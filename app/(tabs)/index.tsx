@@ -1,98 +1,328 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import { Ionicons } from '@expo/vector-icons';
+import { useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import {
+    FlatList,
+    RefreshControl,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from 'react-native';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { GuildCard } from '@/components/GuildCard';
+import { ProductCard } from '@/components/ProductCard';
+import { colors } from '@/theme/colors';
+import { semanticSpacing } from '@/theme/spacing';
+import { typography } from '@/theme/typography';
 
-export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
-
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
-  );
+interface Guild {
+  id: string;
+  name: string;
+  icon: string;
+  productCount: number;
 }
 
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
-});
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  discountedPrice?: number;
+  image: string;
+  rating: number;
+  location: string;
+}
+
+export default function HomeScreen() {
+  const { t } = useTranslation();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  
+  const [refreshing, setRefreshing] = useState(false);
+  const [selectedGuild, setSelectedGuild] = useState<string | null>(null);
+
+  // Mock data
+  const guilds: Guild[] = [
+    { id: '1', name: 'Construction', icon: 'construct', productCount: 245 },
+    { id: '2', name: 'Electronics', icon: 'hardware-chip', productCount: 189 },
+    { id: '3', name: 'Textiles', icon: 'shirt', productCount: 156 },
+    { id: '4', name: 'Food & Beverage', icon: 'restaurant', productCount: 98 },
+    { id: '5', name: 'Automotive', icon: 'car', productCount: 134 },
+    { id: '6', name: 'Chemicals', icon: 'flask', productCount: 87 },
+  ];
+
+  const recommendedProducts: Product[] = [
+    {
+      id: '1',
+      name: 'Industrial Steel Pipes',
+      price: 1500000,
+      image: 'https://via.placeholder.com/150',
+      rating: 4.5,
+      location: 'Tehran',
+    },
+    {
+      id: '2',
+      name: 'Construction Materials',
+      price: 800000,
+      discountedPrice: 750000,
+      image: 'https://via.placeholder.com/150',
+      rating: 4.2,
+      location: 'Isfahan',
+    },
+    {
+      id: '3',
+      name: 'Electrical Components',
+      price: 1200000,
+      image: 'https://via.placeholder.com/150',
+      rating: 4.8,
+      location: 'Shiraz',
+    },
+  ];
+
+  const trendingProducts: Product[] = [
+    {
+      id: '4',
+      name: 'Textile Machinery',
+      price: 2500000,
+      image: 'https://via.placeholder.com/150',
+      rating: 4.6,
+      location: 'Tabriz',
+    },
+    {
+      id: '5',
+      name: 'Food Processing Equipment',
+      price: 1800000,
+      image: 'https://via.placeholder.com/150',
+      rating: 4.3,
+      location: 'Mashhad',
+    },
+  ];
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    // Simulate API call
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 1000);
+  }, []);
+
+  const handleGuildPress = (guildId: string) => {
+    setSelectedGuild(guildId);
+    console.log('Selected guild:', guildId);
+  };
+
+  const handleProductPress = (productId: string) => {
+    console.log('Product pressed:', productId);
+  };
+
+  const renderGuild = ({ item }: { item: Guild }) => (
+    <GuildCard
+      id={item.id}
+      name={item.name}
+      icon={item.icon}
+      productCount={item.productCount}
+      onPress={() => handleGuildPress(item.id)}
+      isSelected={selectedGuild === item.id}
+    />
+  );
+
+  const renderProduct = ({ item }: { item: Product }) => (
+    <ProductCard
+      id={item.id}
+      name={item.name}
+      price={item.price}
+      discountedPrice={item.discountedPrice}
+      image={item.image}
+      rating={item.rating}
+      onPress={() => handleProductPress(item.id)}
+    />
+  );
+
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: isDark ? colors.background.dark : colors.background.light,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: semanticSpacing.md,
+      paddingVertical: semanticSpacing.sm,
+      backgroundColor: isDark ? colors.background.dark : colors.background.light,
+      borderBottomWidth: 1,
+      borderBottomColor: isDark ? colors.border.light : colors.border.light,
+    },
+    headerTitle: {
+      fontSize: typography.h3.fontSize,
+      fontWeight: typography.h3.fontWeight,
+      color: isDark ? colors.text.primary : colors.text.primary,
+    },
+    headerActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    headerButton: {
+      padding: semanticSpacing.sm,
+      marginLeft: semanticSpacing.sm,
+    },
+    content: {
+      flex: 1,
+    },
+    section: {
+      marginBottom: semanticSpacing.xl,
+    },
+    sectionHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: semanticSpacing.md,
+      paddingVertical: semanticSpacing.md,
+    },
+    sectionTitle: {
+      fontSize: typography.h4.fontSize,
+      fontWeight: typography.h4.fontWeight,
+      color: isDark ? colors.text.primary : colors.text.primary,
+    },
+    viewAllButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    viewAllText: {
+      fontSize: typography.bodySmall.fontSize,
+      color: colors.primary[600],
+      fontWeight: typography.fontWeights.medium,
+      marginRight: semanticSpacing.xs,
+    },
+    guildsContainer: {
+      paddingLeft: semanticSpacing.md,
+    },
+    productsContainer: {
+      paddingHorizontal: semanticSpacing.md,
+    },
+    productsGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'space-between',
+    },
+    emptyState: {
+      alignItems: 'center',
+      paddingVertical: semanticSpacing.xl,
+    },
+    emptyStateText: {
+      fontSize: typography.body.fontSize,
+      color: isDark ? colors.text.secondary : colors.text.secondary,
+      textAlign: 'center',
+      marginTop: semanticSpacing.sm,
+    },
+  });
+
+  return (
+    <SafeAreaView style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>{t('home.title')}</Text>
+        <View style={styles.headerActions}>
+          <TouchableOpacity style={styles.headerButton}>
+            <Ionicons 
+              name="notifications-outline" 
+              size={24} 
+              color={isDark ? colors.gray[400] : colors.gray[600]} 
+            />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.headerButton}>
+            <Ionicons 
+              name="search-outline" 
+              size={24} 
+              color={isDark ? colors.gray[400] : colors.gray[600]} 
+            />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <ScrollView
+        style={styles.content}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Guilds Section */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>{t('home.guilds')}</Text>
+            <TouchableOpacity style={styles.viewAllButton}>
+              <Text style={styles.viewAllText}>{t('home.viewAll')}</Text>
+              <Ionicons name="chevron-forward" size={16} color={colors.primary[600]} />
+            </TouchableOpacity>
+          </View>
+          <FlatList
+            style={styles.guildsContainer}
+            data={guilds}
+            renderItem={renderGuild}
+            keyExtractor={(item) => item.id}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingRight: semanticSpacing.md }}
+          />
+        </View>
+
+        {/* Recommended Products */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>{t('home.recommended')}</Text>
+            <TouchableOpacity style={styles.viewAllButton}>
+              <Text style={styles.viewAllText}>{t('home.viewAll')}</Text>
+              <Ionicons name="chevron-forward" size={16} color={colors.primary[600]} />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.productsContainer}>
+            <View style={styles.productsGrid}>
+              {recommendedProducts.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  id={product.id}
+                  name={product.name}
+                  price={product.price}
+                  discountedPrice={product.discountedPrice}
+                  image={product.image}
+                  rating={product.rating}
+                  onPress={() => handleProductPress(product.id)}
+                />
+              ))}
+            </View>
+          </View>
+        </View>
+
+        {/* Trending Products */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>{t('home.trending')}</Text>
+            <TouchableOpacity style={styles.viewAllButton}>
+              <Text style={styles.viewAllText}>{t('home.viewAll')}</Text>
+              <Ionicons name="chevron-forward" size={16} color={colors.primary[600]} />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.productsContainer}>
+            <View style={styles.productsGrid}>
+              {trendingProducts.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  id={product.id}
+                  name={product.name}
+                  price={product.price}
+                  image={product.image}
+                  rating={product.rating}
+                  onPress={() => handleProductPress(product.id)}
+                />
+              ))}
+            </View>
+          </View>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}

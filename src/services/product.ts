@@ -1,0 +1,277 @@
+import apiClient from './api';
+
+// Types
+export interface Product {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  originalPrice?: number;
+  category: string;
+  condition: 'new' | 'used' | 'refurbished';
+  location: string;
+  images: string[];
+  specifications: ProductSpecification[];
+  seller: Seller;
+  rating: number;
+  reviewCount: number;
+  isAvailable: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProductSpecification {
+  label: string;
+  value: string;
+}
+
+export interface Seller {
+  id: string;
+  name: string;
+  avatar?: string;
+  rating: number;
+  responseTime: string;
+  verified: boolean;
+  location: string;
+}
+
+export interface CreateProductRequest {
+  name: string;
+  description: string;
+  price: number;
+  originalPrice?: number;
+  category: string;
+  condition: 'new' | 'used' | 'refurbished';
+  location: string;
+  images: string[];
+  specifications: ProductSpecification[];
+}
+
+export interface UpdateProductRequest {
+  name?: string;
+  description?: string;
+  price?: number;
+  originalPrice?: number;
+  category?: string;
+  condition?: 'new' | 'used' | 'refurbished';
+  location?: string;
+  images?: string[];
+  specifications?: ProductSpecification[];
+  isAvailable?: boolean;
+}
+
+export interface ProductFilters {
+  category?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  condition?: string;
+  location?: string;
+  search?: string;
+  sortBy?: 'newest' | 'price_low' | 'price_high' | 'popularity';
+  page?: number;
+  limit?: number;
+}
+
+export interface ProductSearchResponse {
+  products: Product[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface ApiResponse<T> {
+  data?: T;
+  error?: string;
+  success: boolean;
+}
+
+// Product service functions
+export const productService = {
+  /**
+   * Get all products with optional filters
+   */
+  async getProducts(filters?: ProductFilters): Promise<ApiResponse<ProductSearchResponse>> {
+    try {
+      const response = await apiClient.get('/products', { params: filters });
+      return {
+        data: response.data,
+        success: true,
+      };
+    } catch (error: any) {
+      return {
+        error: error.response?.data?.detail || 'Failed to fetch products',
+        success: false,
+      };
+    }
+  },
+
+  /**
+   * Get a specific product by ID
+   */
+  async getProductById(id: string): Promise<ApiResponse<Product>> {
+    try {
+      const response = await apiClient.get(`/products/${id}`);
+      return {
+        data: response.data,
+        success: true,
+      };
+    } catch (error: any) {
+      return {
+        error: error.response?.data?.detail || 'Failed to fetch product',
+        success: false,
+      };
+    }
+  },
+
+  /**
+   * Create a new product
+   */
+  async createProduct(data: CreateProductRequest): Promise<ApiResponse<Product>> {
+    try {
+      const response = await apiClient.post('/products', data);
+      return {
+        data: response.data,
+        success: true,
+      };
+    } catch (error: any) {
+      return {
+        error: error.response?.data?.detail || 'Failed to create product',
+        success: false,
+      };
+    }
+  },
+
+  /**
+   * Update an existing product
+   */
+  async updateProduct(id: string, data: UpdateProductRequest): Promise<ApiResponse<Product>> {
+    try {
+      const response = await apiClient.put(`/products/${id}`, data);
+      return {
+        data: response.data,
+        success: true,
+      };
+    } catch (error: any) {
+      return {
+        error: error.response?.data?.detail || 'Failed to update product',
+        success: false,
+      };
+    }
+  },
+
+  /**
+   * Delete a product
+   */
+  async deleteProduct(id: string): Promise<ApiResponse<void>> {
+    try {
+      await apiClient.delete(`/products/${id}`);
+      return {
+        success: true,
+      };
+    } catch (error: any) {
+      return {
+        error: error.response?.data?.detail || 'Failed to delete product',
+        success: false,
+      };
+    }
+  },
+
+  /**
+   * Search products
+   */
+  async searchProducts(query: string, filters?: Omit<ProductFilters, 'search'>): Promise<ApiResponse<ProductSearchResponse>> {
+    try {
+      const response = await apiClient.get('/products/search', {
+        params: { q: query, ...filters },
+      });
+      return {
+        data: response.data,
+        success: true,
+      };
+    } catch (error: any) {
+      return {
+        error: error.response?.data?.detail || 'Failed to search products',
+        success: false,
+      };
+    }
+  },
+
+  /**
+   * Get products by category
+   */
+  async getProductsByCategory(categoryId: string, filters?: Omit<ProductFilters, 'category'>): Promise<ApiResponse<ProductSearchResponse>> {
+    try {
+      const response = await apiClient.get(`/categories/${categoryId}/products`, {
+        params: filters,
+      });
+      return {
+        data: response.data,
+        success: true,
+      };
+    } catch (error: any) {
+      return {
+        error: error.response?.data?.detail || 'Failed to fetch products by category',
+        success: false,
+      };
+    }
+  },
+
+  /**
+   * Get user's products
+   */
+  async getUserProducts(filters?: Omit<ProductFilters, 'seller'>): Promise<ApiResponse<ProductSearchResponse>> {
+    try {
+      const response = await apiClient.get('/me/products', { params: filters });
+      return {
+        data: response.data,
+        success: true,
+      };
+    } catch (error: any) {
+      return {
+        error: error.response?.data?.detail || 'Failed to fetch user products',
+        success: false,
+      };
+    }
+  },
+
+  /**
+   * Upload product images
+   */
+  async uploadImages(images: FormData): Promise<ApiResponse<string[]>> {
+    try {
+      const response = await apiClient.post('/products/images', images, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return {
+        data: response.data,
+        success: true,
+      };
+    } catch (error: any) {
+      return {
+        error: error.response?.data?.detail || 'Failed to upload images',
+        success: false,
+      };
+    }
+  },
+
+  /**
+   * Get product categories
+   */
+  async getCategories(): Promise<ApiResponse<{ id: string; name: string; icon: string }[]>> {
+    try {
+      const response = await apiClient.get('/categories');
+      return {
+        data: response.data,
+        success: true,
+      };
+    } catch (error: any) {
+      return {
+        error: error.response?.data?.detail || 'Failed to fetch categories',
+        success: false,
+      };
+    }
+  },
+};

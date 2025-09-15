@@ -1,112 +1,141 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { useQuery } from '@tanstack/react-query';
+import { useRouter } from 'expo-router';
+import { useCallback, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 
-import { Collapsible } from '@/components/ui/collapsible';
-import { ExternalLink } from '@/components/external-link';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
+import Banner from '@/components/Banner';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
+import ProductCard from '@/components/ProductCard';
+import SellerCard from '@/components/SellerCard';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Fonts } from '@/constants/theme';
+import { useProducts } from '@/features/products/hooks';
+import { useProductsStore } from '@/features/products/store';
+import apiClient from '@/services/api';
 
-export default function TabTwoScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText
-          type="title"
-          style={{
-            fontFamily: Fonts.rounded,
-          }}>
-          Explore
-        </ThemedText>
+export default function ExploreScreen() {
+  const router = useRouter();
+  const { t } = useTranslation();
+  const { products, isLoading } = useProductsStore();
+  const { refetch, isFetching } = useProducts();
+  const [refreshing, setRefreshing] = useState(false);
+  const bannersQuery = useQuery({
+    queryKey: ['banners'],
+    queryFn: async () => {
+      const res = await apiClient.get('/banners');
+      return res.data as Array<{ id: string; title: string; subtitle?: string; image?: string }>;
+    },
+  });
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await refetch();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refetch]);
+
+  const renderItem = ({ item }: any) => (
+    <ProductCard
+      id={item.id}
+      name={item.name}
+      price={item.price}
+      discountedPrice={item.originalPrice}
+      image={item.images?.[0]}
+      rating={item.rating}
+      onPress={() => router.push(`/product/${item.id}`)}
+    />
+  );
+
+  const topSellers = useMemo(() => {
+    const map = new Map<string, any>();
+    products.forEach((p: any) => {
+      if (p?.seller?.id && !map.has(p.seller.id)) {
+        map.set(p.seller.id, p.seller);
+      }
+    });
+    return Array.from(map.values()).slice(0, 10);
+  }, [products]);
+
+  if (isLoading && products.length === 0) {
+    return (
+      <ThemedView style={styles.center}>
+        <LoadingSpinner />
+        <ThemedText>{t('common.loading')}</ThemedText>
       </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image
-          source={require('@/assets/images/react-logo.png')}
-          style={{ width: 100, height: 100, alignSelf: 'center' }}
+    );
+  }
+
+  return (
+    <ThemedView style={styles.container}>
+      {!!bannersQuery.data?.length && (
+        <FlatList
+          data={bannersQuery.data}
+          keyExtractor={(b) => String(b.id)}
+          renderItem={({ item }) => (
+            <Banner title={item.title} subtitle={item.subtitle} image={item.image} onPress={() => {}} />
+          )}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingVertical: 8 }}
         />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful{' '}
-          <ThemedText type="defaultSemiBold" style={{ fontFamily: Fonts.mono }}>
-            react-native-reanimated
-          </ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
-    </ParallaxScrollView>
+      )}
+
+      {!!topSellers.length && (
+        <View style={{ marginBottom: 12 }}>
+          <ThemedText style={{ marginBottom: 8 }}>{t('home.recommended')}</ThemedText>
+          <FlatList
+            data={topSellers}
+            keyExtractor={(s: any) => String(s.id)}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            renderItem={({ item }: any) => (
+              <SellerCard name={item.name} rating={item.rating} image={item.avatar} onPress={() => {}} />
+            )}
+            ItemSeparatorComponent={() => <View style={{ width: 12 }} />}
+            contentContainerStyle={{ paddingBottom: 4 }}
+          />
+        </View>
+      )}
+      <FlatList
+        data={products}
+        keyExtractor={(item: any) => String(item.id)}
+        numColumns={2}
+        columnWrapperStyle={styles.row}
+        contentContainerStyle={styles.listContent}
+        renderItem={renderItem}
+        refreshControl={
+          <RefreshControl refreshing={refreshing || isFetching} onRefresh={onRefresh} />
+        }
+        ListEmptyComponent={
+          <View style={styles.center}>
+            <ThemedText>{t('home.noProducts')}</ThemedText>
+          </View>
+        }
+      />
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
+  container: {
+    flex: 1,
+    paddingHorizontal: 12,
+    paddingTop: 12,
   },
-  titleContainer: {
-    flexDirection: 'row',
-    gap: 8,
+  row: {
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  listContent: {
+    paddingBottom: 24,
+  },
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
   },
 });

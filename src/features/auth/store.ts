@@ -1,6 +1,16 @@
-import * as SecureStore from 'expo-secure-store';
-import { create } from 'zustand';
-import { User } from './types';
+import '@/polyfills/web';
+import { deleteItem, getItem, saveItem } from "@/utils/secureStore";
+import { User } from "./types";
+// Ensure process.env before requiring zustand (SSR/web)
+// @ts-expect-error
+if (typeof globalThis.process === 'undefined') {
+  // @ts-expect-error
+  globalThis.process = { env: {} };
+} else if (typeof (globalThis as any).process.env === 'undefined') {
+  (globalThis as any).process.env = {};
+}
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { create } = require('zustand');
 
 interface AuthState {
   user: User | null;
@@ -22,21 +32,45 @@ export const useAuthStore = create<AuthState>((set) => ({
   token: null,
   refreshToken: null,
   isAuthenticated: false,
-  isLoading: true, // Start as loading to check auth status
+  isLoading: true,
   error: null,
 
   login: async (user, token, refreshToken) => {
-    await SecureStore.setItemAsync('auth_token', token);
-    if (refreshToken) {
-      await SecureStore.setItemAsync('refresh_token', refreshToken);
+    try {
+      await saveItem("auth_token", token);
+      if (refreshToken) {
+        await saveItem("refresh_token", refreshToken);
+      }
+      set({
+        user,
+        token,
+        refreshToken,
+        isAuthenticated: true,
+        isLoading: false,
+        error: null,
+      });
+    } catch (e) {
+      console.error("Login failed:", e);
+      set({ error: "Failed to save session", isLoading: false });
     }
-    set({ user, token, refreshToken, isAuthenticated: true, isLoading: false, error: null });
   },
 
   logout: async () => {
-    await SecureStore.deleteItemAsync('auth_token');
-    await SecureStore.deleteItemAsync('refresh_token');
-    set({ user: null, token: null, refreshToken: null, isAuthenticated: false, isLoading: false, error: null });
+    try {
+      await deleteItem("auth_token");
+      await deleteItem("refresh_token");
+    } catch (e) {
+      console.error("Logout cleanup failed:", e);
+    } finally {
+      set({
+        user: null,
+        token: null,
+        refreshToken: null,
+        isAuthenticated: false,
+        isLoading: false,
+        error: null,
+      });
+    }
   },
 
   setLoading: (loading) => set({ isLoading: loading }),
@@ -46,22 +80,41 @@ export const useAuthStore = create<AuthState>((set) => ({
   initializeAuth: async () => {
     set({ isLoading: true });
     try {
-      const token = await SecureStore.getItemAsync('auth_token');
-      const refreshToken = await SecureStore.getItemAsync('refresh_token');
+      const token = await getItem("auth_token");
+      const refreshToken = await getItem("refresh_token");
+
       if (token) {
-        // In a real app, you'd verify the token or try to refresh it here
-        // For now, we'll assume it's valid if present
-        set({ token, refreshToken, isAuthenticated: true, isLoading: false });
-        // Optionally fetch user profile here
+        // optionally fetch user profile from backend here
+        set({
+          user: null,
+          token,
+          refreshToken,
+          isAuthenticated: true,
+          isLoading: false,
+          error: null,
+        });
       } else {
-        set({ isAuthenticated: false, isLoading: false });
+        set({
+          user: null,
+          token: null,
+          refreshToken: null,
+          isAuthenticated: false,
+          isLoading: false,
+          error: null,
+        });
       }
     } catch (e) {
-      console.error('Failed to initialize auth:', e);
-      set({ isAuthenticated: false, isLoading: false, error: 'Failed to load session' });
+      console.error("Failed to initialize auth:", e);
+      set({
+        user: null,
+        token: null,
+        refreshToken: null,
+        isAuthenticated: false,
+        isLoading: false,
+        error: "Failed to load session",
+      });
     }
   },
 }));
 
-// Call initializeAuth when the app starts
-useAuthStore.getState().initializeAuth();
+// You can now call initializeAuth in your App entry file instead of here

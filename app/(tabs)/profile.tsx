@@ -1,6 +1,8 @@
-import { useAuth } from '@/features/auth/hooks';
+import { useAuth, useProfile } from '@/features/auth/hooks';
+import { useWalletBalance } from '@/features/wallet/hooks';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -24,6 +26,8 @@ export default function ProfileScreen() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const { user, logout } = useAuth();
+  const { data: profile } = useProfile();
+  const { data: walletBalance } = useWalletBalance();
   
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [darkModeEnabled, setDarkModeEnabled] = useState(isDark);
@@ -195,14 +199,14 @@ export default function ProfileScreen() {
       <View style={styles.header}>
         <View style={styles.profileSection}>
           <Image 
-            source={{ uri: 'https://via.placeholder.com/80' }} 
+            source={{ uri: user?.avatar || 'https://via.placeholder.com/80' }} 
             style={styles.avatar} 
           />
           <Text style={styles.userName}>
-            {user?.name || 'User Name'}
+            {user?.name || profile?.name || 'User Name'}
           </Text>
           <Text style={styles.userRole}>
-            {user?.role || 'Buyer/Seller'}
+            {user?.email || user?.phone || 'Buyer/Seller'}
           </Text>
         </View>
       </View>
@@ -234,7 +238,9 @@ export default function ProfileScreen() {
             </View>
             <View style={styles.menuContent}>
               <Text style={styles.menuTitle}>{t('profile.wallet')}</Text>
-              <Text style={styles.menuSubtitle}>Manage your wallet and transactions</Text>
+              <Text style={styles.menuSubtitle}>
+                {walletBalance ? `${t('wallet.balance')}: ${walletBalance.balance.toLocaleString()} ${walletBalance.currency}` : 'Manage your wallet and transactions'}
+              </Text>
             </View>
             <Ionicons 
               name="chevron-forward" 

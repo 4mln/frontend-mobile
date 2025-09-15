@@ -1,6 +1,5 @@
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     Alert,
@@ -12,6 +11,8 @@ import {
     View,
 } from 'react-native';
 
+import { useTopUp, useTransactions, useWalletBalance, useWithdraw } from '@/features/wallet/hooks';
+import { useWalletStore } from '@/features/wallet/store';
 import { colors } from '@/theme/colors';
 import { semanticSpacing } from '@/theme/spacing';
 import { typography } from '@/theme/typography';
@@ -30,64 +31,28 @@ export default function WalletScreen() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
 
-  const [balance] = useState(2500000); // Mock balance
+  const { data: balanceData } = useWalletBalance();
+  const { transactions } = useWalletStore();
+  useTransactions();
+  const topUp = useTopUp();
+  const withdraw = useWithdraw();
 
-  const transactions: Transaction[] = [
-    {
-      id: '1',
-      type: 'credit',
-      amount: 500000,
-      description: 'Top-up via bank transfer',
-      date: '2024-01-15',
-      status: 'completed',
-    },
-    {
-      id: '2',
-      type: 'debit',
-      amount: 150000,
-      description: 'Payment for Industrial Steel Pipes',
-      date: '2024-01-14',
-      status: 'completed',
-    },
-    {
-      id: '3',
-      type: 'credit',
-      amount: 200000,
-      description: 'Refund for cancelled order',
-      date: '2024-01-13',
-      status: 'completed',
-    },
-    {
-      id: '4',
-      type: 'debit',
-      amount: 75000,
-      description: 'Service fee',
-      date: '2024-01-12',
-      status: 'completed',
-    },
-  ];
+  // Using transactions from wallet store populated by useTransactions()
 
-  const handleTopUp = () => {
-    Alert.alert(
-      'Top Up Wallet',
-      'Choose a top-up method',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Bank Transfer', onPress: () => console.log('Bank transfer') },
-        { text: 'Credit Card', onPress: () => console.log('Credit card') },
-      ]
-    );
+  const handleTopUp = async () => {
+    try {
+      await topUp.mutateAsync({ amount: 100000, method: 'wallet' } as any);
+    } catch (e) {
+      Alert.alert('Error', 'Failed to top up');
+    }
   };
 
-  const handleWithdraw = () => {
-    Alert.alert(
-      'Withdraw Funds',
-      'Withdraw funds to your bank account?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Withdraw', onPress: () => console.log('Withdraw') },
-      ]
-    );
+  const handleWithdraw = async () => {
+    try {
+      await withdraw.mutateAsync({ amount: 50000, bankAccount: { accountNumber: '****', bankName: 'Bank', accountHolderName: 'You' } } as any);
+    } catch (e) {
+      Alert.alert('Error', 'Failed to withdraw');
+    }
   };
 
   const renderTransaction = ({ item }: { item: Transaction }) => (
@@ -272,7 +237,7 @@ export default function WalletScreen() {
         <View style={styles.balanceCard}>
           <Text style={styles.balanceLabel}>Current Balance</Text>
           <Text style={styles.balanceAmount}>
-            {balance.toLocaleString()} Toman
+            {(balanceData?.balance ?? 0).toLocaleString()} {balanceData?.currency || 'Toman'}
           </Text>
           
           <View style={styles.actionButtons}>

@@ -76,3 +76,12 @@ export interface UpdateProductRequest {
   specifications?: ProductSpecification[];
   isAvailable?: boolean;
 }
+
+
+
+
+
+
+
+
+

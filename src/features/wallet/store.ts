@@ -1,5 +1,15 @@
-import { create } from 'zustand';
+import '@/polyfills/web';
 import { PaymentMethod, Transaction, WalletBalance, WalletState, WalletStatistics } from './types';
+// Ensure process.env before requiring zustand (SSR/web)
+// @ts-expect-error
+if (typeof globalThis.process === 'undefined') {
+  // @ts-expect-error
+  globalThis.process = { env: {} };
+} else if (typeof (globalThis as any).process.env === 'undefined') {
+  (globalThis as any).process.env = {};
+}
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { create } = require('zustand');
 
 interface WalletStore extends WalletState {
   // Actions
@@ -46,3 +56,12 @@ export const useWalletStore = create<WalletStore>((set, get) => ({
   
   clearError: () => set({ error: null }),
 }));
+
+
+
+
+
+
+
+
+

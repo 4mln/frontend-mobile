@@ -14,12 +14,16 @@ import {
 } from 'react-native';
 
 import { FilterBottomSheet } from '@/components/FilterBottomSheet';
-import { ProductCard } from '@/components/ProductCard';
+import ProductCard from '@/components/ProductCard';
+import { useSearchProducts } from '@/features/products/hooks';
+import { useProductsStore } from '@/features/products/store';
 import { colors } from '@/theme/colors';
 import { semanticSpacing } from '@/theme/spacing';
 import { typography } from '@/theme/typography';
+import { useRouter } from 'expo-router';
 
 export default function SearchScreen() {
+  const router = useRouter();
   const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
@@ -28,35 +32,14 @@ export default function SearchScreen() {
   const [showFilters, setShowFilters] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [sortBy, setSortBy] = useState('newest');
+  const { products } = useProductsStore();
+  const searchMutation = useSearchProducts();
 
-  // Mock data - replace with actual API calls
-  const mockProducts = [
-    {
-      id: '1',
-      name: 'Industrial Steel Pipes',
-      price: 1500000,
-      image: 'https://via.placeholder.com/150',
-      rating: 4.5,
-    },
-    {
-      id: '2',
-      name: 'Construction Materials',
-      price: 800000,
-      image: 'https://via.placeholder.com/150',
-      rating: 4.2,
-    },
-    {
-      id: '3',
-      name: 'Electrical Components',
-      price: 1200000,
-      image: 'https://via.placeholder.com/150',
-      rating: 4.8,
-    },
-  ];
-
-  const handleSearch = () => {
-    // Implement search logic
-    console.log('Searching for:', searchQuery);
+  const handleSearch = async () => {
+    await searchMutation.mutateAsync({
+      query: searchQuery,
+      filters: { sortBy },
+    } as any);
   };
 
   const handleRefresh = () => {
@@ -209,24 +192,24 @@ export default function SearchScreen() {
       >
         <View style={styles.resultsHeader}>
           <Text style={styles.resultsText}>
-            {t('search.results', { count: mockProducts.length })}
+            {t('search.results', { count: products.length })}
           </Text>
           <TouchableOpacity style={styles.clearFiltersButton}>
             <Text style={styles.clearFiltersText}>{t('search.clearFilters')}</Text>
           </TouchableOpacity>
         </View>
 
-        {mockProducts.length > 0 ? (
+        {products.length > 0 ? (
           <View style={styles.productsGrid}>
-            {mockProducts.map((product) => (
+            {products.map((product: any) => (
               <ProductCard
                 key={product.id}
                 id={product.id}
                 name={product.name}
                 price={product.price}
-                image={product.image}
+                image={product.images?.[0]}
                 rating={product.rating}
-                onPress={() => console.log('Product pressed:', product.id)}
+                onPress={() => router.push(`/product/${product.id}`)}
               />
             ))}
           </View>

@@ -15,6 +15,7 @@ import {
     View,
 } from 'react-native';
 
+import { useProduct } from '@/features/products/hooks';
 import { colors } from '@/theme/colors';
 import { semanticSpacing } from '@/theme/spacing';
 import { typography } from '@/theme/typography';
@@ -30,36 +31,7 @@ export default function ProductDetailScreen() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isSaved, setIsSaved] = useState(false);
 
-  // Mock product data
-  const product = {
-    id: id || '1',
-    name: 'Industrial Steel Pipes',
-    price: 1500000,
-    originalPrice: 1800000,
-    rating: 4.5,
-    reviewCount: 128,
-    location: 'Tehran, Iran',
-    description: 'High-quality industrial steel pipes suitable for construction and manufacturing applications. Made from premium grade steel with excellent durability and corrosion resistance.',
-    specifications: [
-      { label: 'Material', value: 'Carbon Steel' },
-      { label: 'Diameter', value: '6 inches' },
-      { label: 'Length', value: '12 meters' },
-      { label: 'Thickness', value: '5mm' },
-      { label: 'Grade', value: 'ASTM A53' },
-    ],
-    images: [
-      'https://via.placeholder.com/400x300',
-      'https://via.placeholder.com/400x300',
-      'https://via.placeholder.com/400x300',
-      'https://via.placeholder.com/400x300',
-    ],
-    seller: {
-      name: 'Steel Supplier Co.',
-      rating: 4.8,
-      responseTime: 'Usually responds within 2 hours',
-      verified: true,
-    },
-  };
+  const { data: product } = useProduct(String(id));
 
   const handleRequestQuote = () => {
     Alert.alert(
@@ -381,7 +353,9 @@ export default function ProductDetailScreen() {
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Image Carousel */}
         <View style={styles.imageContainer}>
-          <Image source={{ uri: product.images[currentImageIndex] }} style={styles.image} />
+          {!!product?.images?.length && (
+            <Image source={{ uri: product.images[currentImageIndex] }} style={styles.image} />
+          )}
           <View style={styles.imageIndicators}>
             {product.images.map((_, index) => (
               <View
@@ -397,13 +371,13 @@ export default function ProductDetailScreen() {
 
         {/* Product Info */}
         <View style={styles.infoContainer}>
-          <Text style={styles.title}>{product.name}</Text>
+          <Text style={styles.title}>{product?.name}</Text>
           
           <View style={styles.ratingContainer}>
             <View style={styles.rating}>
-              {renderStars(product.rating)}
+              {product?.rating ? renderStars(product.rating) : null}
               <Text style={styles.ratingText}>
-                {product.rating} ({product.reviewCount} reviews)
+                {product?.rating || '-'} ({product?.reviewCount || 0} reviews)
               </Text>
             </View>
             <View style={styles.location}>
@@ -412,15 +386,15 @@ export default function ProductDetailScreen() {
                 size={16} 
                 color={isDark ? colors.gray[400] : colors.gray[500]} 
               />
-              <Text style={styles.locationText}>{product.location}</Text>
+              <Text style={styles.locationText}>{product?.location}</Text>
             </View>
           </View>
 
           <View style={styles.priceContainer}>
             <Text style={styles.price}>
-              {product.price.toLocaleString()} Toman
+              {product?.price?.toLocaleString?.() || '-'} Toman
             </Text>
-            {product.originalPrice && (
+            {product?.originalPrice && (
               <>
                 <Text style={styles.originalPrice}>
                   {product.originalPrice.toLocaleString()} Toman
@@ -437,13 +411,13 @@ export default function ProductDetailScreen() {
           {/* Description */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t('product.description')}</Text>
-            <Text style={styles.description}>{product.description}</Text>
+            <Text style={styles.description}>{product?.description}</Text>
           </View>
 
           {/* Specifications */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t('product.specifications')}</Text>
-            {product.specifications.map((spec, index) => (
+            {product?.specifications?.map((spec, index) => (
               <View key={index} style={styles.specItem}>
                 <Text style={styles.specLabel}>{spec.label}</Text>
                 <Text style={styles.specValue}>{spec.value}</Text>
@@ -461,20 +435,20 @@ export default function ProductDetailScreen() {
                 </View>
                 <View style={styles.sellerInfo}>
                   <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Text style={styles.sellerName}>{product.seller.name}</Text>
-                    {product.seller.verified && (
+                    <Text style={styles.sellerName}>{product?.seller?.name}</Text>
+                    {product?.seller?.verified && (
                       <View style={styles.verifiedBadge}>
                         <Text style={styles.verifiedText}>Verified</Text>
                       </View>
                     )}
                   </View>
                   <View style={styles.sellerRating}>
-                    {renderStars(product.seller.rating)}
+                    {product?.seller?.rating ? renderStars(product.seller.rating) : null}
                     <Text style={styles.sellerRatingText}>
-                      {product.seller.rating} ({product.reviewCount} reviews)
+                      {product?.seller?.rating || '-'} ({product?.reviewCount || 0} reviews)
                     </Text>
                   </View>
-                  <Text style={styles.responseTime}>{product.seller.responseTime}</Text>
+                  <Text style={styles.responseTime}>{product?.seller?.responseTime}</Text>
                 </View>
               </View>
             </View>

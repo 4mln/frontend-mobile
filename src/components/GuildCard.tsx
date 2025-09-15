@@ -10,7 +10,7 @@ import {
 
 import { colors } from '@/theme/colors';
 import { semanticSpacing } from '@/theme/spacing';
-import { typography } from '@/theme/typography';
+import { fontWeights, typography } from '@/theme/typography';
 
 interface GuildCardProps {
   id: string;
@@ -66,7 +66,7 @@ export const GuildCard: React.FC<GuildCardProps> = ({
     },
     name: {
       fontSize: typography.bodySmall.fontSize,
-      fontWeight: typography.fontWeights.medium,
+      fontWeight: fontWeights.medium,
       color: isSelected 
         ? colors.primary[700] 
         : isDark 

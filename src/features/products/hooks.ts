@@ -1,3 +1,4 @@
+import '@/polyfills/web';
 import { productService } from '@/services/product';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useProductsStore } from './store';
@@ -187,3 +188,12 @@ export const useProductCategories = () => {
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };
+
+
+
+
+
+
+
+
+

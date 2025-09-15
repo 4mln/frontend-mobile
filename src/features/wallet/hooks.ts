@@ -1,3 +1,4 @@
+import '@/polyfills/web';
 import { walletService } from '@/services/wallet';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useWalletStore } from './store';
@@ -196,3 +197,12 @@ export const useWalletStatistics = () => {
     },
   });
 };
+
+
+
+
+
+
+
+
+

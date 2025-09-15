@@ -173,3 +173,12 @@ interface ApiResponse<T> {
 3. Implement service functions with error handling
 4. Export the service from `index.ts`
 5. Update this README with the new service documentation
+
+
+
+
+
+
+
+
+

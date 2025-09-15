@@ -54,3 +54,12 @@ export interface ChatState {
   isTyping: boolean;
   typingUsers: string[];
 }
+
+
+
+
+
+
+
+
+

@@ -112,3 +112,12 @@ export const validateIranianNationalId = (nationalId: string): boolean => {
   const remainder = sum % 11;
   return remainder < 2 ? check === remainder : check === 11 - remainder;
 };
+
+
+
+
+
+
+
+
+

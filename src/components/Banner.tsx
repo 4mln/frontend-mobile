@@ -1,5 +1,4 @@
-import React from "react";
-import { TouchableOpacity, View, Text, Image, StyleSheet, Dimensions } from "react-native";
+import { Dimensions, Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SPACING } from "../theme/theme";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -30,11 +29,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: "hidden",
     marginRight: SPACING.base,
-    elevation: 4, // shadow for Android
-    shadowColor: "#000", // shadow for iOS
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
+    boxShadow: '0px 2px 4px rgba(0,0,0,0.3)',
   },
   image: { width: "100%", height: "100%" },
   overlay: {

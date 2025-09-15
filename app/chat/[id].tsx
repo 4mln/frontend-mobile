@@ -1,7 +1,7 @@
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     Alert,
@@ -9,6 +9,7 @@ import {
     Image,
     KeyboardAvoidingView,
     Platform,
+    RefreshControl,
     SafeAreaView,
     StyleSheet,
     Text,
@@ -17,18 +18,14 @@ import {
     View,
 } from 'react-native';
 
+import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { ThemedText } from '@/components/themed-text';
+import { ThemedView } from '@/components/themed-view';
+import { useMessages, useSendMessage } from '@/features/chat/hooks';
+import { useChatStore } from '@/features/chat/store';
 import { colors } from '@/theme/colors';
 import { semanticSpacing } from '@/theme/spacing';
 import { typography } from '@/theme/typography';
-
-interface Message {
-  id: string;
-  text: string;
-  senderId: string;
-  timestamp: string;
-  type: 'text' | 'image' | 'file';
-  isRead: boolean;
-}
 
 export default function ChatDetailScreen() {
   const { t } = useTranslation();
@@ -37,63 +34,31 @@ export default function ChatDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
 
   const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      text: 'Hello! I\'m interested in your Industrial Steel Pipes. Can you provide more details?',
-      senderId: 'user',
-      timestamp: '10:30 AM',
-      type: 'text',
-      isRead: true,
-    },
-    {
-      id: '2',
-      text: 'Of course! Our steel pipes are made from premium grade carbon steel with excellent durability. What specific diameter and length are you looking for?',
-      senderId: 'seller',
-      timestamp: '10:32 AM',
-      type: 'text',
-      isRead: true,
-    },
-    {
-      id: '3',
-      text: 'I need 6-inch diameter pipes, 12 meters long. What\'s the price per unit?',
-      senderId: 'user',
-      timestamp: '10:35 AM',
-      type: 'text',
-      isRead: true,
-    },
-    {
-      id: '4',
-      text: 'For 6-inch diameter, 12-meter pipes, the price is 1,500,000 Toman per unit. We can offer a 5% discount for orders above 10 units.',
-      senderId: 'seller',
-      timestamp: '10:37 AM',
-      type: 'text',
-      isRead: false,
-    },
-  ]);
+  const { messages, isLoading } = useChatStore();
+  const { refetch, isFetching } = useMessages(id as string);
+  const { mutateAsync: sendMessage, isPending: isSending } = useSendMessage();
 
-  const conversation = {
-    id: id || '1',
-    name: 'Steel Supplier Co.',
+  const conversation = useMemo(() => ({
+    id: id || 'unknown',
+    name: 'Conversation',
     avatar: 'https://via.placeholder.com/50',
     isOnline: true,
-  };
+  }), [id]);
 
-  const handleSendMessage = () => {
-    if (!message.trim()) return;
+  const flatListRef = useRef<FlatList<any>>(null);
+  useEffect(() => {
+    if (!isLoading && messages.length > 0) {
+      setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 50);
+    }
+  }, [messages, isLoading]);
 
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      text: message.trim(),
-      senderId: 'user',
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      type: 'text',
-      isRead: false,
-    };
-
-    setMessages(prev => [...prev, newMessage]);
+  const handleSendMessage = useCallback(async () => {
+    const text = message.trim();
+    if (!text || !id) return;
+    await sendMessage({ conversationId: String(id), data: { text } });
     setMessage('');
-  };
+    setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 50);
+  }, [message, id, sendMessage]);
 
   const handleSendImage = () => {
     Alert.alert(
@@ -119,7 +84,7 @@ export default function ChatDetailScreen() {
     );
   };
 
-  const renderMessage = ({ item }: { item: Message }) => {
+  const renderMessage = ({ item }: { item: any }) => {
     const isUser = item.senderId === 'user';
     
     return (
@@ -291,6 +256,15 @@ export default function ChatDetailScreen() {
     },
   });
 
+  if (isLoading && messages.length === 0) {
+    return (
+      <ThemedView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <LoadingSpinner />
+        <ThemedText>{t('common.loading')}</ThemedText>
+      </ThemedView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
@@ -338,12 +312,14 @@ export default function ChatDetailScreen() {
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
         <FlatList
+          ref={flatListRef}
           style={styles.messagesContainer}
           data={messages}
           renderItem={renderMessage}
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingVertical: semanticSpacing.sm }}
+          refreshControl={<RefreshControl refreshing={isFetching} onRefresh={refetch} />}
         />
 
         {/* Input */}
@@ -377,7 +353,7 @@ export default function ChatDetailScreen() {
           <TouchableOpacity 
             style={styles.sendButton} 
             onPress={handleSendMessage}
-            disabled={!message.trim()}
+            disabled={!message.trim() || isSending}
           >
             <Ionicons 
               name="send" 

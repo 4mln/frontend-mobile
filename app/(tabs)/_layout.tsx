@@ -6,7 +6,7 @@ import { Platform } from 'react-native';
 import { HapticTab } from '@/components/haptic-tab';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { colors } from '@/theme/colors';
-import { typography } from '@/theme/typography'; // added to fix fontWeight
+import { fontWeights } from '@/theme/typography'; // added to fix fontWeight
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -28,7 +28,7 @@ export default function TabLayout() {
         },
         tabBarLabelStyle: {
           fontSize: 12,
-          fontWeight: typography.fontWeights.medium, // fixed
+          fontWeight: fontWeights.medium, // fixed
           marginTop: 4,
         },
         headerShown: false,

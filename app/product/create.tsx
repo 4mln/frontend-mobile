@@ -17,6 +17,7 @@ import {
     View,
 } from 'react-native';
 
+import { useCreateProduct } from '@/features/products/hooks';
 import { colors } from '@/theme/colors';
 import { semanticSpacing } from '@/theme/spacing';
 import { typography } from '@/theme/typography';
@@ -38,6 +39,7 @@ export default function CreateProductScreen() {
   });
 
   const [isLoading, setIsLoading] = useState(false);
+  const createProduct = useCreateProduct();
 
   const categories = [
     'Construction Materials',
@@ -96,12 +98,22 @@ export default function CreateProductScreen() {
 
     setIsLoading(true);
     try {
-      // Submit product to backend
-      console.log('Submitting product:', formData);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      const payload = {
+        name: formData.name.trim(),
+        description: formData.description.trim(),
+        price: Number(formData.price),
+        category: formData.category,
+        condition: formData.condition as any,
+        location: formData.location,
+        images: formData.images,
+        specifications: formData.specifications
+          ? formData.specifications.split('\n').map((line) => {
+              const [label, ...rest] = line.split(':');
+              return { label: label?.trim() || '', value: rest.join(':').trim() };
+            })
+          : [],
+      };
+      await createProduct.mutateAsync(payload as any);
       Alert.alert(
         'Success',
         'Your product has been listed successfully!',

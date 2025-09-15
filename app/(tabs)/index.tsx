@@ -3,21 +3,21 @@ import { Ionicons } from '@expo/vector-icons';
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-    FlatList,
-    RefreshControl,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  FlatList,
+  RefreshControl,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 import { GuildCard } from '@/components/GuildCard';
-import { ProductCard } from '@/components/ProductCard';
+import ProductCard from '@/components/ProductCard';
 import { colors } from '@/theme/colors';
 import { semanticSpacing } from '@/theme/spacing';
-import { typography } from '@/theme/typography';
+import { fontWeights, typography } from '@/theme/typography';
 
 interface Guild {
   id: string;
@@ -194,7 +194,7 @@ export default function HomeScreen() {
     viewAllText: {
       fontSize: typography.bodySmall.fontSize,
       color: colors.primary[600],
-      fontWeight: typography.fontWeights.medium,
+      fontWeight: fontWeights.medium,
       marginRight: semanticSpacing.xs,
     },
     guildsContainer: {

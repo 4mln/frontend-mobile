@@ -1,22 +1,23 @@
-import React, { useEffect, useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
-  View,
-  Text,
-  FlatList,
-  StyleSheet,
-  RefreshControl,
-  Dimensions,
-  TouchableOpacity,
-  TextInput,
-  ScrollView,
-  Modal,
+    Dimensions,
+    FlatList,
+    Modal,
+    RefreshControl,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
-import SkeletonContent from "react-native-skeleton-content";
 import apiClient from "../src/api/apiClient";
-import ProductCard from "../src/components/ProductCard";
 import Banner from "../src/components/Banner";
+import ProductCard from "../src/components/ProductCard";
 import SellerCard from "../src/components/SellerCard";
 import { SPACING } from "../src/theme/theme";
+// Avoid SSR crash on web due to reanimated in skeleton-content
+const isWeb = typeof window !== "undefined" && !('__EXPO_E2E__' in (globalThis as any));
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -95,18 +96,21 @@ export default function ExploreScreen() {
 
   if (loading) {
     return (
-      <SkeletonContent
-        containerStyle={{ flex: 1, padding: SPACING.base }}
-        isLoading={true}
-        layout={[
-          { width: "100%", height: 50, marginBottom: SPACING.base }, // search
-          { width: "100%", height: 50, marginBottom: SPACING.base }, // category
-          { width: "100%", height: 45, marginBottom: SPACING.base }, // sort
-          { width: "100%", height: 150, marginBottom: SPACING.base }, // banner
-          { width: 80, height: 80, marginRight: 12, marginBottom: SPACING.base }, // seller
-          { width: "48%", height: 220, marginBottom: SPACING.base }, // product grid
-        ]}
-      />
+      <View style={{ flex: 1, padding: SPACING.base }}>
+        <View style={{ width: "100%", height: 50, backgroundColor: "#eee", borderRadius: 12, marginBottom: SPACING.base }} />
+        <View style={{ width: "100%", height: 50, backgroundColor: "#eee", borderRadius: 12, marginBottom: SPACING.base }} />
+        <View style={{ width: "100%", height: 45, backgroundColor: "#eee", borderRadius: 12, marginBottom: SPACING.base }} />
+        <View style={{ width: "100%", height: 150, backgroundColor: "#eee", borderRadius: 12, marginBottom: SPACING.base }} />
+        <View style={{ flexDirection: "row", marginBottom: SPACING.base }}>
+          <View style={{ width: 80, height: 80, backgroundColor: "#eee", borderRadius: 40, marginRight: 12 }} />
+          <View style={{ width: 80, height: 80, backgroundColor: "#eee", borderRadius: 40, marginRight: 12 }} />
+          <View style={{ width: 80, height: 80, backgroundColor: "#eee", borderRadius: 40 }} />
+        </View>
+        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+          <View style={{ width: "48%", height: 220, backgroundColor: "#eee", borderRadius: 12 }} />
+          <View style={{ width: "48%", height: 220, backgroundColor: "#eee", borderRadius: 12 }} />
+        </View>
+      </View>
     );
   }
 

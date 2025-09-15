@@ -1,23 +1,24 @@
 import { useSendOTP } from '@/features/auth/hooks';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-    Alert,
-    KeyboardAvoidingView,
-    Platform,
-    SafeAreaView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 import { colors } from '@/theme/colors';
 import { semanticSpacing } from '@/theme/spacing';
-import { typography } from '@/theme/typography';
+import { fontWeights, lineHeights, typography } from '@/theme/typography';
 
 export default function LoginScreen() {
   const { t } = useTranslation();
@@ -43,8 +44,7 @@ export default function LoginScreen() {
     setIsLoading(true);
     try {
       await sendOTPMutation.mutateAsync({ phone: phone.trim() });
-      // Navigate to OTP verification screen
-      console.log('OTP sent successfully');
+      router.push({ pathname: '/auth/verify-otp', params: { phone: phone.trim() } });
     } catch (error) {
       Alert.alert('Error', 'Failed to send OTP. Please try again.');
     } finally {
@@ -86,7 +86,7 @@ export default function LoginScreen() {
       fontSize: typography.bodyLarge.fontSize,
       color: isDark ? colors.text.secondary : colors.text.secondary,
       textAlign: 'center',
-      lineHeight: typography.bodyLarge.fontSize * typography.lineHeights.normal,
+      lineHeight: typography.bodyLarge.fontSize * lineHeights.normal,
     },
     form: {
       marginBottom: semanticSpacing.xl,
@@ -96,7 +96,7 @@ export default function LoginScreen() {
     },
     label: {
       fontSize: typography.body.fontSize,
-      fontWeight: typography.fontWeights.medium,
+      fontWeight: fontWeights.medium,
       color: isDark ? colors.text.primary : colors.text.primary,
       marginBottom: semanticSpacing.sm,
     },
@@ -117,7 +117,7 @@ export default function LoginScreen() {
     countryCodeText: {
       fontSize: typography.body.fontSize,
       color: isDark ? colors.text.primary : colors.text.primary,
-      fontWeight: typography.fontWeights.medium,
+      fontWeight: fontWeights.medium,
     },
     input: {
       flex: 1,
@@ -149,11 +149,11 @@ export default function LoginScreen() {
       fontSize: typography.bodySmall.fontSize,
       color: isDark ? colors.text.secondary : colors.text.secondary,
       textAlign: 'center',
-      lineHeight: typography.bodySmall.fontSize * typography.lineHeights.normal,
+      lineHeight: typography.bodySmall.fontSize * lineHeights.normal,
     },
     link: {
       color: colors.primary[600],
-      fontWeight: typography.fontWeights.medium,
+      fontWeight: fontWeights.medium,
     },
   });
 

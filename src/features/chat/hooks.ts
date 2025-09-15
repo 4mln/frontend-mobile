@@ -1,3 +1,4 @@
+import '@/polyfills/web';
 import { chatService } from '@/services/chat';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useChatStore } from './store';
@@ -178,3 +179,12 @@ export const useUploadAttachment = () => {
     },
   });
 };
+
+
+
+
+
+
+
+
+

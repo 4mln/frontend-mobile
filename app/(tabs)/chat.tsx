@@ -1,11 +1,12 @@
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     FlatList,
     Image,
+    RefreshControl,
     SafeAreaView,
     StyleSheet,
     Text,
@@ -14,63 +15,36 @@ import {
     View,
 } from 'react-native';
 
+import { useConversations } from '@/features/chat/hooks';
+import { useChatStore } from '@/features/chat/store';
 import { colors } from '@/theme/colors';
 import { semanticSpacing } from '@/theme/spacing';
 import { typography } from '@/theme/typography';
-
-interface Conversation {
-  id: string;
-  name: string;
-  lastMessage: string;
-  timestamp: string;
-  unreadCount: number;
-  avatar?: string;
-  isOnline: boolean;
-}
 
 export default function ChatScreen() {
   const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
-  
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Mock conversations data
-  const [conversations] = useState<Conversation[]>([
-    {
-      id: '1',
-      name: 'Steel Supplier Co.',
-      lastMessage: 'Thank you for your interest in our products',
-      timestamp: '2 min ago',
-      unreadCount: 2,
-      avatar: 'https://via.placeholder.com/50',
-      isOnline: true,
-    },
-    {
-      id: '2',
-      name: 'Construction Materials Ltd.',
-      lastMessage: 'We can provide the materials you requested',
-      timestamp: '1 hour ago',
-      unreadCount: 0,
-      avatar: 'https://via.placeholder.com/50',
-      isOnline: false,
-    },
-    {
-      id: '3',
-      name: 'Electrical Components Inc.',
-      lastMessage: 'Please check the updated quote',
-      timestamp: '3 hours ago',
-      unreadCount: 1,
-      avatar: 'https://via.placeholder.com/50',
-      isOnline: true,
-    },
-  ]);
+  const { conversations, isLoading } = useChatStore();
+  const { refetch, isFetching } = useConversations();
 
-  const handleConversationPress = (conversation: Conversation) => {
+  const filtered = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return conversations;
+    return conversations.filter(c => c.name.toLowerCase().includes(q) || c.lastMessage.toLowerCase().includes(q));
+  }, [conversations, searchQuery]);
+
+  const onRefresh = useCallback(async () => {
+    await refetch();
+  }, [refetch]);
+
+  const handleConversationPress = (conversation: any) => {
     router.push(`/chat/${conversation.id}`);
   };
 
-  const renderConversation = ({ item }: { item: Conversation }) => (
+  const renderConversation = ({ item }: { item: any }) => (
     <TouchableOpacity
       style={styles.conversationItem}
       onPress={() => handleConversationPress(item)}
@@ -264,13 +238,14 @@ export default function ChatScreen() {
       </View>
 
       {/* Conversations List */}
-      {conversations.length > 0 ? (
+      {filtered.length > 0 ? (
         <FlatList
           style={styles.conversationsList}
-          data={conversations}
+          data={filtered}
           renderItem={renderConversation}
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
+          refreshControl={<RefreshControl refreshing={isFetching} onRefresh={onRefresh} />}
         />
       ) : (
         <View style={styles.emptyState}>
@@ -279,7 +254,7 @@ export default function ChatScreen() {
             size={64} 
             color={isDark ? colors.gray[400] : colors.gray[500]} 
           />
-          <Text style={styles.emptyStateText}>{t('chat.noMessages')}</Text>
+          <Text style={styles.emptyStateText}>{isLoading ? t('common.loading') : t('chat.noMessages')}</Text>
         </View>
       )}
     </SafeAreaView>

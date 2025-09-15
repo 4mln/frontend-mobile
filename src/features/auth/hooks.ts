@@ -1,3 +1,4 @@
+import '@/polyfills/web';
 import { authService } from '@/services/auth';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from './store';

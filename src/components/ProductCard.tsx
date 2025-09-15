@@ -1,15 +1,15 @@
+import { FontAwesome } from "@expo/vector-icons";
 import React from "react";
 import {
-  View,
-  Text,
-  Image,
-  StyleSheet,
-  TouchableOpacity,
+    Image,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
-import { FontAwesome } from "@expo/vector-icons";
 
 type ProductCardProps = {
-  id: number;
+  id: string | number;
   name: string;
   price: number;
   discountedPrice?: number;
@@ -73,11 +73,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 16,
     marginRight: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 3,
+    boxShadow: '0px 2px 5px rgba(0,0,0,0.1)',
     overflow: "hidden",
     position: "relative",
   },
@@ -119,11 +115,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 20,
     padding: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    boxShadow: '0px 1px 2px rgba(0,0,0,0.1)',
   },
 });
 

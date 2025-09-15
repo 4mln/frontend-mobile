@@ -15,11 +15,16 @@ const resources = {
   },
 };
 
+const deviceLocale = (Localization as any)?.locale
+  || (Array.isArray((Localization as any)?.locales) ? (Localization as any).locales[0] : 'en');
+const localeTag = typeof deviceLocale === 'string' ? deviceLocale : (deviceLocale?.languageTag || 'en');
+const initialLng = String(localeTag).toLowerCase().startsWith('fa') ? 'fa' : 'en';
+
 i18n
   .use(initReactI18next)
   .init({
     resources,
-    lng: Localization.locale.startsWith('fa') ? 'fa' : 'en',
+    lng: initialLng,
     fallbackLng: 'en',
     
     interpolation: {

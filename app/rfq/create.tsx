@@ -16,6 +16,7 @@ import {
     View,
 } from 'react-native';
 
+import { useCreateRFQ } from '@/features/rfq/hooks';
 import { colors } from '@/theme/colors';
 import { semanticSpacing } from '@/theme/spacing';
 import { typography } from '@/theme/typography';
@@ -37,6 +38,7 @@ export default function CreateRFQScreen() {
   });
 
   const [isLoading, setIsLoading] = useState(false);
+  const createRFQ = useCreateRFQ();
 
   const categories = [
     'Construction Materials',
@@ -72,12 +74,16 @@ export default function CreateRFQScreen() {
 
     setIsLoading(true);
     try {
-      // Submit RFQ to backend
-      console.log('Submitting RFQ:', formData);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      await createRFQ.mutateAsync({
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+        category: formData.category,
+        quantity: formData.quantity,
+        budget: formData.budget,
+        deliveryDate: formData.deliveryDate,
+        location: formData.location,
+        specifications: formData.specifications,
+      } as any);
       Alert.alert(
         'Success',
         'Your RFQ has been created successfully!',

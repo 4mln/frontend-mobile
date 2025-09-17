@@ -1,6 +1,5 @@
 {
   "name": "b2b-marketplace",
-  "main": "index.js",
   "version": "2.1.0",
   "private": true,
   "scripts": {
@@ -9,20 +8,7 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "expo lint",
-    "test": "jest",
-    "test:e2e": "detox test",
-    "build:android": "eas build --platform android",
-    "build:ios": "eas build --platform ios",
-    "build:web": "expo export -p web",
-    "deploy:web": "bash scripts/deploy-web.sh",
-    "deploy:mobile": "bash scripts/deploy-mobile.sh",
-    "deploy:all": "npm run deploy:web && npm run deploy:mobile",
-    "backend:start": "cd c:\\b2b-marketplace && docker-compose up -d",
-    "backend:stop": "cd c:\\b2b-marketplace && docker-compose down",
-    "backend:logs": "cd c:\\b2b-marketplace && docker-compose logs -f api",
-    "backend:test": "node scripts/test-backend-connection.js",
-    "dev:full": "npm run backend:start && npm start"
+    "lint": "expo lint"
   },
   "dependencies": {
     "react": "19.1.0",
@@ -62,7 +48,7 @@
     "react-native-svg": "15.12.1",
     "react-native-web": "^0.21.0",
     "react-native-worklets": "0.5.1",
-    "zustand": "^4.4.0"
+    "zustand": "5.0.8"
   },
   "devDependencies": {
     "@types/react": "18.2.6",

@@ -4,10 +4,12 @@
     "slug": "b2b-marketplace",
     "version": "2.1.0",
     "orientation": "portrait",
-    "icon": "./src/assets/images/icon.png",
+    "icon": "./assets/images/icon.png",
+    "scheme": "b2bmarketpalce",
     "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
     "splash": {
-      "image": "./src/assets/images/splash-icon.png",
+      "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -21,17 +23,19 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./src/assets/images/android-icon-foreground.png",
-        "backgroundImage": "./src/assets/images/android-icon-background.png",
-        "monochromeImage": "./src/assets/images/android-icon-monochrome.png"
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "backgroundImage": "./assets/images/android-icon-background.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false,
       "package": "com.b2bmarketplace.app",
       "versionCode": 1
     },
     "web": {
-      "favicon": "./src/assets/images/favicon.png",
-      "bundler": "metro",
       "output": "static",
+      "favicon": "./assets/images/favicon.png",
       "name": "B2B Marketplace",
       "shortName": "B2B Market",
       "description": "Professional B2B marketplace for business-to-business transactions",
@@ -47,13 +51,23 @@
     "plugins": [
       "expo-router",
       [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff",
+          "dark": {
+            "backgroundColor": "#000000"
+          }
+        }
+      ],
+      [
         "expo-font",
         {
-          "fonts": [
-            "./src/assets/fonts/Vazir-Regular.ttf",
-            "./src/assets/fonts/Vazir-Medium.ttf",
-            "./src/assets/fonts/Vazir-Bold.ttf"
-          ]
+          "Vazir-Regular": "./assets/fonts/Vazir-Regular.ttf",
+          "Vazir-Medium": "./assets/fonts/Vazir-Medium.ttf",
+          "Vazir-Bold": "./assets/fonts/Vazir-Bold.ttf"
         }
       ],
       [
@@ -61,10 +75,12 @@
         {
           "supportsRTL": true
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "experiments": {
-      "typedRoutes": true
+      "typedRoutes": true,
+      "reactCompiler": true
     },
     "extra": {
       "router": {

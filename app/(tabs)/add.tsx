@@ -13,7 +13,7 @@ import {
 
 import { colors } from '@/theme/colors';
 import { semanticSpacing } from '@/theme/spacing';
-import { typography } from '@/theme/typography';
+import { fontWeights, lineHeights, typography } from '@/theme/typography';
 
 export default function AddScreen() {
   const { t } = useTranslation();
@@ -85,14 +85,14 @@ export default function AddScreen() {
     },
     optionTitle: {
       fontSize: typography.bodyLarge.fontSize,
-      fontWeight: typography.fontWeights.semibold,
+      fontWeight: fontWeights.semibold,
       color: isDark ? colors.text.primary : colors.text.primary,
       flex: 1,
     },
     optionDescription: {
       fontSize: typography.body.fontSize,
       color: isDark ? colors.text.secondary : colors.text.secondary,
-      lineHeight: typography.body.fontSize * typography.lineHeights.normal,
+      lineHeight: typography.body.fontSize * lineHeights.normal,
     },
     quickActions: {
       flexDirection: 'row',

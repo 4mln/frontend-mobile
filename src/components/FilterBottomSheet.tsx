@@ -13,7 +13,7 @@ import {
 
 import { colors } from '@/theme/colors';
 import { semanticSpacing } from '@/theme/spacing';
-import { typography } from '@/theme/typography';
+import { fontWeights, typography } from '@/theme/typography';
 
 interface FilterOption {
   id: string;
@@ -170,7 +170,7 @@ export const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
     },
     sectionTitle: {
       fontSize: typography.bodyLarge.fontSize,
-      fontWeight: typography.fontWeights.semibold,
+      fontWeight: fontWeights.semibold,
       color: isDark ? colors.text.primary : colors.text.primary,
       marginBottom: semanticSpacing.md,
     },
@@ -217,7 +217,7 @@ export const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
     },
     optionText: {
       fontSize: typography.body.fontSize,
-      fontWeight: typography.fontWeights.medium,
+      fontWeight: fontWeights.medium,
     },
     optionTextSelected: {
       color: colors.background.light,

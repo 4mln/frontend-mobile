@@ -5,18 +5,18 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-    Alert,
-    SafeAreaView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 import { colors } from '@/theme/colors';
 import { semanticSpacing } from '@/theme/spacing';
-import { typography } from '@/theme/typography';
+import { fontWeights, lineHeights, typography } from '@/theme/typography';
 
 export default function VerifyOTPScreen() {
   const { t } = useTranslation();
@@ -140,11 +140,11 @@ export default function VerifyOTPScreen() {
       fontSize: typography.bodyLarge.fontSize,
       color: isDark ? colors.text.secondary : colors.text.secondary,
       textAlign: 'center',
-      lineHeight: typography.bodyLarge.fontSize * typography.lineHeights.normal,
+      lineHeight: typography.bodyLarge.fontSize * lineHeights.normal,
     },
     phoneNumber: {
       fontSize: typography.body.fontSize,
-      fontWeight: typography.fontWeights.medium,
+      fontWeight: fontWeights.medium,
       color: colors.primary[600],
       marginTop: semanticSpacing.sm,
     },
@@ -161,7 +161,7 @@ export default function VerifyOTPScreen() {
       borderRadius: semanticSpacing.radius.lg,
       textAlign: 'center',
       fontSize: typography.h3.fontSize,
-      fontWeight: typography.fontWeights.bold,
+      fontWeight: fontWeights.bold,
       color: isDark ? colors.text.primary : colors.text.primary,
       backgroundColor: isDark ? colors.gray[800] : colors.background.light,
     },
@@ -197,13 +197,13 @@ export default function VerifyOTPScreen() {
     },
     resendButtonText: {
       fontSize: typography.body.fontSize,
-      fontWeight: typography.fontWeights.medium,
+      fontWeight: fontWeights.medium,
       color: colors.primary[600],
     },
     timerText: {
       fontSize: typography.body.fontSize,
       color: colors.primary[600],
-      fontWeight: typography.fontWeights.medium,
+      fontWeight: fontWeights.medium,
     },
   });
 

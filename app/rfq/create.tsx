@@ -19,7 +19,7 @@ import {
 import { useCreateRFQ } from '@/features/rfq/hooks';
 import { colors } from '@/theme/colors';
 import { semanticSpacing } from '@/theme/spacing';
-import { typography } from '@/theme/typography';
+import { fontWeights, typography } from '@/theme/typography';
 
 export default function CreateRFQScreen() {
   const { t } = useTranslation();
@@ -136,8 +136,8 @@ export default function CreateRFQScreen() {
       marginBottom: semanticSpacing.xl,
     },
     sectionTitle: {
-      fontSize: typography.h5.fontSize,
-      fontWeight: typography.h5.fontWeight,
+      fontSize: typography.h4.fontSize,
+      fontWeight: typography.h4.fontWeight,
       color: isDark ? colors.text.primary : colors.text.primary,
       marginBottom: semanticSpacing.md,
     },
@@ -146,7 +146,7 @@ export default function CreateRFQScreen() {
     },
     label: {
       fontSize: typography.body.fontSize,
-      fontWeight: typography.fontWeights.medium,
+      fontWeight: fontWeights.medium,
       color: isDark ? colors.text.primary : colors.text.primary,
       marginBottom: semanticSpacing.sm,
     },

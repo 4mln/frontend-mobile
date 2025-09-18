@@ -25,7 +25,7 @@ import { useMessages, useSendMessage } from '@/features/chat/hooks';
 import { useChatStore } from '@/features/chat/store';
 import { colors } from '@/theme/colors';
 import { semanticSpacing } from '@/theme/spacing';
-import { typography } from '@/theme/typography';
+import { lineHeights, typography } from '@/theme/typography';
 
 export default function ChatDetailScreen() {
   const { t } = useTranslation();
@@ -201,7 +201,7 @@ export default function ChatDetailScreen() {
     },
     messageText: {
       fontSize: typography.body.fontSize,
-      lineHeight: typography.body.fontSize * typography.lineHeights.normal,
+      lineHeight: typography.body.fontSize * lineHeights.normal,
     },
     userMessageText: {
       color: colors.background.light,

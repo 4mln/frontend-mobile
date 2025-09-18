@@ -4,6 +4,17 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useProductsStore } from './store';
 import { CreateProductRequest, ProductFilters, UpdateProductRequest } from './types';
 
+const getErrorMessage = (value: unknown): string => {
+  if (!value) return 'Unknown error';
+  if (typeof value === 'string') return value;
+  if (value instanceof Error) return value.message;
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return String(value);
+  }
+};
+
 export const useProducts = (filters?: ProductFilters) => {
   const { setProducts, setLoading, setError, setTotal, setPage, setHasMore } = useProductsStore();
 
@@ -18,10 +29,10 @@ export const useProducts = (filters?: ProductFilters) => {
         setHasMore(response.data.page < response.data.totalPages);
         return response.data;
       }
-      throw new Error(response.error || 'Failed to fetch products');
+      throw new Error(getErrorMessage(response.error) || 'Failed to fetch products');
     },
     onError: (error: any) => {
-      setError(error.message);
+      setError(getErrorMessage(error));
     },
   });
 };
@@ -37,11 +48,11 @@ export const useProduct = (id: string) => {
         setSelectedProduct(response.data);
         return response.data;
       }
-      throw new Error(response.error || 'Failed to fetch product');
+      throw new Error(getErrorMessage(response.error) || 'Failed to fetch product');
     },
     enabled: !!id,
     onError: (error: any) => {
-      setError(error.message);
+      setError(getErrorMessage(error));
     },
   });
 };
@@ -56,7 +67,7 @@ export const useCreateProduct = () => {
       if (response.success && response.data) {
         return response.data;
       }
-      throw new Error(response.error || 'Failed to create product');
+      throw new Error(getErrorMessage(response.error) || 'Failed to create product');
     },
     onMutate: () => {
       setLoading(true);
@@ -67,7 +78,7 @@ export const useCreateProduct = () => {
       queryClient.invalidateQueries({ queryKey: ['user-products'] });
     },
     onError: (error: any) => {
-      setError(error.message);
+      setError(getErrorMessage(error));
     },
     onSettled: () => {
       setLoading(false);
@@ -85,7 +96,7 @@ export const useUpdateProduct = () => {
       if (response.success && response.data) {
         return response.data;
       }
-      throw new Error(response.error || 'Failed to update product');
+      throw new Error(getErrorMessage(response.error) || 'Failed to update product');
     },
     onMutate: () => {
       setLoading(true);
@@ -98,7 +109,7 @@ export const useUpdateProduct = () => {
       queryClient.invalidateQueries({ queryKey: ['user-products'] });
     },
     onError: (error: any) => {
-      setError(error.message);
+      setError(getErrorMessage(error));
     },
     onSettled: () => {
       setLoading(false);
@@ -116,7 +127,7 @@ export const useDeleteProduct = () => {
       if (response.success) {
         return id;
       }
-      throw new Error(response.error || 'Failed to delete product');
+      throw new Error(getErrorMessage(response.error) || 'Failed to delete product');
     },
     onMutate: () => {
       setLoading(true);
@@ -128,7 +139,7 @@ export const useDeleteProduct = () => {
       queryClient.invalidateQueries({ queryKey: ['user-products'] });
     },
     onError: (error: any) => {
-      setError(error.message);
+      setError(getErrorMessage(error));
     },
     onSettled: () => {
       setLoading(false);
@@ -147,14 +158,14 @@ export const useSearchProducts = () => {
         setTotal(response.data.total);
         return response.data;
       }
-      throw new Error(response.error || 'Failed to search products');
+      throw new Error(getErrorMessage(response.error) || 'Failed to search products');
     },
     onMutate: () => {
       setLoading(true);
       setError(null);
     },
     onError: (error: any) => {
-      setError(error.message);
+      setError(getErrorMessage(error));
     },
     onSettled: () => {
       setLoading(false);
@@ -170,7 +181,7 @@ export const useUserProducts = (filters?: ProductFilters) => {
       if (response.success && response.data) {
         return response.data;
       }
-      throw new Error(response.error || 'Failed to fetch user products');
+      throw new Error(getErrorMessage(response.error) || 'Failed to fetch user products');
     },
   });
 };
@@ -183,7 +194,7 @@ export const useProductCategories = () => {
       if (response.success && response.data) {
         return response.data;
       }
-      throw new Error(response.error || 'Failed to fetch categories');
+      throw new Error(getErrorMessage(response.error) || 'Failed to fetch categories');
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });

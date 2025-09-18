@@ -1,3 +1,6 @@
+import { useColorScheme } from "@/hooks/use-color-scheme";
+import apiClient from "@/services/api";
+import { colors } from "@/theme/colors";
 import { useEffect, useRef, useState } from "react";
 import {
     Dimensions,
@@ -11,7 +14,6 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
-import apiClient from "../src/api/apiClient";
 import Banner from "../src/components/Banner";
 import ProductCard from "../src/components/ProductCard";
 import SellerCard from "../src/components/SellerCard";
@@ -46,20 +48,48 @@ export default function ExploreScreen() {
   const [sortModalVisible, setSortModalVisible] = useState(false);
   const bannerListRef = useRef<FlatList>(null);
 
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+
+  const safeData = <T,>(res: any, fallback: T): T => {
+    if (!res) return fallback;
+    const data = res?.data;
+    if (Array.isArray(data)) return data as T;
+    return fallback;
+  };
+
+  // Ensure we don't try to iterate over undefined values
+  const ensureArray = <T,>(data: T[] | undefined | null): T[] => {
+    return Array.isArray(data) ? data : [];
+  };
+
   const fetchData = async () => {
     try {
       const [productsRes, sellersRes, bannersRes, categoriesRes] = await Promise.all([
-        apiClient.get("/products"),
-        apiClient.get("/sellers"),
-        apiClient.get("/banners"),
-        apiClient.get("/categories"),
+        apiClient.get("/products").catch(() => ({ data: [] })),
+        apiClient.get("/sellers").catch(() => ({ data: [] })),
+        apiClient.get("/banners").catch(() => ({ data: [] })),
+        apiClient.get("/categories").catch(() => ({ data: [] })),
       ]);
-      setProducts(productsRes.data);
-      setSellers(sellersRes.data);
-      setBanners(bannersRes.data);
-      setCategories([{ id: "all", name: "All" }, ...categoriesRes.data]);
+      
+      // Define variables with proper fallbacks to prevent undefined values
+      const productData = safeData<Product[]>(productsRes, []);
+      const sellerData = safeData<Seller[]>(sellersRes, []);
+      const bannerData = safeData<BannerData[]>(bannersRes, []);
+      const categoryData = safeData<Category[]>(categoriesRes, []);
+      
+      // Ensure we're setting arrays, not undefined values
+      setProducts(ensureArray(productData));
+      setSellers(ensureArray(sellerData));
+      setBanners(ensureArray(bannerData));
+      setCategories([{ id: "all", name: "All" }, ...ensureArray(categoryData)]);
     } catch (error) {
       console.error("Error fetching data:", error);
+      // Ensure state is at least empty arrays
+      setProducts([]);
+      setSellers([]);
+      setBanners([]);
+      setCategories([{ id: "all", name: "All" }]);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -124,13 +154,14 @@ export default function ExploreScreen() {
       keyExtractor={(item) => item.id.toString()}
       numColumns={numColumns}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-      ListHeaderComponent={
-        <>
+      ListHeaderComponent={() => (
+        <View>
           {/* Search + Filter */}
           <View style={styles.searchContainer}>
             <TextInput
-              style={styles.searchInput}
+              style={[styles.searchInput, { color: isDark ? colors.text.primary : colors.text.primary }]}
               placeholder="Search products..."
+              placeholderTextColor={isDark ? colors.gray[400] : colors.gray[500]}
               value={searchQuery}
               onChangeText={setSearchQuery}
             />
@@ -197,61 +228,69 @@ export default function ExploreScreen() {
           </Modal>
 
           {/* Banners */}
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Promotions</Text>
-            <TouchableOpacity onPress={() => console.log("See All Banners")}>
-              <Text style={styles.seeAll}>See All</Text>
-            </TouchableOpacity>
-          </View>
-          <FlatList
-            ref={bannerListRef}
-            data={banners}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            pagingEnabled
-            keyExtractor={(item) => item.id.toString()}
-            contentContainerStyle={{ paddingVertical: SPACING.base }}
-            ItemSeparatorComponent={() => <View style={{ width: SPACING.small }} />}
-            renderItem={({ item }) => (
-              <Banner
-                title={item.title}
-                subtitle={item.subtitle}
-                image={item.image || "https://via.placeholder.com/300x150"}
-                onPress={() => console.log("Banner clicked", item.id)}
+          {Array.isArray(banners) && banners.length > 0 && (
+            <>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Promotions</Text>
+                <TouchableOpacity onPress={() => console.log("See All Banners")}>
+                  <Text style={styles.seeAll}>See All</Text>
+                </TouchableOpacity>
+              </View>
+              <FlatList
+                ref={bannerListRef}
+                data={banners}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                pagingEnabled
+                keyExtractor={(item) => item.id.toString()}
+                contentContainerStyle={{ paddingVertical: SPACING.base }}
+                ItemSeparatorComponent={() => <View style={{ width: SPACING.small }} />}
+                renderItem={({ item }) => (
+                  <Banner
+                    title={item.title}
+                    subtitle={item.subtitle}
+                    image={item.image || "https://via.placeholder.com/300x150"}
+                    onPress={() => console.log("Banner clicked", item.id)}
+                  />
+                )}
               />
-            )}
-          />
+            </>
+          )}
 
           {/* Sellers */}
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Top Sellers</Text>
-            <TouchableOpacity onPress={() => console.log("See All Sellers")}>
-              <Text style={styles.seeAll}>See All</Text>
-            </TouchableOpacity>
-          </View>
-          <FlatList
-            data={sellers}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingVertical: SPACING.base }}
-            ItemSeparatorComponent={() => <View style={{ width: SPACING.small }} />}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={({ item }) => (
-              <SellerCard
-                name={item.name}
-                rating={item.rating}
-                image={item.image || "https://via.placeholder.com/60"}
-                onPress={() => console.log("Seller clicked", item.id)}
+          {Array.isArray(sellers) && sellers.length > 0 && (
+            <>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Top Sellers</Text>
+                <TouchableOpacity onPress={() => console.log("See All Sellers")}>
+                  <Text style={styles.seeAll}>See All</Text>
+                </TouchableOpacity>
+              </View>
+              <FlatList
+                data={sellers}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ paddingVertical: SPACING.base }}
+                ItemSeparatorComponent={() => <View style={{ width: SPACING.small }} />}
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={({ item }) => (
+                  <SellerCard
+                    name={item.name}
+                    rating={item.rating}
+                    image={item.image || "https://via.placeholder.com/60"}
+                    onPress={() => console.log("Seller clicked", item.id)}
+                  />
+                )}
               />
-            )}
-          />
+            </>
+          )}
 
           {/* Products Header */}
           <View style={[styles.sectionHeader, { marginTop: SPACING.base }]}>
             <Text style={styles.sectionTitle}>Products</Text>
           </View>
-        </>
-      }
+        </View>
+      )}
       renderItem={({ item }) => (
         <View style={{ width: productItemWidth }}>
           <ProductCard

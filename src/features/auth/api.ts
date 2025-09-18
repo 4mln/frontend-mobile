@@ -1,4 +1,4 @@
-import { apiClient } from '@/services/api';
+import apiClient from '@/services/api';
 import { AuthResponse, LoginRequest, VerifyOTPRequest } from './types';
 
 export const authApi = {

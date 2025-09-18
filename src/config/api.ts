@@ -1,9 +1,9 @@
 // API Configuration
 export const API_CONFIG = {
   // Backend URL - Update this to match your backend
-  BASE_URL: __DEV__ 
+  BASE_URL: (process.env.EXPO_PUBLIC_API_URL || process.env.BACKEND_URL || (__DEV__ 
     ? 'http://localhost:8000' 
-    : 'https://api.b2b-marketplace.com',
+    : 'https://api.b2b-marketplace.com')) as string,
   
   // API Version
   VERSION: 'v1',

@@ -18,7 +18,7 @@ import {
 import { useProduct } from '@/features/products/hooks';
 import { colors } from '@/theme/colors';
 import { semanticSpacing } from '@/theme/spacing';
-import { typography } from '@/theme/typography';
+import { fontWeights, lineHeights, typography } from '@/theme/typography';
 
 const { width } = Dimensions.get('window');
 
@@ -199,7 +199,7 @@ export default function ProductDetailScreen() {
     discountText: {
       fontSize: typography.caption.fontSize,
       color: colors.background.light,
-      fontWeight: typography.fontWeights.medium,
+      fontWeight: fontWeights.medium,
     },
     section: {
       marginBottom: semanticSpacing.xl,
@@ -213,7 +213,7 @@ export default function ProductDetailScreen() {
     description: {
       fontSize: typography.body.fontSize,
       color: isDark ? colors.text.secondary : colors.text.secondary,
-      lineHeight: typography.body.fontSize * typography.lineHeights.normal,
+      lineHeight: typography.body.fontSize * lineHeights.normal,
     },
     specItem: {
       flexDirection: 'row',
@@ -228,7 +228,7 @@ export default function ProductDetailScreen() {
     },
     specValue: {
       fontSize: typography.body.fontSize,
-      fontWeight: typography.fontWeights.medium,
+      fontWeight: fontWeights.medium,
       color: isDark ? colors.text.primary : colors.text.primary,
     },
     sellerContainer: {
@@ -255,7 +255,7 @@ export default function ProductDetailScreen() {
     },
     sellerName: {
       fontSize: typography.bodyLarge.fontSize,
-      fontWeight: typography.fontWeights.semibold,
+      fontWeight: fontWeights.semibold,
       color: isDark ? colors.text.primary : colors.text.primary,
       marginBottom: semanticSpacing.xs,
     },
@@ -278,7 +278,7 @@ export default function ProductDetailScreen() {
     verifiedText: {
       fontSize: typography.caption.fontSize,
       color: colors.background.light,
-      fontWeight: typography.fontWeights.medium,
+      fontWeight: fontWeights.medium,
     },
     responseTime: {
       fontSize: typography.bodySmall.fontSize,

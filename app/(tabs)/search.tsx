@@ -19,7 +19,7 @@ import { useSearchProducts } from '@/features/products/hooks';
 import { useProductsStore } from '@/features/products/store';
 import { colors } from '@/theme/colors';
 import { semanticSpacing } from '@/theme/spacing';
-import { typography } from '@/theme/typography';
+import { fontWeights, typography } from '@/theme/typography';
 import { useRouter } from 'expo-router';
 
 export default function SearchScreen() {
@@ -126,7 +126,7 @@ export default function SearchScreen() {
     clearFiltersText: {
       fontSize: typography.caption.fontSize,
       color: colors.primary[600],
-      fontWeight: typography.fontWeights.medium,
+      fontWeight: fontWeights.medium,
     },
     productsGrid: {
       flexDirection: 'row',

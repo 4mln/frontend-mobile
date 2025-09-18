@@ -91,9 +91,9 @@ export const colors = {
   
   // Text colors
   text: {
-    primary: '#1f2937',
-    secondary: '#6b7280',
-    tertiary: '#9ca3af',
+    primary: '#000000',
+    secondary: '#333333',
+    tertiary: '#555555',
     inverse: '#ffffff',
   },
   

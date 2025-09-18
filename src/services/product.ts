@@ -178,23 +178,38 @@ export const productService = {
   },
 
   /**
-   * Search products
+   * Search products (resilient to backend path differences)
    */
   async searchProducts(query: string, filters?: Omit<ProductFilters, 'search'>): Promise<ApiResponse<ProductSearchResponse>> {
-    try {
-      const response = await apiClient.get('/products/search', {
-        params: { q: query, ...filters },
-      });
-      return {
-        data: response.data,
-        success: true,
-      };
-    } catch (error: any) {
-      return {
-        error: error.response?.data?.detail || 'Failed to search products',
-        success: false,
-      };
-    }
+    const params = { q: query, search: query, ...filters } as any;
+
+    const tryPaths = async (paths: string[]): Promise<ApiResponse<ProductSearchResponse>> => {
+      for (const path of paths) {
+        try {
+          const response = await apiClient.get(path, { params });
+          return { data: response.data, success: true };
+        } catch (error: any) {
+          const status = error?.response?.status;
+          if (status && status !== 404) {
+            return {
+              error: error.response?.data?.detail || `Failed to search products (status ${status})`,
+              success: false,
+            };
+          }
+          // if 404, continue to next path
+        }
+      }
+      return { error: 'Failed to search products (no matching route)', success: false };
+    };
+
+    // Try common patterns in order of likelihood
+    return await tryPaths([
+      '/products',               // /api/products?q=...
+      '/products/search',        // /api/products/search?q=...
+      '/search/products',        // /api/search/products?q=...
+      '/v1/products',            // /api/v1/products?q=...
+      '/v1/products/search',     // /api/v1/products/search?q=...
+    ]);
   },
 
   /**

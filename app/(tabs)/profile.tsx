@@ -1,6 +1,7 @@
 import { useAuth, useProfile } from '@/features/auth/hooks';
 import { useWalletBalance } from '@/features/wallet/hooks';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import i18n from '@/i18n';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
@@ -18,8 +19,9 @@ import {
 } from 'react-native';
 
 import { colors } from '@/theme/colors';
+import { useThemeModeStore } from '@/theme/modeStore';
 import { semanticSpacing } from '@/theme/spacing';
-import { typography } from '@/theme/typography';
+import { fontWeights, typography } from '@/theme/typography';
 
 export default function ProfileScreen() {
   const { t } = useTranslation();
@@ -28,9 +30,26 @@ export default function ProfileScreen() {
   const { user, logout } = useAuth();
   const { data: profile } = useProfile();
   const { data: walletBalance } = useWalletBalance();
+  const mode = useThemeModeStore((s) => s.mode);
+  const setMode = useThemeModeStore((s) => s.setMode);
   
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-  const [darkModeEnabled, setDarkModeEnabled] = useState(isDark);
+  const currentLng = (i18n.language || 'en').startsWith('fa') ? 'fa' : 'en';
+  const [, setLangTick] = useState(0);
+
+  const handleThemeToggle = (value: boolean) => {
+    setMode(value ? 'dark' : 'light');
+  };
+
+  const cycleMode = () => {
+    const next = mode === 'system' ? 'light' : mode === 'light' ? 'dark' : 'system';
+    setMode(next);
+  };
+
+  const changeLanguage = (lng: 'en' | 'fa') => {
+    if (lng === currentLng) return;
+    i18n.changeLanguage(lng).then(() => setLangTick((x) => x + 1));
+  };
 
   const handleLogout = () => {
     Alert.alert(
@@ -130,7 +149,7 @@ export default function ProfileScreen() {
     },
     menuTitle: {
       fontSize: typography.bodyLarge.fontSize,
-      fontWeight: typography.fontWeights.medium,
+      fontWeight: fontWeights.medium,
       color: isDark ? colors.text.primary : colors.text.primary,
       marginBottom: semanticSpacing.xs,
     },
@@ -169,8 +188,43 @@ export default function ProfileScreen() {
     },
     switchText: {
       fontSize: typography.bodyLarge.fontSize,
-      fontWeight: typography.fontWeights.medium,
+      fontWeight: fontWeights.medium,
       color: isDark ? colors.text.primary : colors.text.primary,
+    },
+    langRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: semanticSpacing.md,
+      paddingHorizontal: semanticSpacing.sm,
+      backgroundColor: isDark ? colors.card.background : colors.card.background,
+      borderRadius: semanticSpacing.radius.lg,
+      marginBottom: semanticSpacing.sm,
+      borderWidth: 1,
+      borderColor: isDark ? colors.card.border : colors.card.border,
+    },
+    langButtons: {
+      flexDirection: 'row',
+      gap: 8,
+    },
+    langBtn: {
+      paddingHorizontal: semanticSpacing.md,
+      paddingVertical: semanticSpacing.sm,
+      borderRadius: semanticSpacing.radius.md,
+      borderWidth: 1,
+      borderColor: colors.primary[500],
+      backgroundColor: 'transparent',
+      marginLeft: semanticSpacing.sm,
+    },
+    langBtnActive: {
+      backgroundColor: colors.primary[500],
+    },
+    langBtnText: {
+      color: colors.primary[600],
+      fontWeight: '600',
+    },
+    langBtnTextActive: {
+      color: colors.background.light,
     },
     logoutButton: {
       backgroundColor: colors.error[500],
@@ -275,23 +329,23 @@ export default function ProfileScreen() {
               <View style={styles.switchIcon}>
                 <Ionicons name="moon-outline" size={20} color={colors.primary[600]} />
               </View>
-              <Text style={styles.switchText}>{t('profile.theme')}</Text>
+              <Text style={styles.switchText}>{t('profile.theme')} ({mode})</Text>
             </View>
             <Switch
-              value={darkModeEnabled}
-              onValueChange={setDarkModeEnabled}
+              value={mode === 'dark'}
+              onValueChange={handleThemeToggle}
               trackColor={{ false: colors.gray[300], true: colors.primary[200] }}
-              thumbColor={darkModeEnabled ? colors.primary[500] : colors.gray[400]}
+              thumbColor={mode === 'dark' ? colors.primary[500] : colors.gray[400]}
             />
           </View>
 
-          <TouchableOpacity style={styles.menuItem} onPress={handleSettings}>
+          <TouchableOpacity style={styles.menuItem} onPress={cycleMode}>
             <View style={styles.menuIcon}>
-              <Ionicons name="settings-outline" size={20} color={colors.primary[600]} />
+              <Ionicons name="contrast-outline" size={20} color={colors.primary[600]} />
             </View>
             <View style={styles.menuContent}>
-              <Text style={styles.menuTitle}>{t('profile.settings')}</Text>
-              <Text style={styles.menuSubtitle}>App preferences and privacy</Text>
+              <Text style={styles.menuTitle}>Cycle Theme Mode</Text>
+              <Text style={styles.menuSubtitle}>Switch between system, light, dark</Text>
             </View>
             <Ionicons 
               name="chevron-forward" 
@@ -300,6 +354,30 @@ export default function ProfileScreen() {
               style={styles.menuArrow}
             />
           </TouchableOpacity>
+
+          {/* Language selector */}
+          <View style={styles.langRow}>
+            <View style={styles.switchContent}>
+              <View style={styles.switchIcon}>
+                <Ionicons name="language-outline" size={20} color={colors.primary[600]} />
+              </View>
+              <Text style={styles.switchText}>{t('profile.language') || 'Language'}</Text>
+            </View>
+            <View style={styles.langButtons}>
+              <TouchableOpacity
+                style={[styles.langBtn, currentLng === 'en' && styles.langBtnActive]}
+                onPress={() => changeLanguage('en')}
+              >
+                <Text style={[styles.langBtnText, currentLng === 'en' && styles.langBtnTextActive]}>English</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.langBtn, currentLng === 'fa' && styles.langBtnActive]}
+                onPress={() => changeLanguage('fa')}
+              >
+                <Text style={[styles.langBtnText, currentLng === 'fa' && styles.langBtnTextActive]}>فارسی</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
 
         {/* Support Section */}

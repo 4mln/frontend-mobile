@@ -19,7 +19,7 @@ import { useConversations } from '@/features/chat/hooks';
 import { useChatStore } from '@/features/chat/store';
 import { colors } from '@/theme/colors';
 import { semanticSpacing } from '@/theme/spacing';
-import { typography } from '@/theme/typography';
+import { fontWeights, typography } from '@/theme/typography';
 
 export default function ChatScreen() {
   const { t } = useTranslation();
@@ -162,7 +162,7 @@ export default function ChatScreen() {
     },
     conversationName: {
       fontSize: typography.bodyLarge.fontSize,
-      fontWeight: typography.fontWeights.semibold,
+      fontWeight: fontWeights.semibold,
       color: isDark ? colors.text.primary : colors.text.primary,
     },
     timestamp: {
@@ -180,7 +180,7 @@ export default function ChatScreen() {
       flex: 1,
     },
     unreadMessage: {
-      fontWeight: typography.fontWeights.medium,
+      fontWeight: fontWeights.medium,
       color: isDark ? colors.text.primary : colors.text.primary,
     },
     unreadBadge: {
@@ -194,7 +194,7 @@ export default function ChatScreen() {
     },
     unreadCount: {
       fontSize: typography.caption.fontSize,
-      fontWeight: typography.fontWeights.medium,
+      fontWeight: fontWeights.medium,
       color: colors.background.light,
     },
     emptyState: {

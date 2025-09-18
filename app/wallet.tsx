@@ -15,7 +15,7 @@ import { useTopUp, useTransactions, useWalletBalance, useWithdraw } from '@/feat
 import { useWalletStore } from '@/features/wallet/store';
 import { colors } from '@/theme/colors';
 import { semanticSpacing } from '@/theme/spacing';
-import { typography } from '@/theme/typography';
+import { fontWeights, typography } from '@/theme/typography';
 
 interface Transaction {
   id: string;
@@ -188,7 +188,7 @@ export default function WalletScreen() {
     },
     transactionDescription: {
       fontSize: typography.body.fontSize,
-      fontWeight: typography.fontWeights.medium,
+      fontWeight: fontWeights.medium,
       color: isDark ? colors.text.primary : colors.text.primary,
       marginBottom: semanticSpacing.xs,
     },
@@ -201,7 +201,7 @@ export default function WalletScreen() {
     },
     amountText: {
       fontSize: typography.bodyLarge.fontSize,
-      fontWeight: typography.fontWeights.semibold,
+      fontWeight: fontWeights.semibold,
       marginBottom: semanticSpacing.xs,
     },
     statusBadge: {
@@ -211,7 +211,7 @@ export default function WalletScreen() {
     },
     statusText: {
       fontSize: typography.caption.fontSize,
-      fontWeight: typography.fontWeights.medium,
+      fontWeight: fontWeights.medium,
     },
     emptyState: {
       flex: 1,

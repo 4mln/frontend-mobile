@@ -4,7 +4,7 @@ import * as SecureStore from 'expo-secure-store';
 
 // Create axios instance
 const apiClient: AxiosInstance = axios.create({
-  baseURL: API_CONFIG.BASE_URL,
+  baseURL: `${API_CONFIG.BASE_URL}/api/v1`,
   timeout: API_CONFIG.TIMEOUT,
   headers: API_CONFIG.DEFAULT_HEADERS,
 });
@@ -20,6 +20,15 @@ apiClient.interceptors.request.use(
     } catch (error) {
       console.error('Error getting auth token:', error);
     }
+
+    if (__DEV__) {
+      try {
+        // Safe dev-only request log
+        // eslint-disable-next-line no-console
+        console.log('[API]', (config.method || 'GET').toUpperCase(), `${config.baseURL || ''}${config.url || ''}`, config.params || '');
+      } catch {}
+    }
+
     return config;
   },
   (error) => {
@@ -42,7 +51,7 @@ apiClient.interceptors.response.use(
       try {
         const refreshToken = await SecureStore.getItemAsync('refresh_token');
         if (refreshToken) {
-          const response = await axios.post(`${API_CONFIG.BASE_URL}/auth/refresh`, {
+          const response = await axios.post(`${API_CONFIG.BASE_URL}/api/v1/auth/refresh`, {
             refreshToken,
           });
 
@@ -54,10 +63,10 @@ apiClient.interceptors.response.use(
           return apiClient(originalRequest);
         }
       } catch (refreshError) {
-        // Refresh failed, logout user
+        // Refresh failed, clear tokens
         await SecureStore.deleteItemAsync('auth_token');
         await SecureStore.deleteItemAsync('refresh_token');
-        // You might want to dispatch a logout action here
+        // Optionally: trigger app logout flow here
       }
     }
 

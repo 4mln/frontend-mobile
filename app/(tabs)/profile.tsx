@@ -41,6 +41,11 @@ export default function ProfileScreen() {
     setMode(value ? 'dark' : 'light');
   };
 
+  const toggleThemeMode = () => {
+    const nextMode = mode === 'dark' ? 'light' : 'dark';
+    setMode(nextMode);
+  };
+
   const cycleMode = () => {
     const next = mode === 'system' ? 'light' : mode === 'light' ? 'dark' : 'system';
     setMode(next);
@@ -68,6 +73,14 @@ export default function ProfileScreen() {
 
   const handleWallet = () => {
     router.push('/wallet');
+  };
+
+  const handleSessions = () => {
+    router.push('/profile/sessions');
+  };
+
+  const handleConnections = () => {
+    router.push('/admin/connections');
   };
 
   const handleSettings = () => {
@@ -104,12 +117,12 @@ export default function ProfileScreen() {
     userName: {
       fontSize: typography.h3.fontSize,
       fontWeight: typography.h3.fontWeight,
-      color: isDark ? colors.text.primary : colors.text.primary,
+      color: isDark ? '#f8fafc' : colors.text.primary,
       marginBottom: semanticSpacing.xs,
     },
     userRole: {
       fontSize: typography.body.fontSize,
-      color: isDark ? colors.text.secondary : colors.text.secondary,
+      color: isDark ? '#cbd5e1' : colors.text.secondary,
     },
     content: {
       flex: 1,
@@ -121,7 +134,7 @@ export default function ProfileScreen() {
     sectionTitle: {
       fontSize: typography.h4.fontSize,
       fontWeight: typography.h4.fontWeight,
-      color: isDark ? colors.text.primary : colors.text.primary,
+      color: isDark ? '#f8fafc' : colors.text.primary,
       marginBottom: semanticSpacing.md,
     },
     menuItem: {
@@ -150,12 +163,12 @@ export default function ProfileScreen() {
     menuTitle: {
       fontSize: typography.bodyLarge.fontSize,
       fontWeight: fontWeights.medium,
-      color: isDark ? colors.text.primary : colors.text.primary,
+      color: isDark ? '#f8fafc' : colors.text.primary,
       marginBottom: semanticSpacing.xs,
     },
     menuSubtitle: {
       fontSize: typography.bodySmall.fontSize,
-      color: isDark ? colors.text.secondary : colors.text.secondary,
+      color: isDark ? '#cbd5e1' : colors.text.secondary,
     },
     menuArrow: {
       marginLeft: semanticSpacing.sm,
@@ -189,7 +202,7 @@ export default function ProfileScreen() {
     switchText: {
       fontSize: typography.bodyLarge.fontSize,
       fontWeight: fontWeights.medium,
-      color: isDark ? colors.text.primary : colors.text.primary,
+      color: isDark ? '#f8fafc' : colors.text.primary,
     },
     langRow: {
       flexDirection: 'row',
@@ -241,7 +254,7 @@ export default function ProfileScreen() {
     },
     versionText: {
       fontSize: typography.caption.fontSize,
-      color: isDark ? colors.text.tertiary : colors.text.tertiary,
+      color: isDark ? '#94a3b8' : colors.text.tertiary,
       textAlign: 'center',
       marginBottom: semanticSpacing.lg,
     },
@@ -303,6 +316,22 @@ export default function ProfileScreen() {
               style={styles.menuArrow}
             />
           </TouchableOpacity>
+
+          <TouchableOpacity style={styles.menuItem} onPress={handleSessions}>
+            <View style={styles.menuIcon}>
+              <Ionicons name="key-outline" size={20} color={colors.primary[600]} />
+            </View>
+            <View style={styles.menuContent}>
+              <Text style={styles.menuTitle}>Active Sessions</Text>
+              <Text style={styles.menuSubtitle}>Manage your active login sessions</Text>
+            </View>
+            <Ionicons 
+              name="chevron-forward" 
+              size={20} 
+              color={isDark ? colors.gray[400] : colors.gray[500]} 
+              style={styles.menuArrow}
+            />
+          </TouchableOpacity>
         </View>
 
         {/* Settings Section */}
@@ -333,7 +362,7 @@ export default function ProfileScreen() {
             </View>
             <Switch
               value={mode === 'dark'}
-              onValueChange={handleThemeToggle}
+              onValueChange={toggleThemeMode}
               trackColor={{ false: colors.gray[300], true: colors.primary[200] }}
               thumbColor={mode === 'dark' ? colors.primary[500] : colors.gray[400]}
             />

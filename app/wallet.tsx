@@ -4,14 +4,20 @@ import { useTranslation } from 'react-i18next';
 import {
     Alert,
     FlatList,
+    Modal,
+    RefreshControl,
     SafeAreaView,
+    ScrollView,
     StyleSheet,
     Text,
+    TextInput,
     TouchableOpacity,
     View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useState } from 'react';
 
-import { useTopUp, useTransactions, useWalletBalance, useWithdraw } from '@/features/wallet/hooks';
+import { useTopUp, useTransactions, useTransfer, useWalletBalance, useWithdraw } from '@/features/wallet/hooks';
 import { useWalletStore } from '@/features/wallet/store';
 import { colors } from '@/theme/colors';
 import { semanticSpacing } from '@/theme/spacing';
@@ -30,28 +36,103 @@ export default function WalletScreen() {
   const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
+  const insets = useSafeAreaInsets();
 
-  const { data: balanceData } = useWalletBalance();
-  const { transactions } = useWalletStore();
-  useTransactions();
+  // State for modals
+  const [isTopUpModalVisible, setTopUpModalVisible] = useState(false);
+  const [isWithdrawModalVisible, setWithdrawModalVisible] = useState(false);
+  const [isTransferModalVisible, setTransferModalVisible] = useState(false);
+  const [topUpAmount, setTopUpAmount] = useState('');
+  const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [transferAmount, setTransferAmount] = useState('');
+  const [recipientId, setRecipientId] = useState('');
+  const [transferDescription, setTransferDescription] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Hooks
+  const { data: balanceData, refetch: refetchBalance } = useWalletBalance();
+  const { transactions, isLoading } = useWalletStore();
+  const { refetch: refetchTransactions } = useTransactions();
   const topUp = useTopUp();
   const withdraw = useWithdraw();
+  const transfer = useTransfer();
 
-  // Using transactions from wallet store populated by useTransactions()
+  // Refresh function
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await Promise.all([refetchBalance(), refetchTransactions()]);
+    setRefreshing(false);
+  };
 
+  // Handle top up
   const handleTopUp = async () => {
+    if (!topUpAmount || isNaN(Number(topUpAmount))) {
+      Alert.alert('Error', 'Please enter a valid amount');
+      return;
+    }
+
     try {
-      await topUp.mutateAsync({ amount: 100000, method: 'wallet' } as any);
+      await topUp.mutateAsync({ 
+        amount: Number(topUpAmount), 
+        method: 'wallet' 
+      });
+      setTopUpAmount('');
+      setTopUpModalVisible(false);
+      Alert.alert('Success', 'Your wallet has been topped up');
     } catch (e) {
       Alert.alert('Error', 'Failed to top up');
     }
   };
 
+  // Handle withdraw
   const handleWithdraw = async () => {
+    if (!withdrawAmount || isNaN(Number(withdrawAmount))) {
+      Alert.alert('Error', 'Please enter a valid amount');
+      return;
+    }
+
     try {
-      await withdraw.mutateAsync({ amount: 50000, bankAccount: { accountNumber: '****', bankName: 'Bank', accountHolderName: 'You' } } as any);
+      await withdraw.mutateAsync({ 
+        amount: Number(withdrawAmount), 
+        bankAccount: { 
+          accountNumber: '****', 
+          bankName: 'Bank', 
+          accountHolderName: 'You' 
+        } 
+      });
+      setWithdrawAmount('');
+      setWithdrawModalVisible(false);
+      Alert.alert('Success', 'Withdrawal request submitted');
     } catch (e) {
       Alert.alert('Error', 'Failed to withdraw');
+    }
+  };
+
+  // Handle transfer
+  const handleTransfer = async () => {
+    if (!transferAmount || isNaN(Number(transferAmount))) {
+      Alert.alert('Error', 'Please enter a valid amount');
+      return;
+    }
+
+    if (!recipientId) {
+      Alert.alert('Error', 'Please enter a recipient ID');
+      return;
+    }
+
+    try {
+      await transfer.mutateAsync({
+        recipientId,
+        amount: Number(transferAmount),
+        description: transferDescription
+      });
+      setTransferAmount('');
+      setRecipientId('');
+      setTransferDescription('');
+      setTransferModalVisible(false);
+      Alert.alert('Success', 'Funds transferred successfully');
+    } catch (e) {
+      Alert.alert('Error', 'Failed to transfer funds');
     }
   };
 
@@ -228,24 +309,39 @@ export default function WalletScreen() {
   });
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { paddingTop: insets.top }]}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Wallet</Text>
+        <Text style={styles.headerTitle}>{t('wallet.title', 'Wallet')}</Text>
         
         {/* Balance Card */}
         <View style={styles.balanceCard}>
-          <Text style={styles.balanceLabel}>Current Balance</Text>
+          <Text style={styles.balanceLabel}>{t('wallet.currentBalance', 'Current Balance')}</Text>
           <Text style={styles.balanceAmount}>
             {(balanceData?.balance ?? 0).toLocaleString()} {balanceData?.currency || 'Toman'}
           </Text>
           
           <View style={styles.actionButtons}>
-            <TouchableOpacity style={[styles.actionButton, styles.primaryButton]} onPress={handleTopUp}>
-              <Text style={[styles.actionButtonText, styles.primaryButtonText]}>Top Up</Text>
+            <TouchableOpacity 
+              style={[styles.actionButton, styles.primaryButton]} 
+              onPress={() => setTopUpModalVisible(true)}
+            >
+              <Ionicons name="add-circle-outline" size={18} color={colors.background.light} style={styles.buttonIcon} />
+              <Text style={[styles.actionButtonText, styles.primaryButtonText]}>{t('wallet.topUp', 'Top Up')}</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.actionButton, styles.secondaryButton]} onPress={handleWithdraw}>
-              <Text style={[styles.actionButtonText, styles.secondaryButtonText]}>Withdraw</Text>
+            <TouchableOpacity 
+              style={[styles.actionButton, styles.secondaryButton]} 
+              onPress={() => setWithdrawModalVisible(true)}
+            >
+              <Ionicons name="cash-outline" size={18} color={colors.gray[700]} style={styles.buttonIcon} />
+              <Text style={[styles.actionButtonText, styles.secondaryButtonText]}>{t('wallet.withdraw', 'Withdraw')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.actionButton, styles.tertiaryButton]} 
+              onPress={() => setTransferModalVisible(true)}
+            >
+              <Ionicons name="swap-horizontal-outline" size={18} color={colors.background.light} style={styles.buttonIcon} />
+              <Text style={[styles.actionButtonText, styles.tertiaryButtonText]}>{t('wallet.transfer', 'Transfer')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -253,7 +349,16 @@ export default function WalletScreen() {
 
       {/* Transactions */}
       <View style={styles.content}>
-        <Text style={styles.sectionTitle}>Recent Transactions</Text>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>{t('wallet.recentTransactions', 'Recent Transactions')}</Text>
+          <TouchableOpacity onPress={handleRefresh}>
+            <Ionicons 
+              name="refresh-outline" 
+              size={20} 
+              color={isDark ? colors.primary[400] : colors.primary[600]} 
+            />
+          </TouchableOpacity>
+        </View>
         
         {transactions.length > 0 ? (
           <FlatList
@@ -261,6 +366,14 @@ export default function WalletScreen() {
             renderItem={renderTransaction}
             keyExtractor={(item) => item.id}
             showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={handleRefresh}
+                colors={[colors.primary[500]]}
+                tintColor={isDark ? colors.primary[400] : colors.primary[600]}
+              />
+            }
           />
         ) : (
           <View style={styles.emptyState}>
@@ -269,10 +382,130 @@ export default function WalletScreen() {
               size={64}
               color={isDark ? colors.gray[400] : colors.gray[500]}
             />
-            <Text style={styles.emptyStateText}>No transactions yet</Text>
+            <Text style={styles.emptyStateText}>{t('wallet.noTransactions', 'No transactions yet')}</Text>
           </View>
         )}
       </View>
+
+      {/* Top Up Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isTopUpModalVisible}
+        onRequestClose={() => setTopUpModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>{t('wallet.topUpWallet', 'Top Up Wallet')}</Text>
+              <TouchableOpacity onPress={() => setTopUpModalVisible(false)}>
+                <Ionicons name="close" size={24} color={isDark ? colors.gray[400] : colors.gray[600]} />
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.modalBody}>
+              <Text style={styles.inputLabel}>{t('wallet.amount', 'Amount')}</Text>
+              <TextInput
+                style={styles.input}
+                placeholder={t('wallet.enterAmount', 'Enter amount')}
+                keyboardType="numeric"
+                value={topUpAmount}
+                onChangeText={setTopUpAmount}
+              />
+              
+              <TouchableOpacity style={styles.modalButton} onPress={handleTopUp}>
+                <Text style={styles.modalButtonText}>{t('wallet.topUp', 'Top Up')}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Withdraw Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isWithdrawModalVisible}
+        onRequestClose={() => setWithdrawModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>{t('wallet.withdrawFunds', 'Withdraw Funds')}</Text>
+              <TouchableOpacity onPress={() => setWithdrawModalVisible(false)}>
+                <Ionicons name="close" size={24} color={isDark ? colors.gray[400] : colors.gray[600]} />
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.modalBody}>
+              <Text style={styles.inputLabel}>{t('wallet.amount', 'Amount')}</Text>
+              <TextInput
+                style={styles.input}
+                placeholder={t('wallet.enterAmount', 'Enter amount')}
+                keyboardType="numeric"
+                value={withdrawAmount}
+                onChangeText={setWithdrawAmount}
+              />
+              
+              <TouchableOpacity style={styles.modalButton} onPress={handleWithdraw}>
+                <Text style={styles.modalButtonText}>{t('wallet.withdraw', 'Withdraw')}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Transfer Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isTransferModalVisible}
+        onRequestClose={() => setTransferModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>{t('wallet.transferFunds', 'Transfer Funds')}</Text>
+              <TouchableOpacity onPress={() => setTransferModalVisible(false)}>
+                <Ionicons name="close" size={24} color={isDark ? colors.gray[400] : colors.gray[600]} />
+              </TouchableOpacity>
+            </View>
+            
+            <ScrollView style={styles.modalBody}>
+              <Text style={styles.inputLabel}>{t('wallet.recipientId', 'Recipient ID')}</Text>
+              <TextInput
+                style={styles.input}
+                placeholder={t('wallet.enterRecipientId', 'Enter recipient ID')}
+                value={recipientId}
+                onChangeText={setRecipientId}
+              />
+              
+              <Text style={styles.inputLabel}>{t('wallet.amount', 'Amount')}</Text>
+              <TextInput
+                style={styles.input}
+                placeholder={t('wallet.enterAmount', 'Enter amount')}
+                keyboardType="numeric"
+                value={transferAmount}
+                onChangeText={setTransferAmount}
+              />
+              
+              <Text style={styles.inputLabel}>{t('wallet.description', 'Description (Optional)')}</Text>
+              <TextInput
+                style={[styles.input, styles.textArea]}
+                placeholder={t('wallet.enterDescription', 'Enter description')}
+                multiline
+                numberOfLines={3}
+                value={transferDescription}
+                onChangeText={setTransferDescription}
+              />
+              
+              <TouchableOpacity style={styles.modalButton} onPress={handleTransfer}>
+                <Text style={styles.modalButtonText}>{t('wallet.transfer', 'Transfer')}</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }

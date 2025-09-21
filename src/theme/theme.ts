@@ -5,8 +5,8 @@ export const COLORS = {
   secondary: "#264653",  // dark accent
   background: "#f5f5f5",
   cardBackground: "#ffffff",
-  textPrimary: "#000000",  // Darker text for better contrast
-  textSecondary: "#333333", // Darker secondary text
+  textPrimary: "#333333",
+  textSecondary: "#666666",
   error: "#e63946",
   warning: "#f4a261",
 };

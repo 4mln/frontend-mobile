@@ -2,6 +2,7 @@ import { useColorScheme } from "@/hooks/use-color-scheme";
 import apiClient from "@/services/api";
 import { colors } from "@/theme/colors";
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
     Dimensions,
     FlatList,
@@ -48,8 +49,10 @@ export default function ExploreScreen() {
   const [sortModalVisible, setSortModalVisible] = useState(false);
   const bannerListRef = useRef<FlatList>(null);
 
+  const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
+  const styles = createStyles(isDark);
 
   const safeData = <T,>(res: any, fallback: T): T => {
     if (!res) return fallback;
@@ -82,14 +85,14 @@ export default function ExploreScreen() {
       setProducts(ensureArray(productData));
       setSellers(ensureArray(sellerData));
       setBanners(ensureArray(bannerData));
-      setCategories([{ id: "all", name: "All" }, ...ensureArray(categoryData)]);
+      setCategories([{ id: "all", name: t("explore.all") }, ...ensureArray(categoryData)]);
     } catch (error) {
       console.error("Error fetching data:", error);
       // Ensure state is at least empty arrays
       setProducts([]);
       setSellers([]);
       setBanners([]);
-      setCategories([{ id: "all", name: "All" }]);
+      setCategories([{ id: "all", name: t("All") }]);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -126,19 +129,19 @@ export default function ExploreScreen() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, padding: SPACING.base }}>
-        <View style={{ width: "100%", height: 50, backgroundColor: "#eee", borderRadius: 12, marginBottom: SPACING.base }} />
-        <View style={{ width: "100%", height: 50, backgroundColor: "#eee", borderRadius: 12, marginBottom: SPACING.base }} />
-        <View style={{ width: "100%", height: 45, backgroundColor: "#eee", borderRadius: 12, marginBottom: SPACING.base }} />
-        <View style={{ width: "100%", height: 150, backgroundColor: "#eee", borderRadius: 12, marginBottom: SPACING.base }} />
+      <View style={{ flex: 1, padding: SPACING.base, backgroundColor: isDark ? colors.background.dark : colors.background.light }}>
+        <View style={{ width: "100%", height: 50, backgroundColor: isDark ? colors.background.surface : colors.background.gray, borderRadius: 12, marginBottom: SPACING.base }} />
+        <View style={{ width: "100%", height: 50, backgroundColor: isDark ? colors.background.surface : colors.background.gray, borderRadius: 12, marginBottom: SPACING.base }} />
+        <View style={{ width: "100%", height: 45, backgroundColor: isDark ? colors.background.surface : colors.background.gray, borderRadius: 12, marginBottom: SPACING.base }} />
+        <View style={{ width: "100%", height: 150, backgroundColor: isDark ? colors.background.surface : colors.background.gray, borderRadius: 12, marginBottom: SPACING.base }} />
         <View style={{ flexDirection: "row", marginBottom: SPACING.base }}>
-          <View style={{ width: 80, height: 80, backgroundColor: "#eee", borderRadius: 40, marginRight: 12 }} />
-          <View style={{ width: 80, height: 80, backgroundColor: "#eee", borderRadius: 40, marginRight: 12 }} />
-          <View style={{ width: 80, height: 80, backgroundColor: "#eee", borderRadius: 40 }} />
+          <View style={{ width: 80, height: 80, backgroundColor: isDark ? colors.background.surface : colors.background.gray, borderRadius: 40, marginRight: 12 }} />
+          <View style={{ width: 80, height: 80, backgroundColor: isDark ? colors.background.surface : colors.background.gray, borderRadius: 40, marginRight: 12 }} />
+          <View style={{ width: 80, height: 80, backgroundColor: isDark ? colors.background.surface : colors.background.gray, borderRadius: 40 }} />
         </View>
         <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-          <View style={{ width: "48%", height: 220, backgroundColor: "#eee", borderRadius: 12 }} />
-          <View style={{ width: "48%", height: 220, backgroundColor: "#eee", borderRadius: 12 }} />
+          <View style={{ width: "48%", height: 220, backgroundColor: isDark ? colors.background.surface : colors.background.gray, borderRadius: 12 }} />
+          <View style={{ width: "48%", height: 220, backgroundColor: isDark ? colors.background.surface : colors.background.gray, borderRadius: 12 }} />
         </View>
       </View>
     );
@@ -149,18 +152,19 @@ export default function ExploreScreen() {
   const productItemWidth = (SCREEN_WIDTH - SPACING.base * 3) / numColumns;
 
   return (
-    <FlatList
-      data={filteredProducts}
-      keyExtractor={(item) => item.id.toString()}
-      numColumns={numColumns}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-      ListHeaderComponent={() => (
+    <View style={{ flex: 1, backgroundColor: isDark ? colors.background.dark : colors.background.light }}>
+      <FlatList
+        data={filteredProducts}
+        keyExtractor={(item) => item.id.toString()}
+        numColumns={numColumns}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        ListHeaderComponent={() => (
         <View>
           {/* Search + Filter */}
           <View style={styles.searchContainer}>
             <TextInput
               style={[styles.searchInput, { color: isDark ? colors.text.primary : colors.text.primary }]}
-              placeholder="Search products..."
+              placeholder={t("explore.searchProducts")}
               placeholderTextColor={isDark ? colors.gray[400] : colors.gray[500]}
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -169,7 +173,7 @@ export default function ExploreScreen() {
               style={styles.filterButton}
               onPress={() => console.log("Open filter modal")}
             >
-              <Text style={{ color: "#fff", fontWeight: "bold" }}>Filter</Text>
+              <Text style={{ color: "#fff", fontWeight: "bold" }}>{t("explore.filter")}</Text>
             </TouchableOpacity>
           </View>
 
@@ -200,7 +204,7 @@ export default function ExploreScreen() {
             onPress={() => setSortModalVisible(true)}
           >
             <Text style={{ fontWeight: "bold" }}>
-              Sort: {sortOption === "default" ? "Default" : sortOption === "priceLow" ? "Price Low→High" : sortOption === "priceHigh" ? "Price High→Low" : "Rating"}
+              {t("explore.sort")}: {sortOption === "default" ? t("explore.default") : sortOption === "priceLow" ? t("explore.priceLowHigh") : sortOption === "priceHigh" ? t("explore.priceHighLow") : t("explore.rating")}
             </Text>
           </TouchableOpacity>
 
@@ -211,10 +215,10 @@ export default function ExploreScreen() {
             />
             <View style={styles.modalContent}>
               {[
-                { id: "default", label: "Default" },
-                { id: "priceLow", label: "Price: Low → High" },
-                { id: "priceHigh", label: "Price: High → Low" },
-                { id: "rating", label: "Rating" },
+                { id: "default", label: t("Default") },
+                { id: "priceLow", label: t("Price: Low → High") },
+                { id: "priceHigh", label: t("Price: High → Low") },
+                { id: "rating", label: t("Rating") },
               ].map((opt) => (
                 <TouchableOpacity
                   key={opt.id}
@@ -227,13 +231,13 @@ export default function ExploreScreen() {
             </View>
           </Modal>
 
-          {/* Banners */}
+          {/* Promotions */}
           {Array.isArray(banners) && banners.length > 0 && (
             <>
               <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Promotions</Text>
-                <TouchableOpacity onPress={() => console.log("See All Banners")}>
-                  <Text style={styles.seeAll}>See All</Text>
+                <Text style={styles.sectionTitle}>{t("explore.promotions")}</Text>
+                <TouchableOpacity onPress={() => console.log("See All Promotions")}>
+                  <Text style={styles.seeAll}>{t("common.seeAll")}</Text>
                 </TouchableOpacity>
               </View>
               <FlatList
@@ -261,9 +265,9 @@ export default function ExploreScreen() {
           {Array.isArray(sellers) && sellers.length > 0 && (
             <>
               <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Top Sellers</Text>
+                <Text style={styles.sectionTitle}>{t("explore.topSellers")}</Text>
                 <TouchableOpacity onPress={() => console.log("See All Sellers")}>
-                  <Text style={styles.seeAll}>See All</Text>
+                  <Text style={styles.seeAll}>{t("common.seeAll")}</Text>
                 </TouchableOpacity>
               </View>
               <FlatList
@@ -287,7 +291,7 @@ export default function ExploreScreen() {
 
           {/* Products Header */}
           <View style={[styles.sectionHeader, { marginTop: SPACING.base }]}>
-            <Text style={styles.sectionTitle}>Products</Text>
+            <Text style={styles.sectionTitle}>{t("explore.products")}</Text>
           </View>
         </View>
       )}
@@ -302,13 +306,14 @@ export default function ExploreScreen() {
             onPress={() => console.log("Clicked product", item.id)}
           />
         </View>
-      )}
-      contentContainerStyle={{ padding: SPACING.base }}
-    />
+        )}
+        contentContainerStyle={{ padding: SPACING.base }}
+      />
+    </View>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (isDark: boolean) => StyleSheet.create({
   searchContainer: {
     flexDirection: "row",
     marginBottom: SPACING.base,
@@ -318,15 +323,17 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 45,
     borderRadius: 12,
-    backgroundColor: "#f0f0f0",
+    backgroundColor: isDark ? colors.background.surface : colors.background.gray,
     paddingHorizontal: SPACING.base,
     marginRight: SPACING.small,
+    borderWidth: 1,
+    borderColor: isDark ? colors.border.light : colors.border.light,
   },
   filterButton: {
     height: 45,
     paddingHorizontal: SPACING.base,
     borderRadius: 12,
-    backgroundColor: "#007BFF",
+    backgroundColor: colors.primary[500],
     justifyContent: "center",
     alignItems: "center",
   },
@@ -334,36 +341,43 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 20,
-    backgroundColor: "#f0f0f0",
+    backgroundColor: isDark ? colors.background.surface : colors.background.gray,
     marginRight: SPACING.small,
+    borderWidth: 1,
+    borderColor: isDark ? colors.border.light : colors.border.light,
   },
   categoryChipActive: {
-    backgroundColor: "#007BFF",
+    backgroundColor: colors.primary[500],
+    borderColor: colors.primary[500],
   },
   sortButton: {
     height: 40,
     borderRadius: 12,
-    backgroundColor: "#e0e0e0",
+    backgroundColor: isDark ? colors.background.surface : colors.background.gray,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: SPACING.base,
+    borderWidth: 1,
+    borderColor: isDark ? colors.border.light : colors.border.light,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.3)",
+    backgroundColor: "rgba(0,0,0,0.5)",
   },
   modalContent: {
     position: "absolute",
     top: 100,
     left: 20,
     right: 20,
-    backgroundColor: "#fff",
+    backgroundColor: isDark ? colors.card.background : colors.card.background,
     borderRadius: 12,
     padding: SPACING.base,
+    borderWidth: 1,
+    borderColor: isDark ? colors.border.light : colors.border.light,
   },
   sortOption: {
     paddingVertical: 12,
-    borderBottomColor: "#ddd",
+    borderBottomColor: isDark ? colors.border.light : colors.border.light,
     borderBottomWidth: 1,
   },
   sectionHeader: {
@@ -372,7 +386,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: SPACING.small,
   },
-  sectionTitle: { fontSize: 18, fontWeight: "bold" },
-  seeAll: { color: "#007BFF" },
-  categoryText: { color: "#000" },
+  sectionTitle: { 
+    fontSize: 18, 
+    fontWeight: "bold",
+    color: isDark ? colors.text.primary : colors.text.primary,
+  },
+  seeAll: { 
+    color: colors.primary[500],
+  },
+  categoryText: { 
+    color: isDark ? colors.text.primary : colors.text.primary,
+  },
 });

@@ -1,7 +1,7 @@
 import { getItem, saveItem } from '@/utils/secureStore';
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
-import { DevSettings, I18nManager, Platform } from 'react-native';
+import { I18nManager, Platform } from 'react-native';
 
 // Import translation files
 import en from './locales/en.json';
@@ -60,21 +60,22 @@ if (typeof document !== 'undefined') {
 i18n.on('languageChanged', async (lng) => {
   await storeLang(lng);
   const shouldRTL = lng === 'fa';
-  if (I18nManager.isRTL !== shouldRTL) {
+  
+  // Update document direction for web
+  if (typeof document !== 'undefined') {
+    document.documentElement.dir = shouldRTL ? 'rtl' : 'ltr';
+    document.documentElement.lang = lng;
+  }
+  
+  // For native platforms, only change RTL if needed
+  if (Platform.OS !== 'web' && I18nManager.isRTL !== shouldRTL) {
     try {
       I18nManager.allowRTL(shouldRTL);
       I18nManager.forceRTL(shouldRTL);
-      if (typeof document !== 'undefined') {
-        document.documentElement.dir = shouldRTL ? 'rtl' : 'ltr';
-      }
-      if (Platform.OS !== 'web' && DevSettings?.reload) {
-        setTimeout(() => {
-          try { DevSettings.reload(); } catch {}
-        }, 50);
-      }
-    } catch {}
-  } else if (typeof document !== 'undefined') {
-    document.documentElement.dir = shouldRTL ? 'rtl' : 'ltr';
+      // Don't reload immediately, let the UI update naturally
+    } catch (error) {
+      console.error('RTL change error:', error);
+    }
   }
 });
 

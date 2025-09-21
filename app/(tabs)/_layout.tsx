@@ -20,11 +20,19 @@ export default function TabLayout() {
         tabBarInactiveTintColor: isDark ? colors.gray[400] : colors.gray[500],
         tabBarStyle: {
           backgroundColor: isDark ? colors.background.dark : colors.background.light,
-          borderTopColor: isDark ? colors.border.dark : colors.border.light, // fixed
+          borderTopColor: isDark ? colors.border.light : colors.border.light,
           borderTopWidth: 1,
-          height: Platform.OS === 'ios' ? 85 : 65,
-          paddingBottom: Platform.OS === 'ios' ? 25 : 10,
-          paddingTop: 10,
+          height: Platform.OS === 'ios' ? 90 : 70,
+          paddingBottom: Platform.OS === 'ios' ? 30 : 15,
+          paddingTop: 12,
+          shadowColor: isDark ? '#000' : '#000',
+          shadowOffset: {
+            width: 0,
+            height: -2,
+          },
+          shadowOpacity: 0.2,
+          shadowRadius: 8,
+          elevation: 12,
         },
         tabBarLabelStyle: {
           fontSize: 12,

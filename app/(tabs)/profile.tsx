@@ -4,7 +4,7 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import i18n from '@/i18n';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     Alert,
@@ -33,27 +33,36 @@ export default function ProfileScreen() {
   const mode = useThemeModeStore((s) => s.mode);
   const setMode = useThemeModeStore((s) => s.setMode);
   
+  // Subscribe to theme changes
+  const themeMode = useThemeModeStore();
+  
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-  const currentLng = (i18n.language || 'en').startsWith('fa') ? 'fa' : 'en';
+  const [currentLng, setCurrentLng] = useState(() => (i18n.language || 'en').startsWith('fa') ? 'fa' : 'en');
   const [, setLangTick] = useState(0);
+  const [, forceUpdate] = useState(0);
+
+  // Force re-render when theme changes
+  useEffect(() => {
+    console.log('Theme changed to:', themeMode.mode);
+    forceUpdate(prev => prev + 1);
+  }, [themeMode.mode]);
 
   const handleThemeToggle = (value: boolean) => {
-    setMode(value ? 'dark' : 'light');
+    const newMode = value ? 'dark' : 'light';
+    console.log('Theme toggle:', { value, newMode, currentMode: mode });
+    setMode(newMode);
+    forceUpdate(prev => prev + 1);
   };
 
-  const toggleThemeMode = () => {
-    const nextMode = mode === 'dark' ? 'light' : 'dark';
-    setMode(nextMode);
-  };
-
-  const cycleMode = () => {
-    const next = mode === 'system' ? 'light' : mode === 'light' ? 'dark' : 'system';
-    setMode(next);
-  };
-
-  const changeLanguage = (lng: 'en' | 'fa') => {
+  const changeLanguage = async (lng: 'en' | 'fa') => {
     if (lng === currentLng) return;
-    i18n.changeLanguage(lng).then(() => setLangTick((x) => x + 1));
+    try {
+      await i18n.changeLanguage(lng);
+      setCurrentLng(lng);
+      setLangTick((x) => x + 1);
+    } catch (error) {
+      console.error('Language change error:', error);
+    }
   };
 
   const handleLogout = () => {
@@ -362,27 +371,12 @@ export default function ProfileScreen() {
             </View>
             <Switch
               value={mode === 'dark'}
-              onValueChange={toggleThemeMode}
+              onValueChange={handleThemeToggle}
               trackColor={{ false: colors.gray[300], true: colors.primary[200] }}
               thumbColor={mode === 'dark' ? colors.primary[500] : colors.gray[400]}
             />
           </View>
 
-          <TouchableOpacity style={styles.menuItem} onPress={cycleMode}>
-            <View style={styles.menuIcon}>
-              <Ionicons name="contrast-outline" size={20} color={colors.primary[600]} />
-            </View>
-            <View style={styles.menuContent}>
-              <Text style={styles.menuTitle}>Cycle Theme Mode</Text>
-              <Text style={styles.menuSubtitle}>Switch between system, light, dark</Text>
-            </View>
-            <Ionicons 
-              name="chevron-forward" 
-              size={20} 
-              color={isDark ? colors.gray[400] : colors.gray[500]} 
-              style={styles.menuArrow}
-            />
-          </TouchableOpacity>
 
           {/* Language selector */}
           <View style={styles.langRow}>

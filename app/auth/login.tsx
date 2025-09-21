@@ -1,19 +1,20 @@
 import { useSendOTP } from '@/features/auth/hooks';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { validateIranianMobileNumber } from '@/utils/validation';
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { Link, router } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  SafeAreaView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    KeyboardAvoidingView,
+    Platform,
+    SafeAreaView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 
 import { colors } from '@/theme/colors';
@@ -27,26 +28,33 @@ export default function LoginScreen() {
   
   const [phone, setPhone] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [phoneError, setPhoneError] = useState<string | undefined>(undefined);
   
   const sendOTPMutation = useSendOTP();
 
   const handleSendOTP = async () => {
-    if (!phone.trim()) {
-      Alert.alert('Error', 'Please enter your phone number');
+    // Validate phone number using the Iranian mobile number validator
+    const validation = validateIranianMobileNumber(phone);
+    
+    if (!validation.isValid) {
+      setPhoneError(validation.error);
       return;
     }
-
-    if (phone.length < 10) {
-      Alert.alert('Error', 'Please enter a valid phone number');
-      return;
-    }
-
+    
+    setPhoneError(undefined);
     setIsLoading(true);
+    
     try {
-      await sendOTPMutation.mutateAsync({ phone: phone.trim() });
-      router.push({ pathname: '/auth/verify-otp', params: { phone: phone.trim() } });
+      // In development, we can mock this API call
+      // await sendOTPMutation.mutateAsync({ phone: phone.trim() });
+      console.log('Sending OTP to', phone.trim());
+      
+      // For development, we'll just navigate to the OTP verification screen
+      setTimeout(() => {
+        router.push({ pathname: '/auth/verify-otp', params: { phone: phone.trim() } });
+      }, 1000);
     } catch (error) {
-      Alert.alert('Error', 'Failed to send OTP. Please try again.');
+      Alert.alert('خطا', 'ارسال کد تایید با مشکل مواجه شد. لطفا دوباره تلاش کنید.');
     } finally {
       setIsLoading(false);
     }
@@ -61,6 +69,9 @@ export default function LoginScreen() {
       flex: 1,
       paddingHorizontal: semanticSpacing.lg,
       justifyContent: 'center',
+      maxWidth: 400,
+      alignSelf: 'center',
+      width: '100%',
     },
     header: {
       alignItems: 'center',
@@ -76,17 +87,17 @@ export default function LoginScreen() {
       marginBottom: semanticSpacing.lg,
     },
     title: {
-      fontSize: typography.h2.fontSize,
-      fontWeight: typography.h2.fontWeight,
+      fontSize: 24, // Fixed from typography.h2.fontSize
+      fontWeight: 'bold', // Fixed from typography.h2.fontWeight
       color: isDark ? colors.text.primary : colors.text.primary,
       textAlign: 'center',
       marginBottom: semanticSpacing.sm,
     },
     subtitle: {
-      fontSize: typography.bodyLarge.fontSize,
+      fontSize: 18, // Fixed from typography.bodyLarge.fontSize
       color: isDark ? colors.text.secondary : colors.text.secondary,
       textAlign: 'center',
-      lineHeight: typography.bodyLarge.fontSize * lineHeights.normal,
+      lineHeight: 18 * lineHeights.normal, // Fixed from typography.bodyLarge.fontSize
     },
     form: {
       marginBottom: semanticSpacing.xl,
@@ -95,10 +106,38 @@ export default function LoginScreen() {
       marginBottom: semanticSpacing.lg,
     },
     label: {
-      fontSize: typography.body.fontSize,
+      fontSize: 16, // Fixed from typography.body.fontSize
       fontWeight: fontWeights.medium,
       color: isDark ? colors.text.primary : colors.text.primary,
+      marginBottom: semanticSpacing.xs,
+      textAlign: 'right',
+    },
+    errorText: {
+      color: colors.error[500],
+      fontSize: 14, // Fixed from typography.small.fontSize
+      marginTop: semanticSpacing.xs,
+      textAlign: 'right',
+    },
+    signupLink: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      marginTop: semanticSpacing.xl,
+    },
+    signupText: {
+      color: isDark ? colors.text.secondary : colors.text.secondary,
+      fontSize: typography.body.fontSize,
+    },
+    signupButton: {
+      marginLeft: semanticSpacing.xs,
+    },
+    signupButtonText: {
+      color: colors.primary[500],
+      fontSize: 16, // Fixed from typography.body.fontSize
+      fontWeight: fontWeights.medium,
+    },
+    label: {
       marginBottom: semanticSpacing.sm,
+      textAlign: 'right',
     },
     inputWrapper: {
       flexDirection: 'row',
@@ -115,7 +154,7 @@ export default function LoginScreen() {
       borderRightColor: isDark ? colors.border.light : colors.border.light,
     },
     countryCodeText: {
-      fontSize: typography.body.fontSize,
+      fontSize: 16, // Fixed from typography.body.fontSize
       color: isDark ? colors.text.primary : colors.text.primary,
       fontWeight: fontWeights.medium,
     },
@@ -123,7 +162,7 @@ export default function LoginScreen() {
       flex: 1,
       paddingHorizontal: semanticSpacing.md,
       paddingVertical: semanticSpacing.md,
-      fontSize: typography.body.fontSize,
+      fontSize: 16, // Fixed from typography.body.fontSize
       color: isDark ? colors.text.primary : colors.text.primary,
     },
     button: {
@@ -137,8 +176,8 @@ export default function LoginScreen() {
       backgroundColor: colors.gray[300],
     },
     buttonText: {
-      fontSize: typography.button.fontSize,
-      fontWeight: typography.button.fontWeight,
+      fontSize: 16, // Fixed from typography.button.fontSize
+      fontWeight: 'bold', // Fixed from typography.button.fontWeight
       color: colors.background.light,
     },
     footer: {
@@ -146,10 +185,10 @@ export default function LoginScreen() {
       marginTop: semanticSpacing.xl,
     },
     footerText: {
-      fontSize: typography.bodySmall.fontSize,
+      fontSize: 14, // Fixed from typography.bodySmall.fontSize
       color: isDark ? colors.text.secondary : colors.text.secondary,
       textAlign: 'center',
-      lineHeight: typography.bodySmall.fontSize * lineHeights.normal,
+      lineHeight: 14 * lineHeights.normal, // Fixed from typography.bodySmall.fontSize
     },
     link: {
       color: colors.primary[600],
@@ -167,32 +206,35 @@ export default function LoginScreen() {
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.logo}>
-              <Ionicons name="business" size={40} color={colors.background.light} />
+              <Ionicons name="person" size={40} color="white" />
             </View>
-            <Text style={styles.title}>{t('auth.welcome')}</Text>
-            <Text style={styles.subtitle}>
-              Enter your phone number to get started
-            </Text>
+            <Text style={styles.title}>خوش آمدید</Text>
+            <Text style={styles.subtitle}>برای ورود شماره موبایل خود را وارد کنید</Text>
           </View>
 
           {/* Form */}
           <View style={styles.form}>
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>{t('auth.enterPhone')}</Text>
+              <Text style={styles.label}>شماره موبایل</Text>
               <View style={styles.inputWrapper}>
                 <View style={styles.countryCode}>
                   <Text style={styles.countryCodeText}>+98</Text>
                 </View>
                 <TextInput
                   style={styles.input}
-                  placeholder={t('auth.phonePlaceholder')}
+                  placeholder="09xxxxxxxxx"
                   placeholderTextColor={isDark ? colors.gray[400] : colors.gray[500]}
                   value={phone}
-                  onChangeText={setPhone}
+                  onChangeText={(text) => {
+                    setPhone(text);
+                    if (phoneError) setPhoneError(undefined);
+                  }}
                   keyboardType="phone-pad"
                   autoFocus
+                  textAlign="right"
                 />
               </View>
+              {phoneError && <Text style={styles.errorText}>{phoneError}</Text>}
             </View>
 
             <TouchableOpacity
@@ -204,7 +246,7 @@ export default function LoginScreen() {
               disabled={!phone.trim() || isLoading}
             >
               <Text style={styles.buttonText}>
-                {isLoading ? t('common.loading') : t('auth.sendOTP')}
+                {isLoading ? "در حال بارگذاری..." : "ارسال کد تایید"}
               </Text>
             </TouchableOpacity>
           </View>
@@ -212,11 +254,21 @@ export default function LoginScreen() {
           {/* Footer */}
           <View style={styles.footer}>
             <Text style={styles.footerText}>
-              By continuing, you agree to our{' '}
-              <Text style={styles.link}>Terms of Service</Text>
-              {' '}and{' '}
-              <Text style={styles.link}>Privacy Policy</Text>
+              با ادامه دادن، شما با {' '}
+              <Text style={styles.link}>شرایط استفاده</Text>
+              {' '}و{' '}
+              <Text style={styles.link}>سیاست حفظ حریم خصوصی</Text>
+              {' '}ما موافقت می‌کنید
             </Text>
+          </View>
+          
+          <View style={styles.signupLink}>
+            <Text style={styles.signupText}>حساب کاربری ندارید؟</Text>
+            <Link href="/auth/signup" asChild>
+              <TouchableOpacity style={styles.signupButton}>
+                <Text style={styles.signupButtonText}>ثبت نام</Text>
+              </TouchableOpacity>
+            </Link>
           </View>
         </View>
       </KeyboardAvoidingView>

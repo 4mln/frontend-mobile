@@ -17,6 +17,7 @@ if (typeof globalThis.cancelAnimationFrame === 'undefined') {
 }
 
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { LoginWall } from '@/components/LoginWall';
 import { useAuth } from '@/features/auth/hooks';
 import { useAuthStore } from '@/features/auth/store';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -41,6 +42,7 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
           <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+            <LoginWall />
             <Stack>
               <Stack.Screen name="index" options={{ headerShown: false }} />
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />

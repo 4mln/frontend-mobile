@@ -21,20 +21,20 @@ export const fontFamilies = {
     }),
   },
   
-  // English fonts
+  // English fonts (modern style)
   english: {
     regular: Platform.select({
-      ios: 'System',
+      ios: 'SF Pro Display',
       android: 'Roboto',
       web: 'Inter, system-ui, -apple-system, sans-serif',
     }),
     medium: Platform.select({
-      ios: 'System',
+      ios: 'SF Pro Display',
       android: 'Roboto-Medium',
       web: 'Inter-Medium, system-ui, -apple-system, sans-serif',
     }),
     bold: Platform.select({
-      ios: 'System',
+      ios: 'SF Pro Display',
       android: 'Roboto-Bold',
       web: 'Inter-Bold, system-ui, -apple-system, sans-serif',
     }),
@@ -42,7 +42,7 @@ export const fontFamilies = {
   
   // Monospace for code/numbers
   mono: Platform.select({
-    ios: 'Menlo',
+    ios: 'SF Mono',
     android: 'monospace',
     web: 'JetBrains Mono, Consolas, monospace',
   }),
@@ -133,4 +133,5 @@ export const typography = {
     fontWeight: fontWeights.medium,
     lineHeight: lineHeights.normal,
   },
+  
 } as const;

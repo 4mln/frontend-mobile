@@ -115,6 +115,9 @@ export default function VerifyOTPScreen() {
       flex: 1,
       paddingHorizontal: semanticSpacing.lg,
       justifyContent: 'center',
+      maxWidth: 400,
+      alignSelf: 'center',
+      width: '100%',
     },
     header: {
       alignItems: 'center',
@@ -130,20 +133,20 @@ export default function VerifyOTPScreen() {
       marginBottom: semanticSpacing.lg,
     },
     title: {
-      fontSize: typography.h2.fontSize,
-      fontWeight: typography.h2.fontWeight,
+      fontSize: 24, // Fixed from typography.h2.fontSize
+      fontWeight: 'bold', // Fixed from typography.h2.fontWeight
       color: isDark ? colors.text.primary : colors.text.primary,
       textAlign: 'center',
       marginBottom: semanticSpacing.sm,
     },
     subtitle: {
-      fontSize: typography.bodyLarge.fontSize,
+      fontSize: 18, // Fixed from typography.bodyLarge.fontSize
       color: isDark ? colors.text.secondary : colors.text.secondary,
       textAlign: 'center',
-      lineHeight: typography.bodyLarge.fontSize * lineHeights.normal,
+      lineHeight: 18 * lineHeights.normal, // Fixed from typography.bodyLarge.fontSize
     },
     phoneNumber: {
-      fontSize: typography.body.fontSize,
+      fontSize: 16, // Fixed from typography.body.fontSize
       fontWeight: fontWeights.medium,
       color: colors.primary[600],
       marginTop: semanticSpacing.sm,
@@ -160,7 +163,7 @@ export default function VerifyOTPScreen() {
       borderColor: isDark ? colors.border.light : colors.border.light,
       borderRadius: semanticSpacing.radius.lg,
       textAlign: 'center',
-      fontSize: typography.h3.fontSize,
+      fontSize: 20, // Fixed from typography.h3.fontSize
       fontWeight: fontWeights.bold,
       color: isDark ? colors.text.primary : colors.text.primary,
       backgroundColor: isDark ? colors.gray[800] : colors.background.light,

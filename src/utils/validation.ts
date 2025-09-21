@@ -13,6 +13,26 @@ export const validatePhone = (phone: string): boolean => {
   return phoneRegex.test(phone.replace(/\s/g, ''));
 };
 
+/**
+ * Enhanced validation for Iranian mobile numbers with error message
+ * @param phone The phone number to validate
+ * @returns Object with isValid flag and error message if invalid
+ */
+export const validateIranianMobileNumber = (phone: string): { isValid: boolean; error?: string } => {
+  if (!phone || phone.trim() === '') {
+    return { isValid: false, error: 'شماره موبایل الزامی است' };
+  }
+  
+  const cleanPhone = phone.replace(/\s/g, '');
+  const phoneRegex = /^(\+98|0)?9\d{9}$/;
+  
+  if (!phoneRegex.test(cleanPhone)) {
+    return { isValid: false, error: 'فرمت شماره موبایل صحیح نیست' };
+  }
+  
+  return { isValid: true };
+};
+
 export const validatePassword = (password: string): { isValid: boolean; errors: string[] } => {
   const errors: string[] = [];
   

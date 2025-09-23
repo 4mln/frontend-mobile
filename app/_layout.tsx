@@ -37,6 +37,8 @@ export default function RootLayout() {
     initializeAuth();
   }, [initializeAuth]);
 
+  // Auth redirection is handled by app/index.tsx via <Redirect />
+
   return (
     <ErrorBoundary>
       <SafeAreaProvider>

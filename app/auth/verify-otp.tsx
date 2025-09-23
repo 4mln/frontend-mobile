@@ -5,24 +5,32 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  Alert,
-  SafeAreaView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    SafeAreaView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 
 import { colors } from '@/theme/colors';
 import { semanticSpacing } from '@/theme/spacing';
 import { fontWeights, lineHeights, typography } from '@/theme/typography';
 
-export default function VerifyOTPScreen() {
+type VerifyOTPScreenProps = {
+  inline?: boolean;
+  phoneProp?: string;
+  onSuccess?: () => void;
+  onBack?: () => void;
+};
+
+export default function VerifyOTPScreen(props: VerifyOTPScreenProps) {
   const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
-  const { phone } = useLocalSearchParams<{ phone: string }>();
+  const params = useLocalSearchParams<{ phone: string }>();
+  const phone = props.phoneProp || params.phone;
   
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [isLoading, setIsLoading] = useState(false);
@@ -80,9 +88,16 @@ export default function VerifyOTPScreen() {
 
     setIsLoading(true);
     try {
-      await verifyOTPMutation.mutateAsync({ phone, otp: otpString });
-      // Navigation will be handled by the auth hook
-      router.replace('/(tabs)');
+      const result = await verifyOTPMutation.mutateAsync({ phone: String(phone).trim(), otp: otpString.trim() });
+      if (result?.success) {
+        if (props?.inline) {
+          props.onSuccess?.();
+        } else {
+          router.replace('/(tabs)');
+        }
+      } else {
+        Alert.alert('Error', t('auth.invalidOTP'));
+      }
     } catch (error) {
       Alert.alert('Error', t('auth.invalidOTP'));
       setOtp(['', '', '', '', '', '']);
@@ -123,6 +138,19 @@ export default function VerifyOTPScreen() {
       alignItems: 'center',
       marginBottom: semanticSpacing['3xl'],
     },
+    backRow: {
+      position: 'absolute',
+      top: semanticSpacing.lg,
+      left: semanticSpacing.lg,
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    backText: {
+      marginLeft: semanticSpacing.xs,
+      color: colors.primary[600],
+      fontSize: typography.body.fontSize,
+      fontWeight: fontWeights.medium,
+    },
     icon: {
       width: 80,
       height: 80,
@@ -155,6 +183,7 @@ export default function VerifyOTPScreen() {
       flexDirection: 'row',
       justifyContent: 'space-between',
       marginBottom: semanticSpacing.xl,
+      writingDirection: 'ltr',
     },
     otpInput: {
       width: 45,
@@ -163,6 +192,7 @@ export default function VerifyOTPScreen() {
       borderColor: isDark ? colors.border.light : colors.border.light,
       borderRadius: semanticSpacing.radius.lg,
       textAlign: 'center',
+      writingDirection: 'ltr',
       fontSize: 20, // Fixed from typography.h3.fontSize
       fontWeight: fontWeights.bold,
       color: isDark ? colors.text.primary : colors.text.primary,
@@ -215,6 +245,12 @@ export default function VerifyOTPScreen() {
       <View style={styles.content}>
         {/* Header */}
         <View style={styles.header}>
+          {!!props?.onBack && (
+            <TouchableOpacity style={styles.backRow} onPress={props.onBack}>
+              <Ionicons name="chevron-back" size={20} color={colors.primary[600]} />
+              <Text style={styles.backText}>{t('common.back')}</Text>
+            </TouchableOpacity>
+          )}
           <View style={styles.icon}>
             <Ionicons name="shield-checkmark" size={40} color={colors.primary[600]} />
           </View>

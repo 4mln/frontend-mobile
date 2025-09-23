@@ -21,7 +21,12 @@ import { colors } from '@/theme/colors';
 import { semanticSpacing } from '@/theme/spacing';
 import { fontWeights, lineHeights, typography } from '@/theme/typography';
 
-export default function LoginScreen() {
+type LoginScreenProps = {
+  onNavigateToSignup?: () => void;
+  onOtpRequested?: (phone: string) => void;
+};
+
+export default function LoginScreen(props: LoginScreenProps) {
   const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
@@ -51,7 +56,11 @@ export default function LoginScreen() {
       
       // For development, we'll just navigate to the OTP verification screen
       setTimeout(() => {
-        router.push({ pathname: '/auth/verify-otp', params: { phone: phone.trim() } });
+        if (props?.onOtpRequested) {
+          props.onOtpRequested(phone.trim());
+        } else {
+          router.push({ pathname: '/auth/verify-otp', params: { phone: phone.trim() } });
+        }
       }, 1000);
     } catch (error) {
       Alert.alert('خطا', 'ارسال کد تایید با مشکل مواجه شد. لطفا دوباره تلاش کنید.');
@@ -75,7 +84,7 @@ export default function LoginScreen() {
     },
     header: {
       alignItems: 'center',
-      marginBottom: semanticSpacing['3xl'],
+      marginBottom: semanticSpacing.xl,
     },
     logo: {
       width: 80,
@@ -103,10 +112,10 @@ export default function LoginScreen() {
       marginBottom: semanticSpacing.xl,
     },
     inputContainer: {
-      marginBottom: semanticSpacing.lg,
+      marginBottom: semanticSpacing.sm,
     },
     label: {
-      fontSize: 16, // Fixed from typography.body.fontSize
+      fontSize: 16,
       fontWeight: fontWeights.medium,
       color: isDark ? colors.text.primary : colors.text.primary,
       marginBottom: semanticSpacing.xs,
@@ -140,37 +149,27 @@ export default function LoginScreen() {
       textAlign: 'right',
     },
     inputWrapper: {
-      flexDirection: 'row',
-      alignItems: 'center',
       borderWidth: 1,
       borderColor: isDark ? colors.border.light : colors.border.light,
       borderRadius: semanticSpacing.radius.lg,
       backgroundColor: isDark ? colors.gray[800] : colors.background.light,
     },
-    countryCode: {
-      paddingHorizontal: semanticSpacing.md,
-      paddingVertical: semanticSpacing.md,
-      borderRightWidth: 1,
-      borderRightColor: isDark ? colors.border.light : colors.border.light,
-    },
-    countryCodeText: {
-      fontSize: 16, // Fixed from typography.body.fontSize
-      color: isDark ? colors.text.primary : colors.text.primary,
-      fontWeight: fontWeights.medium,
-    },
+    
     input: {
       flex: 1,
       paddingHorizontal: semanticSpacing.md,
-      paddingVertical: semanticSpacing.md,
+      paddingVertical: semanticSpacing.sm,
       fontSize: 16, // Fixed from typography.body.fontSize
       color: isDark ? colors.text.primary : colors.text.primary,
+      textAlign: 'left',
+      writingDirection: 'ltr',
     },
     button: {
       backgroundColor: colors.primary[500],
       borderRadius: semanticSpacing.radius.lg,
       paddingVertical: semanticSpacing.md,
       alignItems: 'center',
-      marginTop: semanticSpacing.lg,
+      marginTop: semanticSpacing.md,
     },
     buttonDisabled: {
       backgroundColor: colors.gray[300],
@@ -217,9 +216,7 @@ export default function LoginScreen() {
             <View style={styles.inputContainer}>
               <Text style={styles.label}>شماره موبایل</Text>
               <View style={styles.inputWrapper}>
-                <View style={styles.countryCode}>
-                  <Text style={styles.countryCodeText}>+98</Text>
-                </View>
+                
                 <TextInput
                   style={styles.input}
                   placeholder="09xxxxxxxxx"
@@ -231,7 +228,8 @@ export default function LoginScreen() {
                   }}
                   keyboardType="phone-pad"
                   autoFocus
-                  textAlign="right"
+                  textAlign="left"
+                  writingDirection="ltr"
                 />
               </View>
               {phoneError && <Text style={styles.errorText}>{phoneError}</Text>}
@@ -264,11 +262,17 @@ export default function LoginScreen() {
           
           <View style={styles.signupLink}>
             <Text style={styles.signupText}>حساب کاربری ندارید؟</Text>
-            <Link href="/auth/signup" asChild>
-              <TouchableOpacity style={styles.signupButton}>
+            {props?.onNavigateToSignup ? (
+              <TouchableOpacity style={styles.signupButton} onPress={props.onNavigateToSignup}>
                 <Text style={styles.signupButtonText}>ثبت نام</Text>
               </TouchableOpacity>
-            </Link>
+            ) : (
+              <Link href="/auth/signup" asChild>
+                <TouchableOpacity style={styles.signupButton}>
+                  <Text style={styles.signupButtonText}>ثبت نام</Text>
+                </TouchableOpacity>
+              </Link>
+            )}
           </View>
         </View>
       </KeyboardAvoidingView>

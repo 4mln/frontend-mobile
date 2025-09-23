@@ -1,21 +1,21 @@
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { validateIranianMobileNumber, validateIranianNationalIdWithError } from '@/utils/validation';
+import { validateIranianMobileNumber, validateIranianNationalId } from '@/utils/validation';
 import { Ionicons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
 import { Link, router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    KeyboardAvoidingView,
-    Platform,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 
 import { colors } from '@/theme/colors';
@@ -27,7 +27,12 @@ type Guild = {
   name: string;
 };
 
-export default function SignupScreen() {
+type SignupScreenProps = {
+  onNavigateToLogin?: () => void;
+  onOtpRequested?: (phone: string) => void;
+};
+
+export default function SignupScreen(props: SignupScreenProps) {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   
@@ -86,9 +91,9 @@ export default function SignupScreen() {
     }
     
     // Validate national ID
-    const nationalIdValidation = validateIranianNationalIdWithError(nationalId);
-    if (!nationalIdValidation.isValid) {
-      setNationalIdError(nationalIdValidation.error);
+    const isValidNational = validateIranianNationalId(nationalId);
+    if (!isValidNational) {
+      setNationalIdError('کد ملی نامعتبر است');
       isValid = false;
     } else {
       setNationalIdError(undefined);
@@ -139,16 +144,20 @@ export default function SignupScreen() {
       
       // For development, we'll just show a success message and navigate to the OTP verification
       setTimeout(() => {
-        Alert.alert(
-          'ثبت نام موفق',
-          'کد تایید به شماره موبایل شما ارسال شد.',
-          [
-            {
-              text: 'تایید',
-              onPress: () => router.push({ pathname: '/auth/verify-otp', params: { phone } }),
-            },
-          ]
-        );
+        if (props?.onOtpRequested) {
+          props.onOtpRequested(phone.trim());
+        } else {
+          Alert.alert(
+            'ثبت نام موفق',
+            'کد تایید به شماره موبایل شما ارسال شد.',
+            [
+              {
+                text: 'تایید',
+                onPress: () => router.push({ pathname: '/auth/verify-otp', params: { phone } }),
+              },
+            ]
+          );
+        }
       }, 1500);
     } catch (error) {
       Alert.alert('خطا', 'ثبت نام با مشکل مواجه شد. لطفا دوباره تلاش کنید.');
@@ -204,7 +213,8 @@ export default function SignupScreen() {
                 }}
                 editable={!isLoading}
                 maxLength={10}
-                textAlign="right"
+                textAlign="left"
+                writingDirection="ltr"
               />
               {nationalIdError && <Text style={styles.errorText}>{nationalIdError}</Text>}
             </View>
@@ -222,7 +232,8 @@ export default function SignupScreen() {
                   if (phoneError) setPhoneError(undefined);
                 }}
                 editable={!isLoading}
-                textAlign="right"
+                textAlign="left"
+                writingDirection="ltr"
               />
               {phoneError && <Text style={styles.errorText}>{phoneError}</Text>}
             </View>
@@ -276,34 +287,38 @@ export default function SignupScreen() {
           
           <View style={styles.loginLink}>
             <Text style={styles.loginText}>قبلا ثبت نام کرده‌اید؟</Text>
-            <Link href="/auth/login" asChild>
-              <TouchableOpacity style={styles.loginButton}>
+            {props?.onNavigateToLogin ? (
+              <TouchableOpacity style={styles.loginButton} onPress={props.onNavigateToLogin}>
                 <Text style={styles.loginButtonText}>ورود</Text>
               </TouchableOpacity>
-            </Link>
+            ) : (
+              <Link href="/auth/login" asChild>
+                <TouchableOpacity style={styles.loginButton}>
+                  <Text style={styles.loginButtonText}>ورود</Text>
+                </TouchableOpacity>
+              </Link>
+            )}
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
-}
-
-const styles = StyleSheet.create({
+}const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background.light,
+    backgroundColor: 'transparent',
   },
   content: {
     flexGrow: 1,
     paddingHorizontal: semanticSpacing.lg,
-    paddingVertical: semanticSpacing.xl,
+    paddingVertical: semanticSpacing.lg,
     maxWidth: 400,
     alignSelf: 'center',
     width: '100%',
   },
   header: {
     alignItems: 'center',
-    marginBottom: semanticSpacing.xl,
+    marginBottom: semanticSpacing.md,
   },
   logo: {
     width: 80,
@@ -328,10 +343,10 @@ const styles = StyleSheet.create({
     lineHeight: typography.bodyLarge.fontSize * lineHeights.normal,
   },
   form: {
-    marginBottom: semanticSpacing.xl,
+    marginBottom: semanticSpacing.md,
   },
   inputContainer: {
-    marginBottom: semanticSpacing.lg,
+    marginBottom: semanticSpacing.sm,
   },
   label: {
     fontSize: 16, // Fixed from typography.body.fontSize
@@ -341,7 +356,7 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   input: {
-    height: 50,
+    height: 44,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 8,
@@ -366,11 +381,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background.light,
   },
   picker: {
-    height: 50,
+    height: 44,
     width: '100%',
   },
   loadingContainer: {
-    height: 50,
+    height: 44,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 8,
@@ -386,12 +401,12 @@ const styles = StyleSheet.create({
     fontSize: 16, // Fixed from typography.body.fontSize
   },
   button: {
-    height: 50,
+    height: 44,
     backgroundColor: colors.primary[500],
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: semanticSpacing.md,
+    marginTop: semanticSpacing.sm,
   },
   buttonDisabled: {
     backgroundColor: colors.primary[300],
@@ -419,3 +434,4 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.medium,
   },
 });
+

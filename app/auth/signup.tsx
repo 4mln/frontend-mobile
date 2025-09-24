@@ -5,17 +5,17 @@ import { Picker } from '@react-native-picker/picker';
 import { Link, router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
+    ActivityIndicator,
+    Alert,
+    KeyboardAvoidingView,
+    Platform,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from 'react-native';
 
 import { colors } from '@/theme/colors';
@@ -153,7 +153,7 @@ export default function SignupScreen(props: SignupScreenProps) {
             [
               {
                 text: 'تایید',
-                onPress: () => router.push({ pathname: '/auth/verify-otp', params: { phone } }),
+                onPress: () => router.push({ pathname: '/auth/verify-otp', params: { phone: phone.trim(), from: 'signup' } }),
               },
             ]
           );

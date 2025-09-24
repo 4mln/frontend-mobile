@@ -48,8 +48,6 @@ export default function RootLayout() {
             <Stack>
               <Stack.Screen name="index" options={{ headerShown: false }} />
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="auth/login" options={{ headerShown: false, presentation: 'modal' }} />
-              <Stack.Screen name="auth/verify-otp" options={{ headerShown: false, presentation: 'modal' }} />
               <Stack.Screen name="product/[id]" options={{ headerShown: false, presentation: 'modal' }} />
               <Stack.Screen name="product/create" options={{ headerShown: false, presentation: 'modal' }} />
               <Stack.Screen name="chat/[id]" options={{ headerShown: false, presentation: 'modal' }} />

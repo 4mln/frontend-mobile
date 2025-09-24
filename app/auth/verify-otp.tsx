@@ -1,36 +1,34 @@
 import { useVerifyOTP } from '@/features/auth/hooks';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-    Alert,
-    SafeAreaView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 import { colors } from '@/theme/colors';
 import { semanticSpacing } from '@/theme/spacing';
 import { fontWeights, lineHeights, typography } from '@/theme/typography';
 
-type VerifyOTPScreenProps = {
-  inline?: boolean;
-  phoneProp?: string;
-  onSuccess?: () => void;
-  onBack?: () => void;
-};
-
-export default function VerifyOTPScreen(props: VerifyOTPScreenProps) {
+export default function VerifyOTPScreen() {
   const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
-  const params = useLocalSearchParams<{ phone: string }>();
-  const phone = props.phoneProp || params.phone;
+  const params = useLocalSearchParams<{ phone?: string | string[]; from?: string | string[] }>();
+  const phoneParam = Array.isArray(params.phone) ? params.phone[0] : params.phone;
+  const phone = phoneParam ? String(phoneParam) : '';
+  const fromParam = Array.isArray(params.from) ? params.from[0] : params.from;
+  const from = fromParam ? String(fromParam) : undefined;
+  const navigation = useNavigation<any>();
   
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [isLoading, setIsLoading] = useState(false);
@@ -88,16 +86,9 @@ export default function VerifyOTPScreen(props: VerifyOTPScreenProps) {
 
     setIsLoading(true);
     try {
-      const result = await verifyOTPMutation.mutateAsync({ phone: String(phone).trim(), otp: otpString.trim() });
-      if (result?.success) {
-        if (props?.inline) {
-          props.onSuccess?.();
-        } else {
-          router.replace('/(tabs)');
-        }
-      } else {
-        Alert.alert('Error', t('auth.invalidOTP'));
-      }
+      await verifyOTPMutation.mutateAsync({ phone, otp: otpString });
+      // Navigation will be handled by the auth hook
+      router.replace('/(tabs)');
     } catch (error) {
       Alert.alert('Error', t('auth.invalidOTP'));
       setOtp(['', '', '', '', '', '']);
@@ -125,6 +116,7 @@ export default function VerifyOTPScreen(props: VerifyOTPScreenProps) {
     container: {
       flex: 1,
       backgroundColor: isDark ? colors.background.dark : colors.background.light,
+      writingDirection: 'ltr',
     },
     content: {
       flex: 1,
@@ -133,6 +125,7 @@ export default function VerifyOTPScreen(props: VerifyOTPScreenProps) {
       maxWidth: 400,
       alignSelf: 'center',
       width: '100%',
+      writingDirection: 'ltr',
     },
     header: {
       alignItems: 'center',
@@ -245,12 +238,25 @@ export default function VerifyOTPScreen(props: VerifyOTPScreenProps) {
       <View style={styles.content}>
         {/* Header */}
         <View style={styles.header}>
-          {!!props?.onBack && (
-            <TouchableOpacity style={styles.backRow} onPress={props.onBack}>
-              <Ionicons name="chevron-back" size={20} color={colors.primary[600]} />
-              <Text style={styles.backText}>{t('common.back')}</Text>
-            </TouchableOpacity>
-          )}
+          <TouchableOpacity
+            style={styles.backRow}
+            onPress={() => {
+              try {
+                router.back();
+                // Fallback in case there's no history
+                setTimeout(() => {
+                  try {
+                    router.replace('/');
+                  } catch {}
+                }, 50);
+              } catch {
+                router.replace('/');
+              }
+            }}
+          >
+            <Ionicons name="chevron-back" size={20} color={colors.primary[600]} />
+            <Text style={styles.backText}>{t('common.back')}</Text>
+          </TouchableOpacity>
           <View style={styles.icon}>
             <Ionicons name="shield-checkmark" size={40} color={colors.primary[600]} />
           </View>
@@ -258,7 +264,7 @@ export default function VerifyOTPScreen(props: VerifyOTPScreenProps) {
           <Text style={styles.subtitle}>
             We've sent a verification code to
           </Text>
-          <Text style={styles.phoneNumber}>+98 {phone}</Text>
+          {!!phone && (<Text style={styles.phoneNumber}>+98 {phone}</Text>)}
         </View>
 
         {/* OTP Input */}

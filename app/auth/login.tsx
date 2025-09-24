@@ -59,7 +59,7 @@ export default function LoginScreen(props: LoginScreenProps) {
         if (props?.onOtpRequested) {
           props.onOtpRequested(phone.trim());
         } else {
-          router.push({ pathname: '/auth/verify-otp', params: { phone: phone.trim() } });
+          router.push({ pathname: '/auth/verify-otp', params: { phone: phone.trim(), from: 'login' } });
         }
       }, 1000);
     } catch (error) {

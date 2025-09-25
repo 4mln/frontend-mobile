@@ -60,7 +60,7 @@ export const authService = {
       };
     }
     try {
-      const response = await apiClient.post('/otp/request', data);
+      const response = await apiClient.post('/auth/otp/request', data);
       return {
         data: response.data,
         success: true,
@@ -101,7 +101,7 @@ export const authService = {
       };
     }
     try {
-      const response = await apiClient.post('/otp/verify', {
+      const response = await apiClient.post('/auth/otp/verify', {
         phone: data.phone,
         code: data.otp,
       });
@@ -140,7 +140,7 @@ export const authService = {
    */
   async getProfile(): Promise<ApiResponse<AuthResponse['user']>> {
     try {
-      const response = await apiClient.get('/me/profile');
+      const response = await apiClient.get('/auth/me/profile');
       return {
         data: response.data,
         success: true,
@@ -158,7 +158,7 @@ export const authService = {
    */
   async getCurrentUser(): Promise<ApiResponse<AuthResponse['user']>> {
     try {
-      const response = await apiClient.get('/me');
+      const response = await apiClient.get('/auth/me');
       return {
         data: response.data,
         success: true,
@@ -176,7 +176,7 @@ export const authService = {
    */
   async updateProfile(data: UpdateProfileRequest): Promise<ApiResponse<AuthResponse['user']>> {
     try {
-      const response = await apiClient.patch('/me/profile', data);
+      const response = await apiClient.patch('/auth/me/profile', data);
       return {
         data: response.data,
         success: true,
@@ -194,7 +194,7 @@ export const authService = {
    */
   async logout(): Promise<ApiResponse<void>> {
     try {
-      await apiClient.post('/me/sessions/logout-all');
+      await apiClient.post('/auth/me/sessions/logout-all');
       return {
         success: true,
       };

@@ -5,6 +5,11 @@ export const API_CONFIG = {
     ? 'http://localhost:8000' 
     : 'https://api.b2b-marketplace.com')) as string,
   
+  // API prefix (set EXPO_PUBLIC_API_PREFIX="" if your backend has no prefix)
+  API_PREFIX: (typeof process !== 'undefined' && process.env && typeof process.env.EXPO_PUBLIC_API_PREFIX !== 'undefined'
+    ? String(process.env.EXPO_PUBLIC_API_PREFIX)
+    : '/api/v1') as string,
+  
   // API Version
   VERSION: 'v1',
   

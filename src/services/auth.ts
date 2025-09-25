@@ -51,6 +51,14 @@ export const authService = {
    * Send OTP to phone number
    */
   async sendOTP(data: LoginRequest): Promise<ApiResponse<{ detail: string }>> {
+    // Temporary bypass for OTP during production phase
+    // Set EXPO_PUBLIC_BYPASS_OTP=true to skip real OTP requests
+    if (process.env.EXPO_PUBLIC_BYPASS_OTP === 'true' || process.env.EXPO_PUBLIC_BYPASS_OTP === '1') {
+      return {
+        data: { detail: 'OTP bypass enabled' },
+        success: true,
+      };
+    }
     try {
       const response = await apiClient.post('/otp/request', data);
       return {
@@ -69,6 +77,29 @@ export const authService = {
    * Verify OTP and get tokens
    */
   async verifyOTP(data: VerifyOTPRequest): Promise<ApiResponse<AuthResponse>> {
+    // Temporary bypass for OTP during production phase
+    // Set EXPO_PUBLIC_BYPASS_OTP=true to skip real OTP verification
+    if (process.env.EXPO_PUBLIC_BYPASS_OTP === 'true' || process.env.EXPO_PUBLIC_BYPASS_OTP === '1') {
+      const fakeNow = new Date().toISOString();
+      // IMPORTANT: Remove this block once real OTP auth is implemented
+      return {
+        data: {
+          access_token: 'bypass-access-token',
+          token_type: 'bearer',
+          user: {
+            id: 'bypass-user',
+            phone: data.phone,
+            name: 'Bypass User',
+            email: undefined,
+            avatar: undefined,
+            isVerified: true,
+            createdAt: fakeNow,
+            updatedAt: fakeNow,
+          },
+        },
+        success: true,
+      };
+    }
     try {
       const response = await apiClient.post('/otp/verify', {
         phone: data.phone,

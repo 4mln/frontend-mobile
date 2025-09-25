@@ -10,6 +10,10 @@ import SignupScreen from '../../app/auth/signup';
 
 export const LoginWall: React.FC = () => {
   const { isAuthenticated } = useAuth();
+  // If OTP bypass is enabled, don't render the login wall at all
+  if (process.env.EXPO_PUBLIC_BYPASS_OTP === 'true' || process.env.EXPO_PUBLIC_BYPASS_OTP === '1') {
+    return null;
+  }
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const pathname = usePathname();
@@ -88,7 +92,8 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: 'hidden',
     maxHeight: '90%',
-    width: '50%',
+    width: '95%',
+    maxWidth: 560,
     alignSelf: 'center',
   },
 });
@@ -120,11 +125,12 @@ const InlineOtp: React.FC<InlineOtpProps> = ({ phone, onBack, onSuccess }) => {
   }, [timeLeft]);
 
   const handleOtpChange = (value: string, index: number) => {
-    if (value.length > 1) return;
+    // keep only one numeric digit
+    const digitOnly = value.replace(/\D/g, '').slice(0, 1);
     const next = [...otp];
-    next[index] = value;
+    next[index] = digitOnly;
     setOtp(next);
-    if (value && index < 5) inputRefs.current[index + 1]?.focus();
+    if (digitOnly && index < 5) inputRefs.current[index + 1]?.focus();
     if (next.every(d => d !== '') && next.join('').length === 6) {
       handleVerify(next.join(''));
     }
@@ -158,21 +164,25 @@ const InlineOtp: React.FC<InlineOtpProps> = ({ phone, onBack, onSuccess }) => {
   };
 
   return (
-    <View style={{ paddingHorizontal: 16, paddingVertical: 20 }}>
-      <TouchableOpacity onPress={onBack} style={{ position: 'absolute', top: 16, left: 16, flexDirection: 'row', alignItems: 'center' }}>
-        <Text style={{ color: colors.primary[600], fontWeight: '500' }}>{t('common.back')}</Text>
+    <View style={{ paddingHorizontal: 16, paddingVertical: 20, direction: 'ltr' }}>
+      <TouchableOpacity
+        onPress={onBack}
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        style={{ position: 'absolute', top: 16, left: 16, flexDirection: 'row', alignItems: 'center', zIndex: 10, elevation: 1 }}
+      >
+        <Text style={{ color: colors.primary[600], fontWeight: '500' }}>بازگشت</Text>
       </TouchableOpacity>
       <View style={{ alignItems: 'center', marginBottom: 24 }}>
         <View style={{ width: 80, height: 80, borderRadius: 40, backgroundColor: colors.primary[100], justifyContent: 'center', alignItems: 'center', marginBottom: 12 }}>
           <Ionicons name="shield-checkmark" size={40} color={colors.primary[600]} />
         </View>
-        <Text style={{ fontSize: 20, fontWeight: '700', color: isDark ? colors.text.primary : colors.text.primary, textAlign: 'center', marginBottom: 6 }}>{t('auth.enterOTP')}</Text>
-        <Text style={{ fontSize: 14, color: isDark ? colors.text.secondary : colors.text.secondary, textAlign: 'center' }}>{t('auth.otpSent')}</Text>
+        <Text style={{ fontSize: 20, fontWeight: '700', color: isDark ? colors.text.primary : colors.text.primary, textAlign: 'center', marginBottom: 6 }}>کد تأیید را وارد کنید</Text>
+        <Text style={{ fontSize: 14, color: isDark ? colors.text.secondary : colors.text.secondary, textAlign: 'center' }}>ارسال به:</Text>
         {!!phone && (
           <Text style={{ fontSize: 14, color: colors.primary[600] }}>+98 {phone}</Text>
         )}
       </View>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20 }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20, direction: 'ltr' }}>
         {otp.map((digit, index) => (
           <TextInput
             key={index}
@@ -184,6 +194,7 @@ const InlineOtp: React.FC<InlineOtpProps> = ({ phone, onBack, onSuccess }) => {
               borderColor: isDark ? colors.border.light : colors.border.light,
               borderRadius: 12,
               textAlign: 'center',
+              writingDirection: 'ltr',
               fontSize: 20,
               fontWeight: '700',
               color: isDark ? colors.text.primary : colors.text.primary,
@@ -192,7 +203,8 @@ const InlineOtp: React.FC<InlineOtpProps> = ({ phone, onBack, onSuccess }) => {
             value={digit}
             onChangeText={(value) => handleOtpChange(value, index)}
             onKeyPress={({ nativeEvent }) => handleKeyPress(nativeEvent.key, index)}
-            keyboardType="numeric"
+            keyboardType="number-pad"
+            inputMode="numeric"
             maxLength={1}
             selectTextOnFocus
           />
@@ -203,12 +215,12 @@ const InlineOtp: React.FC<InlineOtpProps> = ({ phone, onBack, onSuccess }) => {
         disabled={otp.join('').length !== 6 || isLoading}
         style={{ backgroundColor: colors.primary[500], borderRadius: 12, paddingVertical: 12, alignItems: 'center', opacity: (otp.join('').length !== 6 || isLoading) ? 0.6 : 1 }}
       >
-        <Text style={{ color: colors.background.light, fontWeight: '700' }}>{isLoading ? t('common.loading') : t('auth.verifyOTP')}</Text>
+        <Text style={{ color: colors.background.light, fontWeight: '700' }}>{isLoading ? 'در حال بارگذاری...' : 'تأیید کد'}</Text>
       </TouchableOpacity>
       <View style={{ alignItems: 'center', marginTop: 16 }}>
         {canResend ? (
           <TouchableOpacity onPress={() => { setTimeLeft(60); setCanResend(false); setOtp(['', '', '', '', '', '']); }}>
-            <Text style={{ color: colors.primary[600], fontWeight: '500' }}>{t('auth.resendOTP')}</Text>
+            <Text style={{ color: colors.primary[600], fontWeight: '500' }}>ارسال مجدد کد</Text>
           </TouchableOpacity>
         ) : (
           <>

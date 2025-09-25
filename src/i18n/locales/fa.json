@@ -125,4 +125,11 @@
     "validationError": "لطفاً ورودی خود را بررسی کنید.",
     "unknownError": "خطای نامشخصی رخ داد."
   }
+  ,
+  "Go Back": "بازگشت",
+  "Enter Authentication Code": "کد تأیید را وارد کنید",
+  "Sent to:": "ارسال به:",
+  "Loading": "در حال بارگذاری...",
+  "Authenticate code": "تأیید کد",
+  "Resend Code": "ارسال مجدد کد"
 }

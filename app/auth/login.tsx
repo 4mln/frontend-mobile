@@ -31,6 +31,9 @@ export default function LoginScreen(props: LoginScreenProps) {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   
+  // If OTP bypass is enabled, we will skip OTP screen and navigate directly
+  const isBypassEnabled = process.env.EXPO_PUBLIC_BYPASS_OTP === 'true' || process.env.EXPO_PUBLIC_BYPASS_OTP === '1';
+  
   const [phone, setPhone] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [phoneError, setPhoneError] = useState<string | undefined>(undefined);
@@ -50,11 +53,15 @@ export default function LoginScreen(props: LoginScreenProps) {
     setIsLoading(true);
     
     try {
-      // In development, we can mock this API call
-      // await sendOTPMutation.mutateAsync({ phone: phone.trim() });
+      if (isBypassEnabled) {
+        // Skip OTP: directly navigate to tabs, LoginWall won't block due to bypass
+        setTimeout(() => {
+          try { router.replace('/(tabs)'); } catch {}
+        }, 500);
+        return;
+      }
+      // In normal mode, trigger OTP flow
       console.log('Sending OTP to', phone.trim());
-      
-      // For development, we'll just navigate to the OTP verification screen
       setTimeout(() => {
         if (props?.onOtpRequested) {
           props.onOtpRequested(phone.trim());

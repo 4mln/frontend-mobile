@@ -3,8 +3,9 @@ import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import * as SecureStore from 'expo-secure-store';
 
 // Create axios instance
+const normalizedPrefix = API_CONFIG.API_PREFIX?.startsWith('/') ? API_CONFIG.API_PREFIX : `/${API_CONFIG.API_PREFIX || ''}`;
 const apiClient: AxiosInstance = axios.create({
-  baseURL: `${API_CONFIG.BASE_URL}/api/v1`,
+  baseURL: `${API_CONFIG.BASE_URL}${normalizedPrefix}`.replace(/\/+$/,'').replace(/([^:])\/\/+/, '$1/'),
   timeout: API_CONFIG.TIMEOUT,
   headers: API_CONFIG.DEFAULT_HEADERS,
 });
@@ -51,7 +52,7 @@ apiClient.interceptors.response.use(
       try {
         const refreshToken = await SecureStore.getItemAsync('refresh_token');
         if (refreshToken) {
-          const response = await axios.post(`${API_CONFIG.BASE_URL}/api/v1/auth/refresh`, {
+          const response = await axios.post(`${API_CONFIG.BASE_URL}${normalizedPrefix}/auth/refresh`, {
             refreshToken,
           });
 

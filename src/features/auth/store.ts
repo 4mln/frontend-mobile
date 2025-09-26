@@ -16,6 +16,7 @@ interface AuthState {
   user: User | null;
   token: string | null;
   refreshToken: string | null;
+  approved: boolean;
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
@@ -31,6 +32,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   token: null,
   refreshToken: null,
+  approved: false,
   isAuthenticated: false,
   isLoading: true,
   error: null,
@@ -41,10 +43,13 @@ export const useAuthStore = create<AuthState>((set) => ({
       if (refreshToken) {
         await saveItem("refresh_token", refreshToken);
       }
+      // Mark that user explicitly approved login (e.g., after OTP)
+      await saveItem("login_approved", "true");
       set({
         user,
         token,
         refreshToken,
+        approved: true,
         isAuthenticated: true,
         isLoading: false,
         error: null,
@@ -59,6 +64,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       await deleteItem("auth_token");
       await deleteItem("refresh_token");
+      await deleteItem("login_approved");
     } catch (e) {
       console.error("Logout cleanup failed:", e);
     } finally {
@@ -66,6 +72,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         user: null,
         token: null,
         refreshToken: null,
+        approved: false,
         isAuthenticated: false,
         isLoading: false,
         error: null,
@@ -80,24 +87,61 @@ export const useAuthStore = create<AuthState>((set) => ({
   initializeAuth: async () => {
     set({ isLoading: true });
     try {
+      const forceReset = (process.env.EXPO_PUBLIC_RESET_LOGIN_ON_START === 'true' || process.env.EXPO_PUBLIC_RESET_LOGIN_ON_START === '1');
+      if (forceReset) {
+        try {
+          await deleteItem('auth_token');
+          await deleteItem('refresh_token');
+          await deleteItem('login_approved');
+        } catch {}
+        set({ user: null, token: null, refreshToken: null, approved: false, isAuthenticated: false, isLoading: false, error: null });
+        return;
+      }
+
       const token = await getItem("auth_token");
       const refreshToken = await getItem("refresh_token");
+      const approved = await getItem("login_approved");
+      const requireOtpOnStart = (process.env.EXPO_PUBLIC_REQUIRE_OTP_ON_START === 'true' || process.env.EXPO_PUBLIC_REQUIRE_OTP_ON_START === '1');
 
-      if (token) {
-        // optionally fetch user profile from backend here
-        set({
-          user: null,
-          token,
-          refreshToken,
-          isAuthenticated: true,
-          isLoading: false,
-          error: null,
-        });
+      // Only restore session if user had explicitly approved login previously
+      if (token && approved === 'true' && !requireOtpOnStart) {
+        // Proactively fetch user profile using shared API service
+        // Dynamic import to avoid circular deps at module load
+        try {
+          const { authService } = await import('@/services/auth');
+          const profileResp = await authService.getProfile();
+          if (profileResp.success && profileResp.data) {
+            set({
+              user: profileResp.data,
+              token,
+              refreshToken,
+              approved: true,
+              isAuthenticated: true,
+              isLoading: false,
+              error: null,
+            });
+          } else {
+            // If unauthorized, clear session; otherwise keep session and allow lazy fetch later
+            const unauthorized = (profileResp.error || '').toLowerCase().includes('unauthorized') || (profileResp as any).status === 401;
+            if (unauthorized) {
+              await deleteItem('auth_token');
+              await deleteItem('refresh_token');
+              set({ user: null, token: null, refreshToken: null, approved: false, isAuthenticated: false, isLoading: false, error: null });
+            } else {
+              set({ user: null, token, refreshToken, approved: true, isAuthenticated: true, isLoading: false, error: null });
+            }
+          }
+        } catch (err) {
+          // Network or other error: keep auth state, user will be fetched later
+          set({ user: null, token, refreshToken, approved: true, isAuthenticated: true, isLoading: false, error: null });
+        }
       } else {
+        try { await deleteItem('login_approved'); } catch {}
         set({
           user: null,
           token: null,
           refreshToken: null,
+          approved: false,
           isAuthenticated: false,
           isLoading: false,
           error: null,

@@ -1,5 +1,6 @@
 import { useSendOTP } from '@/features/auth/hooks';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { authService } from '@/services/auth';
 import { validateIranianMobileNumber } from '@/utils/validation';
 import { Ionicons } from '@expo/vector-icons';
 import { Link, router } from 'expo-router';
@@ -17,9 +18,12 @@ import {
     View,
 } from 'react-native';
 
+import { useMessageBoxStore } from '@/context/messageBoxStore';
+import i18n from '@/i18n';
 import { colors } from '@/theme/colors';
 import { semanticSpacing } from '@/theme/spacing';
 import { fontWeights, lineHeights, typography } from '@/theme/typography';
+import { ensureOnlineOrMessage } from '@/utils/connection';
 
 type LoginScreenProps = {
   onNavigateToSignup?: () => void;
@@ -53,22 +57,33 @@ export default function LoginScreen(props: LoginScreenProps) {
     setIsLoading(true);
     
     try {
-      if (isBypassEnabled) {
-        // Skip OTP: directly navigate to tabs, LoginWall won't block due to bypass
-        setTimeout(() => {
-          try { router.replace('/(tabs)'); } catch {}
-        }, 500);
+      // First: ensure connection
+      const online = await ensureOnlineOrMessage();
+      if (!online) return;
+      // First: check whether user exists
+      const existsResp = await authService.userExists(phone.trim());
+      if (existsResp.success && existsResp.data && !existsResp.data.exists) {
+        const msg = i18n.t('errors.userNotFound');
+        useMessageBoxStore.getState().show({ message: msg, actions: [{ label: i18n.t('common.back') }] });
         return;
       }
-      // In normal mode, trigger OTP flow
-      console.log('Sending OTP to', phone.trim());
-      setTimeout(() => {
+
+      // Then call backend to send OTP
+      const resp = await sendOTPMutation.mutateAsync({ phone: phone.trim() } as any);
+      if (resp?.success) {
         if (props?.onOtpRequested) {
           props.onOtpRequested(phone.trim());
         } else {
           router.push({ pathname: '/auth/verify-otp', params: { phone: phone.trim(), from: 'login' } });
         }
-      }, 1000);
+      } else {
+        const userNotFoundMsg = i18n.t('errors.userNotFound');
+        const networkMsg = i18n.t('errors.networkErrorDetailed');
+        const msg = (resp?.error || '').toLowerCase().includes('not') && (resp?.error || '').toLowerCase().includes('found')
+          ? userNotFoundMsg
+          : (resp?.error || networkMsg);
+        useMessageBoxStore.getState().show({ message: msg, actions: [{ label: i18n.t('common.back') }] });
+      }
     } catch (error) {
       Alert.alert('خطا', 'ارسال کد تایید با مشکل مواجه شد. لطفا دوباره تلاش کنید.');
     } finally {

@@ -79,26 +79,18 @@ export const testOTPEndpoint = async (): Promise<BackendTestResult> => {
       body: JSON.stringify({ phone: '09123456789' }),
       signal: AbortSignal.timeout(5000),
     });
-    
     const responseTime = Date.now() - startTime;
-    
-    // We expect either success or validation error, not 404
-    if (response.status === 200 || response.status === 422) {
-      return {
-        isConnected: true,
-        status: response.status,
-        responseTime,
-        backendUrl,
-      };
-    } else {
-      return {
-        isConnected: false,
-        status: response.status,
-        error: `HTTP ${response.status}: ${response.statusText}`,
-        responseTime,
-        backendUrl,
-      };
-    }
+
+    // Consider the endpoint reachable if server responds with any non-5xx status
+    // This avoids marking the whole backend as disconnected when auth returns 401/400/422.
+    const reachable = response.status < 500;
+    return {
+      isConnected: reachable,
+      status: response.status,
+      error: reachable ? undefined : `HTTP ${response.status}: ${response.statusText}`,
+      responseTime,
+      backendUrl,
+    };
   } catch (error) {
     const responseTime = Date.now() - startTime;
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -127,7 +119,8 @@ export const runBackendTests = async (): Promise<{
     testOTPEndpoint(),
   ]);
   
-  const overall = healthResult.isConnected && otpResult.isConnected;
+  // Overall connectivity should reflect core health only; OTP specifics are diagnostic.
+  const overall = healthResult.isConnected;
   
   console.log('Backend test results:', {
     health: healthResult,

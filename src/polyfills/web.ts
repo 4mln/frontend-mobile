@@ -35,6 +35,24 @@ if (typeof (global as any).process === "undefined") {
   (global as any).process.env = {};
 }
 
+// Web-only: optional auto-reset of stored login on page load via env
+try {
+  if (typeof window !== 'undefined') {
+    const resetByEnv = (process.env.EXPO_PUBLIC_WEB_RESET_ON_LOAD === 'true' || process.env.EXPO_PUBLIC_WEB_RESET_ON_LOAD === '1');
+    if (resetByEnv) {
+      try { localStorage.removeItem('auth_token'); } catch {}
+      try { localStorage.removeItem('refresh_token'); } catch {}
+      try { localStorage.removeItem('login_approved'); } catch {}
+      // Also clear service worker caches if available (best-effort)
+      try {
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
+        }
+      } catch {}
+    }
+  }
+} catch {}
+
 // Reanimated expects a global _eventTimestamp in some web paths
 // Provide a sane default during SSR to avoid ReferenceError
 // @ts-expect-error: injecting private timestamp used by libs

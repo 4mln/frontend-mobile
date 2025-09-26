@@ -4,11 +4,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from './store';
 
 export const useAuth = () => {
-  const { user, isAuthenticated, isLoading, error, login, logout, setLoading, setError, clearError } = useAuthStore();
+  const { user, isAuthenticated, isLoading, error, login, logout, setLoading, setError, clearError, approved } = useAuthStore();
 
   return {
     user,
     isAuthenticated,
+    approved,
     isLoading,
     error,
     login,

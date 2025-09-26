@@ -1,11 +1,16 @@
 import { API_CONFIG } from '@/config/api';
+import { useMessageBoxStore } from '@/context/messageBoxStore';
+import i18n from '@/i18n';
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import * as SecureStore from 'expo-secure-store';
 
 // Create axios instance
 const normalizedPrefix = API_CONFIG.API_PREFIX?.startsWith('/') ? API_CONFIG.API_PREFIX : `/${API_CONFIG.API_PREFIX || ''}`;
+const baseURL = `${API_CONFIG.BASE_URL}${normalizedPrefix}`
+  .replace(/\/+$/,'')
+  .replace(/([^:])\/\/+/g, '$1/');
 const apiClient: AxiosInstance = axios.create({
-  baseURL: `${API_CONFIG.BASE_URL}${normalizedPrefix}`.replace(/\/+$/,'').replace(/([^:])\/\/+/, '$1/'),
+  baseURL,
   timeout: API_CONFIG.TIMEOUT,
   headers: API_CONFIG.DEFAULT_HEADERS,
 });
@@ -52,7 +57,7 @@ apiClient.interceptors.response.use(
       try {
         const refreshToken = await SecureStore.getItemAsync('refresh_token');
         if (refreshToken) {
-          const response = await axios.post(`${API_CONFIG.BASE_URL}${normalizedPrefix}/auth/refresh`, {
+          const response = await axios.post(`${baseURL}/auth/refresh`, {
             refreshToken,
           });
 
@@ -64,13 +69,25 @@ apiClient.interceptors.response.use(
           return apiClient(originalRequest);
         }
       } catch (refreshError) {
-        // Refresh failed, clear tokens
+        // Refresh failed, clear tokens and trigger app logout flow
         await SecureStore.deleteItemAsync('auth_token');
         await SecureStore.deleteItemAsync('refresh_token');
-        // Optionally: trigger app logout flow here
+        try {
+          const { useAuthStore } = await import('@/features/auth/store');
+          useAuthStore.getState().logout();
+        } catch {}
       }
     }
 
+    // Network or timeout error (no response)
+    if (!error.response) {
+      try {
+        const backLabel = i18n.t('common.back');
+        const title = i18n.t('errors.networkErrorTitle', 'Connection Error');
+        const message = i18n.t('errors.networkOffline', 'No internet connection. Please check your network.');
+        useMessageBoxStore.getState().show({ title, message, actions: [{ label: backLabel }] });
+      } catch {}
+    }
     return Promise.reject(error);
   }
 );

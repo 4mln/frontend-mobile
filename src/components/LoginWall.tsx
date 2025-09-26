@@ -9,11 +9,7 @@ import LoginScreen from '../../app/auth/login';
 import SignupScreen from '../../app/auth/signup';
 
 export const LoginWall: React.FC = () => {
-  const { isAuthenticated } = useAuth();
-  // If OTP bypass is enabled, don't render the login wall at all
-  if (process.env.EXPO_PUBLIC_BYPASS_OTP === 'true' || process.env.EXPO_PUBLIC_BYPASS_OTP === '1') {
-    return null;
-  }
+  const { approved } = useAuth();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const pathname = usePathname();
@@ -30,26 +26,15 @@ export const LoginWall: React.FC = () => {
     });
   };
 
-  if (isAuthenticated) {
+  // Only dismiss when explicitly approved after OTP
+  if (approved) {
     return null;
   }
 
   return (
-    <Modal
-      visible={!isAuthenticated}
-      animationType="slide"
-      presentationStyle="overFullScreen"
-      statusBarTranslucent
-      transparent
-    >
-      <StatusBar
-        barStyle={isDark ? 'light-content' : 'dark-content'}
-        backgroundColor={'rgba(0,0,0,0.5)'}
-      />
-      <View style={[
-        styles.container,
-        { backgroundColor: 'rgba(0,0,0,0.5)' }
-      ]}>
+    <Modal visible={!approved} animationType="fade" transparent>
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} translucent backgroundColor="transparent" />
+      <View style={[styles.container, { backgroundColor: 'rgba(0,0,0,0.5)' }]}>
         <View style={[
           styles.sheet,
           { backgroundColor: isDark ? colors.background.dark : colors.background.light }
@@ -59,13 +44,19 @@ export const LoginWall: React.FC = () => {
             {mode === 'login' && (
               <LoginScreen
                 onNavigateToSignup={() => switchMode('signup')}
-                onOtpRequested={(phone) => { setPrevMode('login'); setPendingPhone(phone); switchMode('otp'); }}
+                onOtpRequested={async (phone) => {
+                  setPrevMode('login');
+                  setPendingPhone(phone);
+                  switchMode('otp');
+                }}
               />
             )}
             {mode === 'signup' && (
               <SignupScreen
                 onNavigateToLogin={() => switchMode('login')}
-                onOtpRequested={(phone) => { setPrevMode('signup'); setPendingPhone(phone); switchMode('otp'); }}
+                onOtpRequested={async (phone) => {
+                  setPrevMode('signup'); setPendingPhone(phone); switchMode('otp');
+                }}
               />
             )}
             {mode === 'otp' && (
@@ -123,6 +114,11 @@ const InlineOtp: React.FC<InlineOtpProps> = ({ phone, onBack, onSuccess }) => {
       setCanResend(true);
     }
   }, [timeLeft]);
+
+  // Focus first input on mount
+  React.useEffect(() => {
+    inputRefs.current[0]?.focus();
+  }, []);
 
   const handleOtpChange = (value: string, index: number) => {
     // keep only one numeric digit

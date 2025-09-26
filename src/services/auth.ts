@@ -39,6 +39,14 @@ export interface UpdateProfileRequest {
   avatar?: string;
 }
 
+export interface SignupRequest {
+  firstName: string;
+  lastName: string;
+  nationalId: string;
+  phone: string;
+  guildId: string;
+}
+
 export interface ApiResponse<T> {
   data?: T;
   error?: string;
@@ -60,7 +68,8 @@ export const authService = {
       };
     }
     try {
-      const response = await apiClient.post('/auth/otp/request', data);
+      // Use API prefix-aware client; path should not include extra /auth if backend exposes /otp/request
+      const response = await apiClient.post('/otp/request', data);
       return {
         data: response.data,
         success: true,
@@ -77,31 +86,32 @@ export const authService = {
    * Verify OTP and get tokens
    */
   async verifyOTP(data: VerifyOTPRequest): Promise<ApiResponse<AuthResponse>> {
-    // Temporary bypass for OTP during production phase
-    // Set EXPO_PUBLIC_BYPASS_OTP=true to skip real OTP verification
+    // Bypass only after OTP step: if enabled, accept any 6-digit OTP as valid
     if (process.env.EXPO_PUBLIC_BYPASS_OTP === 'true' || process.env.EXPO_PUBLIC_BYPASS_OTP === '1') {
-      const fakeNow = new Date().toISOString();
-      // IMPORTANT: Remove this block once real OTP auth is implemented
-      return {
-        data: {
-          access_token: 'bypass-access-token',
-          token_type: 'bearer',
-          user: {
-            id: 'bypass-user',
-            phone: data.phone,
-            name: 'Bypass User',
-            email: undefined,
-            avatar: undefined,
-            isVerified: true,
-            createdAt: fakeNow,
-            updatedAt: fakeNow,
+      const code = String(data.otp || '').trim();
+      if (code.length === 6) {
+        const fakeNow = new Date().toISOString();
+        return {
+          data: {
+            access_token: 'bypass-access-token',
+            token_type: 'bearer',
+            user: {
+              id: 'bypass-user',
+              phone: data.phone,
+              name: 'Bypass User',
+              email: undefined,
+              avatar: undefined,
+              isVerified: true,
+              createdAt: fakeNow,
+              updatedAt: fakeNow,
+            },
           },
-        },
-        success: true,
-      };
+          success: true,
+        };
+      }
     }
     try {
-      const response = await apiClient.post('/auth/otp/verify', {
+      const response = await apiClient.post('/otp/verify', {
         phone: data.phone,
         code: data.otp,
       });
@@ -114,6 +124,32 @@ export const authService = {
         error: error.response?.data?.detail || 'Invalid OTP',
         success: false,
       };
+    }
+  },
+
+  /**
+   * Check if a user exists by phone number
+   * Tries GET first, falls back to POST if not supported
+   */
+  async userExists(phone: string): Promise<ApiResponse<{ exists: boolean }>> {
+    try {
+      // Preferred: GET with query param
+      const getResp = await apiClient.get('/auth/users/exists', { params: { phone } });
+      return { data: { exists: !!getResp.data?.exists }, success: true };
+    } catch (getErr: any) {
+      try {
+        // Fallback: POST body
+        const postResp = await apiClient.post('/auth/users/exists', { phone });
+        return { data: { exists: !!postResp.data?.exists }, success: true };
+      } catch (postErr: any) {
+        const detail = postErr?.response?.data?.detail || postErr?.message || 'Failed to check user';
+        // If backend signals not found, return exists=false
+        const notFound = String(detail).toLowerCase().includes('not') && String(detail).toLowerCase().includes('found');
+        if (notFound) {
+          return { data: { exists: false }, success: true };
+        }
+        return { success: false, error: detail };
+      }
     }
   },
 
@@ -201,6 +237,24 @@ export const authService = {
     } catch (error: any) {
       return {
         error: error.response?.data?.detail || 'Failed to logout',
+        success: false,
+      };
+    }
+  },
+
+  /**
+   * Sign up a new user
+   */
+  async signup(data: SignupRequest): Promise<ApiResponse<{ detail: string }>> {
+    try {
+      const response = await apiClient.post('/auth/signup', data);
+      return {
+        data: response.data,
+        success: true,
+      };
+    } catch (error: any) {
+      return {
+        error: error.response?.data?.detail || 'Failed to signup',
         success: false,
       };
     }

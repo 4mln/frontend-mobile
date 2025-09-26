@@ -1,13 +1,14 @@
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { validateIranianMobileNumber, validateIranianNationalId } from '@/utils/validation';
 import { Ionicons } from '@expo/vector-icons';
-import { Picker } from '@react-native-picker/picker';
 import { Link, router } from 'expo-router';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     ActivityIndicator,
     Alert,
     KeyboardAvoidingView,
+    Modal,
     Platform,
     SafeAreaView,
     ScrollView,
@@ -18,9 +19,11 @@ import {
     View
 } from 'react-native';
 
+import { authService } from '@/services/auth';
 import { colors } from '@/theme/colors';
 import { semanticSpacing } from '@/theme/spacing';
 import { fontWeights, lineHeights, typography } from '@/theme/typography';
+import { ensureOnlineOrMessage } from '@/utils/connection';
 
 type Guild = {
   id: string;
@@ -35,17 +38,21 @@ type SignupScreenProps = {
 export default function SignupScreen(props: SignupScreenProps) {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
+  const { t } = useTranslation();
   
-  const [fullName, setFullName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [nationalId, setNationalId] = useState('');
   const [phone, setPhone] = useState('');
   const [selectedGuild, setSelectedGuild] = useState('');
   const [guilds, setGuilds] = useState<Guild[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingGuilds, setIsLoadingGuilds] = useState(true);
+  const [isGuildModalOpen, setIsGuildModalOpen] = useState(false);
   
   // Form validation errors
-  const [nameError, setNameError] = useState<string | undefined>(undefined);
+  const [firstNameError, setFirstNameError] = useState<string | undefined>(undefined);
+  const [lastNameError, setLastNameError] = useState<string | undefined>(undefined);
   const [nationalIdError, setNationalIdError] = useState<string | undefined>(undefined);
   const [phoneError, setPhoneError] = useState<string | undefined>(undefined);
   const [guildError, setGuildError] = useState<string | undefined>(undefined);
@@ -79,16 +86,28 @@ export default function SignupScreen(props: SignupScreenProps) {
     fetchGuilds();
   }, []);
 
+  const validateName = (value: string): string | undefined => {
+    const val = String(value || '').trim();
+    if (val.length < 2) return 'طول نام باید حداقل 2 کاراکتر باشد';
+    // Allow Persian letters, Arabic letters, English letters, spaces, and hyphen
+    const nameRegex = /^[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FFa-zA-Z\s\-]+$/;
+    if (!nameRegex.test(val)) return 'نام فقط می‌تواند شامل حروف باشد';
+    // Disallow multiple consecutive spaces or hyphens
+    if (/\s{2,}/.test(val)) return 'از فاصله‌های متعدد استفاده نکنید';
+    if (/--+/.test(val)) return 'از خط تیره‌ی متعدد استفاده نکنید';
+    return undefined;
+  };
+
   const validateForm = (): boolean => {
     let isValid = true;
     
-    // Validate name
-    if (!fullName.trim()) {
-      setNameError('نام و نام خانوادگی الزامی است');
-      isValid = false;
-    } else {
-      setNameError(undefined);
-    }
+    // Validate first name
+    const fnError = validateName(firstName);
+    if (fnError) { setFirstNameError(fnError); isValid = false; } else { setFirstNameError(undefined); }
+
+    // Validate last name
+    const lnError = validateName(lastName);
+    if (lnError) { setLastNameError(lnError); isValid = false; } else { setLastNameError(undefined); }
     
     // Validate national ID
     const isValidNational = validateIranianNationalId(nationalId);
@@ -127,38 +146,30 @@ export default function SignupScreen(props: SignupScreenProps) {
     setIsLoading(true);
     
     try {
-      // In development, we'll mock the API call
-      // const response = await apiClient.post('/auth/signup', {
-      //   fullName,
-      //   nationalId,
-      //   phone,
-      //   guildId: selectedGuild,
-      // });
-      
-      console.log('Signing up with:', {
-        fullName,
-        nationalId,
-        phone,
+      const online = await ensureOnlineOrMessage();
+      if (!online) return;
+      // Call backend signup
+      const resp = await authService.signup({
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        nationalId: nationalId.trim(),
+        phone: phone.trim(),
         guildId: selectedGuild,
       });
-      
-      // For development, we'll just show a success message and navigate to the OTP verification
-      setTimeout(() => {
+
+      if (resp.success) {
+        // Ensure OTP is requested after successful signup
+        try {
+          await authService.sendOTP({ phone: phone.trim() });
+        } catch {}
         if (props?.onOtpRequested) {
           props.onOtpRequested(phone.trim());
         } else {
-          Alert.alert(
-            'ثبت نام موفق',
-            'کد تایید به شماره موبایل شما ارسال شد.',
-            [
-              {
-                text: 'تایید',
-                onPress: () => router.push({ pathname: '/auth/verify-otp', params: { phone: phone.trim(), from: 'signup' } }),
-              },
-            ]
-          );
+          router.push({ pathname: '/auth/verify-otp', params: { phone: phone.trim(), from: 'signup' } });
         }
-      }, 1500);
+      } else {
+        Alert.alert('خطا', resp.error || 'ثبت نام با مشکل مواجه شد.');
+      }
     } catch (error) {
       Alert.alert('خطا', 'ثبت نام با مشکل مواجه شد. لطفا دوباره تلاش کنید.');
     } finally {
@@ -182,28 +193,47 @@ export default function SignupScreen(props: SignupScreenProps) {
           </View>
           
           <View style={styles.form}>
-            {/* Full Name Input */}
+            {/* First/Last Name Inputs (side-by-side) */}
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>نام و نام خانوادگی</Text>
-              <TextInput
-                style={[styles.input, nameError && styles.inputError]}
-                placeholder="نام و نام خانوادگی خود را وارد کنید"
-                value={fullName}
-                onChangeText={(text) => {
-                  setFullName(text);
-                  if (nameError) setNameError(undefined);
-                }}
-                editable={!isLoading}
-                textAlign="right"
-              />
-              {nameError && <Text style={styles.errorText}>{nameError}</Text>}
+              <View style={{ flexDirection: 'row', gap: 12 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.label}>نام</Text>
+                  <TextInput
+                    style={[styles.input, firstNameError && styles.inputError, { backgroundColor: isDark ? colors.gray[800] : colors.background.light, color: isDark ? colors.text.primary : colors.text.primary, borderColor: isDark ? colors.border.light : colors.border.light }]}
+                    placeholder="نام"
+                    value={firstName}
+                    onChangeText={(text) => {
+                      setFirstName(text);
+                      if (firstNameError) setFirstNameError(undefined);
+                    }}
+                    editable={!isLoading}
+                    textAlign="right"
+                  />
+                  {firstNameError && <Text style={styles.errorText}>{firstNameError}</Text>}
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.label}>نام خانوادگی</Text>
+                  <TextInput
+                    style={[styles.input, lastNameError && styles.inputError, { backgroundColor: isDark ? colors.gray[800] : colors.background.light, color: isDark ? colors.text.primary : colors.text.primary, borderColor: isDark ? colors.border.light : colors.border.light }]}
+                    placeholder="نام خانوادگی"
+                    value={lastName}
+                    onChangeText={(text) => {
+                      setLastName(text);
+                      if (lastNameError) setLastNameError(undefined);
+                    }}
+                    editable={!isLoading}
+                    textAlign="right"
+                  />
+                  {lastNameError && <Text style={styles.errorText}>{lastNameError}</Text>}
+                </View>
+              </View>
             </View>
             
             {/* National ID Input */}
             <View style={styles.inputContainer}>
               <Text style={styles.label}>کد ملی</Text>
               <TextInput
-                style={[styles.input, nationalIdError && styles.inputError]}
+                style={[styles.input, nationalIdError && styles.inputError, { backgroundColor: isDark ? colors.gray[800] : colors.background.light, color: isDark ? colors.text.primary : colors.text.primary, borderColor: isDark ? colors.border.light : colors.border.light }]}
                 placeholder="کد ملی 10 رقمی"
                 keyboardType="number-pad"
                 value={nationalId}
@@ -223,7 +253,7 @@ export default function SignupScreen(props: SignupScreenProps) {
             <View style={styles.inputContainer}>
               <Text style={styles.label}>شماره موبایل</Text>
               <TextInput
-                style={[styles.input, phoneError && styles.inputError]}
+                style={[styles.input, phoneError && styles.inputError, { backgroundColor: isDark ? colors.gray[800] : colors.background.light, color: isDark ? colors.text.primary : colors.text.primary, borderColor: isDark ? colors.border.light : colors.border.light }]}
                 placeholder="09xxxxxxxxx"
                 keyboardType="phone-pad"
                 value={phone}
@@ -247,23 +277,51 @@ export default function SignupScreen(props: SignupScreenProps) {
                   <Text style={styles.loadingText}>در حال بارگذاری صنف‌ها...</Text>
                 </View>
               ) : (
-                <View style={[styles.pickerContainer, guildError && styles.inputError]}>
-                  <Picker
-                    selectedValue={selectedGuild}
-                    onValueChange={(itemValue) => {
-                      setSelectedGuild(itemValue);
-                      if (guildError) setGuildError(undefined);
-                    }}
-                    enabled={!isLoading}
-                    style={styles.picker}
-                    dropdownIconColor={isDark ? colors.text.primary : colors.text.primary}
+                <>
+                  <TouchableOpacity
+                    activeOpacity={0.7}
+                    onPress={() => setIsGuildModalOpen(true)}
+                    disabled={isLoading}
+                    style={[
+                      styles.pickerContainer,
+                      guildError && styles.inputError,
+                      { backgroundColor: isDark ? colors.gray[800] : colors.background.light, borderColor: isDark ? colors.border.light : colors.border.light, height: 44, justifyContent: 'center', paddingHorizontal: semanticSpacing.md }
+                    ]}
                   >
-                    <Picker.Item label="انتخاب صنف" value="" />
-                    {guilds.map((guild) => (
-                      <Picker.Item key={guild.id} label={guild.name} value={guild.id} />
-                    ))}
-                  </Picker>
-                </View>
+                    <Text style={{ color: selectedGuild ? (isDark ? colors.text.primary : colors.text.primary) : (isDark ? colors.text.secondary : colors.text.secondary), fontSize: 16 }}>
+                      {selectedGuild ? (guilds.find(g => g.id === selectedGuild)?.name || '') : 'انتخاب صنف'}
+                    </Text>
+                  </TouchableOpacity>
+
+                  <Modal transparent visible={isGuildModalOpen} animationType="fade" onRequestClose={() => setIsGuildModalOpen(false)}>
+                    <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', paddingHorizontal: semanticSpacing.lg }}>
+                      <View style={{ backgroundColor: isDark ? colors.background.dark : colors.background.light, borderRadius: 12, maxHeight: '70%', overflow: 'hidden', width: '30%', alignSelf: 'center' }}>
+                        <View style={{ padding: semanticSpacing.md, borderBottomWidth: 1, borderColor: isDark ? colors.border.light : colors.border.light }}>
+                          <Text style={{ color: isDark ? colors.text.primary : colors.text.primary, fontWeight: '700', fontSize: 16, textAlign: 'center' }}>انتخاب صنف</Text>
+                          <Text style={{ marginTop: 6, color: isDark ? colors.text.secondary : colors.text.secondary, fontSize: 12, textAlign: 'center' }}>{t('signup.guildNote')}</Text>
+                        </View>
+                        <ScrollView>
+                          {guilds.map((guild) => (
+                            <TouchableOpacity
+                              key={guild.id}
+                              onPress={() => {
+                                setSelectedGuild(guild.id);
+                                if (guildError) setGuildError(undefined);
+                                setIsGuildModalOpen(false);
+                              }}
+                              style={{ paddingVertical: 12, paddingHorizontal: semanticSpacing.md, backgroundColor: selectedGuild === guild.id ? (isDark ? colors.gray[800] : colors.gray[100]) : 'transparent' }}
+                            >
+                              <Text style={{ color: isDark ? colors.text.primary : colors.text.primary, fontSize: 16 }}>{guild.name}</Text>
+                            </TouchableOpacity>
+                          ))}
+                        </ScrollView>
+                        <TouchableOpacity onPress={() => setIsGuildModalOpen(false)} style={{ padding: semanticSpacing.md, borderTopWidth: 1, borderColor: isDark ? colors.border.light : colors.border.light, alignItems: 'center' }}>
+                          <Text style={{ color: isDark ? colors.text.primary : colors.text.primary, fontWeight: '700' }}>بستن</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  </Modal>
+                </>
               )}
               {guildError && <Text style={styles.errorText}>{guildError}</Text>}
             </View>
@@ -372,6 +430,12 @@ export default function SignupScreen(props: SignupScreenProps) {
     color: colors.error[500],
     fontSize: 14, // Fixed from typography.small.fontSize
     marginTop: semanticSpacing.xs,
+    textAlign: 'right',
+  },
+  helperText: {
+    color: colors.text.secondary,
+    fontSize: 12,
+    marginBottom: semanticSpacing.xs,
     textAlign: 'right',
   },
   pickerContainer: {

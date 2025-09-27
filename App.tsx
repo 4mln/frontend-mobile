@@ -1,82 +1,93 @@
-import { create } from "zustand";
-import { saveItem, getItem, deleteItem } from "@/utils/secureStore";
-import { User } from "./types";
-import axios from "axios"; // make sure axios is installed
+import React, { useEffect, useState } from 'react';
+import { View, Text, ActivityIndicator } from 'react-native';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { initializePlugins } from '@/plugins';
+import { PluginNavigation } from '@/navigation/PluginNavigation';
+import { useAuthStore } from '@/features/auth/store';
+import { initializeConfig } from '@/services/configService';
+import { initializeFeatureFlags } from '@/services/featureFlags';
+import { initializeOfflineService } from '@/services/offlineService';
+import { initializeThemeService } from '@/services/themeService';
+import { ThemeProvider } from '@/components/ThemeProvider';
 
-interface AuthState {
-  user: User | null;
-  token: string | null;
-  refreshToken: string | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  error: string | null;
-  login: (user: User, token: string, refreshToken?: string) => Promise<void>;
-  logout: () => Promise<void>;
-  setLoading: (loading: boolean) => void;
-  setError: (error: string | null) => void;
-  clearError: () => void;
-  initializeAuth: () => Promise<void>;
+/**
+ * Main App Component
+ * Initializes plugin system and provides navigation
+ */
+const queryClient = new QueryClient();
+
+export default function App() {
+  const [pluginsInitialized, setPluginsInitialized] = useState(false);
+  const [initializationError, setInitializationError] = useState<string | null>(null);
+  const { isAuthenticated, user } = useAuthStore();
+
+  useEffect(() => {
+    initializeApp();
+  }, []);
+
+  const initializeApp = async () => {
+    try {
+      console.log('[App] Initializing application...');
+      
+      // Initialize configuration services
+      await Promise.all([
+        initializeConfig(),
+        initializeFeatureFlags(),
+        initializeOfflineService(),
+        initializeThemeService(),
+      ]);
+      
+      // Initialize plugin system
+      await initializePlugins();
+      
+      setPluginsInitialized(true);
+      console.log('[App] Application initialized successfully');
+    } catch (error) {
+      console.error('[App] Failed to initialize application:', error);
+      setInitializationError('Failed to initialize application');
+    }
+  };
+
+  if (!pluginsInitialized) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFFFFF' }}>
+        <ActivityIndicator size="large" color="#007AFF" />
+        <Text style={{ marginTop: 16, fontSize: 16, color: '#666' }}>
+          Initializing plugins...
+        </Text>
+      </View>
+    );
+  }
+
+  if (initializationError) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20, backgroundColor: '#FFFFFF' }}>
+        <Text style={{ fontSize: 18, color: '#FF3B30', textAlign: 'center', marginBottom: 16 }}>
+          Initialization Error
+        </Text>
+        <Text style={{ fontSize: 16, color: '#666', textAlign: 'center', marginBottom: 24 }}>
+          {initializationError}
+        </Text>
+        <Text 
+          style={{ fontSize: 16, color: '#007AFF', textAlign: 'center' }}
+          onPress={initializeApp}
+        >
+          Retry
+        </Text>
+      </View>
+    );
+  }
+
+  return (
+    <SafeAreaProvider>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+          <PluginNavigation 
+            userPermissions={user?.permissions || []}
+          />
+        </ThemeProvider>
+      </QueryClientProvider>
+    </SafeAreaProvider>
+  );
 }
-
-export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
-  token: null,
-  refreshToken: null,
-  isAuthenticated: false,
-  isLoading: true,
-  error: null,
-
-  login: async (user, token, refreshToken) => {
-    try {
-      await saveItem("auth_token", token);
-      if (refreshToken) await saveItem("refresh_token", refreshToken);
-      set({ user, token, refreshToken, isAuthenticated: true, isLoading: false, error: null });
-    } catch (e) {
-      console.error("Login failed:", e);
-      set({ error: "Failed to save session", isLoading: false });
-    }
-  },
-
-  logout: async () => {
-    try {
-      await deleteItem("auth_token");
-      await deleteItem("refresh_token");
-    } catch (e) {
-      console.error("Logout cleanup failed:", e);
-    }
-    set({ user: null, token: null, refreshToken: null, isAuthenticated: false, isLoading: false, error: null });
-  },
-
-  setLoading: (loading) => set({ isLoading: loading }),
-  setError: (error) => set({ error }),
-  clearError: () => set({ error: null }),
-
-  initializeAuth: async () => {
-    set({ isLoading: true });
-    try {
-      const token = await getItem("auth_token");
-      const refreshToken = await getItem("refresh_token");
-
-      if (token) {
-        set({ token, refreshToken, isAuthenticated: true });
-
-        // Fetch user profile from backend
-        try {
-          const response = await axios.get("/api/user/profile", {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          set({ user: response.data, isLoading: false });
-        } catch (err) {
-          console.error("Failed to fetch user profile:", err);
-          set({ user: null, isLoading: false, error: "Failed to load user profile" });
-        }
-
-      } else {
-        set({ isAuthenticated: false, isLoading: false });
-      }
-    } catch (e) {
-      console.error("Failed to initialize auth:", e);
-      set({ isAuthenticated: false, isLoading: false, error: "Failed to load session" });
-    }
-  },
-}));

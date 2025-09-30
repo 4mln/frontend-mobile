@@ -1,3 +1,5 @@
+export * from './product';
+export { default as sellerService } from './seller';
 // Export all services
 export { authService } from './auth';
 export { chatService } from './chat';

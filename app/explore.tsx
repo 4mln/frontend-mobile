@@ -2,6 +2,7 @@ import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useDebounce } from "@/hooks/useDebounce";
 import { productService } from "@/services/product";
 import { useQuery } from "@tanstack/react-query";
+import sellerService from "@/services/seller";
 import { colors } from "@/theme/colors";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -90,11 +91,32 @@ export default function ExploreScreen() {
     setBanners([]);
   }, [productSearch, productsLoading]);
 
+  const { data: sellerList } = useQuery({
+    queryKey: ["sellers", {}],
+    queryFn: async () => {
+      try { return await sellerService.listSellers({ pageSize: 10 }); } catch { return [] as Seller[]; }
+    },
+  });
+
+  const { data: categoryList } = useQuery({
+    queryKey: ["categories"],
+    queryFn: async () => {
+      try {
+        const res = await productService.getCategories();
+        if (res.success && res.data) return res.data.map((c) => ({ id: c.id, name: c.name })) as Category[];
+      } catch {}
+      return [] as Category[];
+    },
+  });
+
   useEffect(() => {
-    // TODO: wire sellers and guilds via services when available
-    setSellers([]);
-    setCategories([{ id: "all", name: t("products.all", "All") }]);
-  }, []);
+    setSellers(ensureArray(sellerList as any));
+  }, [sellerList]);
+
+  useEffect(() => {
+    const base = [{ id: "all", name: t("products.all", "All") }];
+    setCategories([...base, ...ensureArray(categoryList as any)]);
+  }, [categoryList, t]);
 
   // Auto-scroll banners
   useEffect(() => {

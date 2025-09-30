@@ -1,6 +1,8 @@
 import '@/i18n';
 import '@/polyfills/web';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { NativeBaseProvider } from 'native-base';
+import { nativeBaseTheme, colorModeManager } from '@/theme/nativeBase';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
 import { useEffect } from 'react';
@@ -46,19 +48,21 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
           <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-            <ConnectionBanner />
-            <LoginWall />
-            <MessageBox />
-            <Stack>
+            <NativeBaseProvider theme={nativeBaseTheme} colorModeManager={colorModeManager}>
+              <ConnectionBanner />
+              <LoginWall />
+              <MessageBox />
+              <Stack>
               <Stack.Screen name="index" options={{ headerShown: false }} />
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="profile/sessions" options={{ headerShown: false }} />
               <Stack.Screen name="product/[id]" options={{ headerShown: false, presentation: 'modal' }} />
               <Stack.Screen name="product/create" options={{ headerShown: false, presentation: 'modal' }} />
               <Stack.Screen name="chat/[id]" options={{ headerShown: false, presentation: 'modal' }} />
               <Stack.Screen name="rfq/create" options={{ headerShown: false, presentation: 'modal' }} />
-              <Stack.Screen name="wallet" options={{ headerShown: false, presentation: 'modal' }} />
-              <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-            </Stack>
+              <Stack.Screen name="modal" options={{ presentation: 'modal', title: undefined }} />
+              </Stack>
+            </NativeBaseProvider>
           </ThemeProvider>
         </QueryClientProvider>
       </SafeAreaProvider>

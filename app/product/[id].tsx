@@ -35,22 +35,22 @@ export default function ProductDetailScreen() {
 
   const handleRequestQuote = () => {
     Alert.alert(
-      'Request Quote',
-      'Send a quote request to the seller?',
+      t('product.requestQuote'),
+      t('product.requestQuoteConfirm', 'Send a quote request to the seller?'),
       [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Send Request', onPress: () => console.log('Quote requested') },
+        { text: t('common.cancel'), style: 'cancel' },
+        { text: t('product.requestQuote', 'Request Quote'), onPress: () => console.log('Quote requested') },
       ]
     );
   };
 
   const handleContact = () => {
     Alert.alert(
-      'Contact Seller',
-      'Start a conversation with the seller?',
+      t('product.contact'),
+      t('product.contactConfirm', 'Start a conversation with the seller?'),
       [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Start Chat', onPress: () => router.push('/chat') },
+        { text: t('common.cancel'), style: 'cancel' },
+        { text: t('chat.startConversation'), onPress: () => router.push('/chat') },
       ]
     );
   };
@@ -67,11 +67,11 @@ export default function ProductDetailScreen() {
 
   const handleReport = () => {
     Alert.alert(
-      'Report Product',
-      'Report this product for inappropriate content?',
+      t('product.report'),
+      t('product.reportConfirm', 'Report this product for inappropriate content?'),
       [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Report', onPress: () => console.log('Product reported'), style: 'destructive' },
+        { text: t('common.cancel'), style: 'cancel' },
+        { text: t('product.report'), onPress: () => console.log('Product reported'), style: 'destructive' },
       ]
     );
   };
@@ -377,7 +377,7 @@ export default function ProductDetailScreen() {
             <View style={styles.rating}>
               {product?.rating ? renderStars(product.rating) : null}
               <Text style={styles.ratingText}>
-                {product?.rating || '-'} ({product?.reviewCount || 0} reviews)
+                {product?.rating || '-'} ({product?.reviewCount || 0} {t('product.reviews', 'reviews')})
               </Text>
             </View>
             <View style={styles.location}>
@@ -392,16 +392,16 @@ export default function ProductDetailScreen() {
 
           <View style={styles.priceContainer}>
             <Text style={styles.price}>
-              {product?.price?.toLocaleString?.() || '-'} Toman
+              {product?.price?.toLocaleString?.() || '-'} {t('product.currency', 'Toman')}
             </Text>
             {product?.originalPrice && (
               <>
                 <Text style={styles.originalPrice}>
-                  {product.originalPrice.toLocaleString()} Toman
+                  {product.originalPrice.toLocaleString()} {t('product.currency', 'Toman')}
                 </Text>
                 <View style={styles.discount}>
                   <Text style={styles.discountText}>
-                    {Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}% OFF
+                    {Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}% {t('product.off', 'OFF')}
                   </Text>
                 </View>
               </>
@@ -427,7 +427,7 @@ export default function ProductDetailScreen() {
 
           {/* Seller Info */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Seller Information</Text>
+            <Text style={styles.sectionTitle}>{t('product.sellerInfo', 'Seller Information')}</Text>
             <View style={styles.sellerContainer}>
               <View style={styles.sellerHeader}>
                 <View style={styles.sellerAvatar}>
@@ -445,10 +445,10 @@ export default function ProductDetailScreen() {
                   <View style={styles.sellerRating}>
                     {product?.seller?.rating ? renderStars(product.seller.rating) : null}
                     <Text style={styles.sellerRatingText}>
-                      {product?.seller?.rating || '-'} ({product?.reviewCount || 0} reviews)
+                      {product?.seller?.rating || '-'} ({product?.reviewCount || 0} {t('product.reviews', 'reviews')})
                     </Text>
                   </View>
-                  <Text style={styles.responseTime}>{product?.seller?.responseTime}</Text>
+                <Text style={styles.responseTime}>{product?.seller?.responseTime}</Text>
                 </View>
               </View>
             </View>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
 import { useOffline } from '@/hooks/useOffline';
 
@@ -18,6 +19,7 @@ export const OfflineStatus: React.FC<OfflineStatusProps> = ({
   onSyncPress,
   onClearPress,
 }) => {
+  const { t } = useTranslation();
   const { isOnline, isSyncing, lastSync, pendingItems, failedItems, sync, clearData } = useOffline();
   
   const [pulseAnim] = React.useState(new Animated.Value(1));
@@ -73,15 +75,15 @@ export const OfflineStatus: React.FC<OfflineStatusProps> = ({
   };
 
   const getStatusText = () => {
-    if (!isOnline) return 'Offline';
-    if (isSyncing) return 'Syncing...';
-    if (failedItems > 0) return `${failedItems} failed`;
-    if (pendingItems > 0) return `${pendingItems} pending`;
-    return 'Synced';
+    if (!isOnline) return t('offline.offline', 'Offline');
+    if (isSyncing) return t('offline.syncing', 'Syncing...');
+    if (failedItems > 0) return t('offline.failedCount', '{{count}} failed', { count: failedItems });
+    if (pendingItems > 0) return t('offline.pendingCount', '{{count}} pending', { count: pendingItems });
+    return t('offline.synced', 'Synced');
   };
 
   const getLastSyncText = () => {
-    if (!lastSync) return 'Never synced';
+    if (!lastSync) return t('offline.neverSynced', 'Never synced');
     
     const now = Date.now();
     const diff = now - lastSync;
@@ -89,10 +91,10 @@ export const OfflineStatus: React.FC<OfflineStatusProps> = ({
     const hours = Math.floor(minutes / 60);
     const days = Math.floor(hours / 24);
     
-    if (days > 0) return `${days}d ago`;
-    if (hours > 0) return `${hours}h ago`;
-    if (minutes > 0) return `${minutes}m ago`;
-    return 'Just now';
+    if (days > 0) return t('offline.daysAgo', '{{count}}d ago', { count: days });
+    if (hours > 0) return t('offline.hoursAgo', '{{count}}h ago', { count: hours });
+    if (minutes > 0) return t('offline.minutesAgo', '{{count}}m ago', { count: minutes });
+    return t('offline.justNow', 'Just now');
   };
 
   return (
@@ -112,7 +114,7 @@ export const OfflineStatus: React.FC<OfflineStatusProps> = ({
         <Text style={styles.statusLabel}>{getStatusText()}</Text>
         {showDetails && (
           <Text style={styles.statusDetails}>
-            {isOnline ? `Last sync: ${getLastSyncText()}` : 'No internet connection'}
+            {isOnline ? `${t('offline.lastSync', 'Last sync')}: ${getLastSyncText()}` : t('errors.networkOffline')}
           </Text>
         )}
       </View>
@@ -127,7 +129,7 @@ export const OfflineStatus: React.FC<OfflineStatusProps> = ({
               disabled={isSyncing}
             >
               <Text style={styles.actionButtonText}>
-                {isSyncing ? 'Syncing...' : 'Sync'}
+                {isSyncing ? t('offline.syncing', 'Syncing...') : t('offline.sync', 'Sync')}
               </Text>
             </TouchableOpacity>
           )}
@@ -137,7 +139,7 @@ export const OfflineStatus: React.FC<OfflineStatusProps> = ({
               style={[styles.actionButton, styles.clearButton]}
               onPress={handleClearPress}
             >
-              <Text style={styles.actionButtonText}>Clear</Text>
+              <Text style={styles.actionButtonText}>{t('offline.clear', 'Clear')}</Text>
             </TouchableOpacity>
           )}
         </View>

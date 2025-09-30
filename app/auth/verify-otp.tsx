@@ -76,12 +76,12 @@ export default function VerifyOTPScreen() {
     const otpString = otpCode || otp.join('');
     
     if (otpString.length !== 6) {
-      Alert.alert('Error', 'Please enter the complete verification code');
+      Alert.alert('Error', t('otp.errors.incomplete'));
       return;
     }
 
     if (!phone) {
-      Alert.alert('Error', 'Phone number not found');
+      Alert.alert('Error', t('otp.errors.noPhone'));
       return;
     }
 
@@ -262,9 +262,7 @@ export default function VerifyOTPScreen() {
             <Ionicons name="shield-checkmark" size={40} color={colors.primary[600]} />
           </View>
           <Text style={styles.title}>{t('auth.enterOTP')}</Text>
-          <Text style={styles.subtitle}>
-            We've sent a verification code to
-          </Text>
+          <Text style={styles.subtitle}>{t('otp.title')}</Text>
           {!!phone && (<Text style={styles.phoneNumber}>+98 {phone}</Text>)}
         </View>
 
@@ -312,9 +310,7 @@ export default function VerifyOTPScreen() {
             </TouchableOpacity>
           ) : (
             <>
-              <Text style={styles.resendText}>
-                Didn't receive the code? Resend in
-              </Text>
+              <Text style={styles.resendText}>{t('otp.didntReceive')}</Text>
               <Text style={styles.timerText}>{formatTime(timeLeft)}</Text>
             </>
           )}

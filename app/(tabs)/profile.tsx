@@ -68,7 +68,7 @@ export default function ProfileScreen() {
   const handleLogout = () => {
     Alert.alert(
       t('auth.logout'),
-      'Are you sure you want to logout?',
+      t('profileScreen.logoutConfirm'),
       [
         { text: t('common.cancel'), style: 'cancel' },
         { text: t('auth.logout'), onPress: logout, style: 'destructive' },
@@ -290,7 +290,7 @@ export default function ProfileScreen() {
       <ScrollView style={styles.content}>
         {/* Account Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Account</Text>
+          <Text style={styles.sectionTitle}>{t('profileScreen.account')}</Text>
           
           <TouchableOpacity style={styles.menuItem} onPress={handleEditProfile}>
             <View style={styles.menuIcon}>
@@ -298,7 +298,7 @@ export default function ProfileScreen() {
             </View>
             <View style={styles.menuContent}>
               <Text style={styles.menuTitle}>{t('profile.editProfile')}</Text>
-              <Text style={styles.menuSubtitle}>Update your personal information</Text>
+              <Text style={styles.menuSubtitle}>{t('profileScreen.updateInfo')}</Text>
             </View>
             <Ionicons 
               name="chevron-forward" 
@@ -315,7 +315,7 @@ export default function ProfileScreen() {
             <View style={styles.menuContent}>
               <Text style={styles.menuTitle}>{t('profile.wallet')}</Text>
               <Text style={styles.menuSubtitle}>
-                {walletBalance ? `${t('wallet.balance')}: ${walletBalance.balance.toLocaleString()} ${walletBalance.currency}` : 'Manage your wallet and transactions'}
+                {walletBalance ? `${t('wallet.balance')}: ${walletBalance.balance.toLocaleString()} ${walletBalance.currency}` : t('profileScreen.walletDesc')}
               </Text>
             </View>
             <Ionicons 
@@ -331,8 +331,8 @@ export default function ProfileScreen() {
               <Ionicons name="key-outline" size={20} color={colors.primary[600]} />
             </View>
             <View style={styles.menuContent}>
-              <Text style={styles.menuTitle}>Active Sessions</Text>
-              <Text style={styles.menuSubtitle}>Manage your active login sessions</Text>
+              <Text style={styles.menuTitle}>{t('profileScreen.activeSessions')}</Text>
+              <Text style={styles.menuSubtitle}>{t('profileScreen.activeSessionsDesc')}</Text>
             </View>
             <Ionicons 
               name="chevron-forward" 
@@ -345,7 +345,7 @@ export default function ProfileScreen() {
 
         {/* Settings Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Settings</Text>
+          <Text style={styles.sectionTitle}>{t('profileScreen.settings')}</Text>
           
           <View style={styles.switchContainer}>
             <View style={styles.switchContent}>
@@ -405,7 +405,7 @@ export default function ProfileScreen() {
 
         {/* Support Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Support</Text>
+          <Text style={styles.sectionTitle}>{t('profileScreen.support')}</Text>
           
           <TouchableOpacity style={styles.menuItem} onPress={handleHelp}>
             <View style={styles.menuIcon}>
@@ -413,7 +413,7 @@ export default function ProfileScreen() {
             </View>
             <View style={styles.menuContent}>
               <Text style={styles.menuTitle}>{t('profile.help')}</Text>
-              <Text style={styles.menuSubtitle}>Get help and support</Text>
+              <Text style={styles.menuSubtitle}>{t('profileScreen.getHelp')}</Text>
             </View>
             <Ionicons 
               name="chevron-forward" 
@@ -429,7 +429,7 @@ export default function ProfileScreen() {
             </View>
             <View style={styles.menuContent}>
               <Text style={styles.menuTitle}>{t('profile.about')}</Text>
-              <Text style={styles.menuSubtitle}>App version and information</Text>
+              <Text style={styles.menuSubtitle}>{t('profileScreen.aboutDesc')}</Text>
             </View>
             <Ionicons 
               name="chevron-forward" 

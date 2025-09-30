@@ -1,11 +1,13 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
+import { useTranslation } from "react-i18next";
 
 export default function HomeScreen() {
+  const { t } = useTranslation();
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Welcome to B2B Marketplace!</Text>
-      <Text>Start building your marketplace here.</Text>
+      <Text style={styles.title}>{t('home.title', 'B2B Marketplace')}</Text>
+      <Text>{t('home.start', 'Start building your marketplace here.')}</Text>
     </View>
   );
 }

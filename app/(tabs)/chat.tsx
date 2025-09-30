@@ -230,7 +230,7 @@ export default function ChatScreen() {
         />
         <TextInput
           style={styles.searchInput}
-          placeholder="Search conversations..."
+          placeholder={t('chat.searchPlaceholder', 'Search conversations...')}
           placeholderTextColor={isDark ? colors.gray[400] : colors.gray[500]}
           value={searchQuery}
           onChangeText={setSearchQuery}

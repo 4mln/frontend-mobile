@@ -300,7 +300,7 @@ export default function CreateProductScreen() {
             color={isDark ? colors.gray[400] : colors.gray[600]} 
           />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>List Product</Text>
+        <Text style={styles.headerTitle}>{t('product.listProduct', 'List Product')}</Text>
       </View>
 
       <KeyboardAvoidingView 
@@ -311,15 +311,15 @@ export default function CreateProductScreen() {
           <View style={styles.form}>
             {/* Basic Information */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Basic Information</Text>
+              <Text style={styles.sectionTitle}>{t('product.basicInfo', 'Basic Information')}</Text>
               
               <View style={styles.inputContainer}>
                 <Text style={styles.label}>
-                  Product Name <Text style={styles.required}>*</Text>
+                  {t('product.name', 'Product Name')} <Text style={styles.required}>*</Text>
                 </Text>
                 <TextInput
                   style={styles.textInput}
-                  placeholder="Enter product name"
+                  placeholder={t('product.enterName', 'Enter product name')}
                   placeholderTextColor={isDark ? colors.gray[400] : colors.gray[500]}
                   value={formData.name}
                   onChangeText={(value) => handleInputChange('name', value)}
@@ -328,11 +328,11 @@ export default function CreateProductScreen() {
 
               <View style={styles.inputContainer}>
                 <Text style={styles.label}>
-                  Description <Text style={styles.required}>*</Text>
+                  {t('product.description')} <Text style={styles.required}>*</Text>
                 </Text>
                 <TextInput
                   style={[styles.textInput, styles.textArea]}
-                  placeholder="Describe your product"
+                  placeholder={t('product.describeProduct', 'Describe your product')}
                   placeholderTextColor={isDark ? colors.gray[400] : colors.gray[500]}
                   value={formData.description}
                   onChangeText={(value) => handleInputChange('description', value)}
@@ -342,11 +342,11 @@ export default function CreateProductScreen() {
 
               <View style={styles.inputContainer}>
                 <Text style={styles.label}>
-                  Price (Toman) <Text style={styles.required}>*</Text>
+                  {t('product.price')} ({t('product.currency', 'Toman')}) <Text style={styles.required}>*</Text>
                 </Text>
                 <TextInput
                   style={styles.textInput}
-                  placeholder="Enter price"
+                  placeholder={t('product.enterPrice', 'Enter price')}
                   placeholderTextColor={isDark ? colors.gray[400] : colors.gray[500]}
                   value={formData.price}
                   onChangeText={(value) => handleInputChange('price', value)}
@@ -356,7 +356,7 @@ export default function CreateProductScreen() {
 
               <View style={styles.inputContainer}>
                 <Text style={styles.label}>
-                  Category <Text style={styles.required}>*</Text>
+                  {t('product.category', 'Category')} <Text style={styles.required}>*</Text>
                 </Text>
                 <View style={styles.categoryContainer}>
                   {categories.map((category) => (
@@ -372,7 +372,7 @@ export default function CreateProductScreen() {
                         styles.categoryButtonText,
                         formData.category === category && styles.categoryButtonTextSelected,
                       ]}>
-                        {category}
+                        {t(`categories.${category}`, category)}
                       </Text>
                     </TouchableOpacity>
                   ))}
@@ -380,7 +380,7 @@ export default function CreateProductScreen() {
               </View>
 
               <View style={styles.inputContainer}>
-                <Text style={styles.label}>Condition</Text>
+                <Text style={styles.label}>{t('product.condition', 'Condition')}</Text>
                 <View style={styles.conditionContainer}>
                   {conditions.map((condition) => (
                     <TouchableOpacity
@@ -395,7 +395,7 @@ export default function CreateProductScreen() {
                         styles.conditionButtonText,
                         formData.condition === condition.value && styles.conditionButtonTextSelected,
                       ]}>
-                        {condition.label}
+                        {t(`product.condition_${condition.value}`, condition.label)}
                       </Text>
                     </TouchableOpacity>
                   ))}
@@ -405,7 +405,7 @@ export default function CreateProductScreen() {
 
             {/* Images */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Product Images</Text>
+              <Text style={styles.sectionTitle}>{t('product.images', 'Product Images')}</Text>
               
               <View style={styles.imagesContainer}>
                 {formData.images.map((image, index) => (
@@ -420,19 +420,19 @@ export default function CreateProductScreen() {
                 </TouchableOpacity>
               </View>
               <Text style={styles.helpText}>
-                Add up to 10 images. First image will be used as the main photo.
+                {t('product.imagesHelp', 'Add up to 10 images. First image will be used as the main photo.')}
               </Text>
             </View>
 
             {/* Additional Information */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Additional Information</Text>
+              <Text style={styles.sectionTitle}>{t('product.additionalInfo', 'Additional Information')}</Text>
               
               <View style={styles.inputContainer}>
-                <Text style={styles.label}>Location</Text>
+                <Text style={styles.label}>{t('product.location', 'Location')}</Text>
                 <TextInput
                   style={styles.textInput}
-                  placeholder="e.g., Tehran, Iran"
+                  placeholder={t('product.locationPlaceholder', 'e.g., Tehran, Iran')}
                   placeholderTextColor={isDark ? colors.gray[400] : colors.gray[500]}
                   value={formData.location}
                   onChangeText={(value) => handleInputChange('location', value)}
@@ -440,17 +440,17 @@ export default function CreateProductScreen() {
               </View>
 
               <View style={styles.inputContainer}>
-                <Text style={styles.label}>Technical Specifications</Text>
+                <Text style={styles.label}>{t('product.technicalSpecifications', 'Technical Specifications')}</Text>
                 <TextInput
                   style={[styles.textInput, styles.textArea]}
-                  placeholder="Any technical details or specifications"
+                  placeholder={t('product.specificationsPlaceholder', 'Any technical details or specifications')}
                   placeholderTextColor={isDark ? colors.gray[400] : colors.gray[500]}
                   value={formData.specifications}
                   onChangeText={(value) => handleInputChange('specifications', value)}
                   multiline
                 />
                 <Text style={styles.helpText}>
-                  Include dimensions, materials, certifications, or other technical details
+                  {t('product.specificationsHelp', 'Include dimensions, materials, certifications, or other technical details')}
                 </Text>
               </View>
             </View>
@@ -465,7 +465,7 @@ export default function CreateProductScreen() {
               disabled={isLoading}
             >
               <Text style={styles.submitButtonText}>
-                {isLoading ? 'Creating Product...' : 'List Product'}
+                {isLoading ? t('product.creating', 'Creating Product...') : t('product.listProduct', 'List Product')}
               </Text>
             </TouchableOpacity>
           </View>

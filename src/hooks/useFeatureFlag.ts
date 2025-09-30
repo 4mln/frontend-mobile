@@ -66,7 +66,7 @@ export const useFeatureFlag = (
 
       if (trackUsage && isEnabled) {
         // Track feature usage
-        const { trackFeatureUsage } = await import('@/services/analytics');
+        const { trackFeatureUsage } = await import('../services/analytics');
         trackFeatureUsage(flagName, 'hook_usage', {
           enabled: isEnabled,
           metadata: flagMetadata,

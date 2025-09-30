@@ -53,6 +53,16 @@ export interface ApiResponse<T> {
   success: boolean;
 }
 
+export interface UserSession {
+  id: number;
+  device_id?: string;
+  user_agent: string;
+  ip_address?: string;
+  created_at: string;
+  last_seen_at?: string;
+  is_revoked: boolean;
+}
+
 // Auth service functions
 export const authService = {
   /**
@@ -68,8 +78,8 @@ export const authService = {
       };
     }
     try {
-      // Use API prefix-aware client; path should not include extra /auth if backend exposes /otp/request
-      const response = await apiClient.post('/otp/request', data);
+      // Use correct backend endpoint with /auth prefix
+      const response = await apiClient.post('/auth/otp/request', data);
       return {
         data: response.data,
         success: true,
@@ -111,7 +121,7 @@ export const authService = {
       }
     }
     try {
-      const response = await apiClient.post('/otp/verify', {
+      const response = await apiClient.post('/auth/otp/verify', {
         phone: data.phone,
         code: data.otp,
       });
@@ -129,27 +139,24 @@ export const authService = {
 
   /**
    * Check if a user exists by phone number
-   * Tries GET first, falls back to POST if not supported
+   * Note: Backend OTP flow automatically creates users, so this always returns true
+   * This method is kept for compatibility but doesn't make actual API calls
    */
   async userExists(phone: string): Promise<ApiResponse<{ exists: boolean }>> {
     try {
-      // Preferred: GET with query param
-      const getResp = await apiClient.get('/auth/users/exists', { params: { phone } });
-      return { data: { exists: !!getResp.data?.exists }, success: true };
-    } catch (getErr: any) {
-      try {
-        // Fallback: POST body
-        const postResp = await apiClient.post('/auth/users/exists', { phone });
-        return { data: { exists: !!postResp.data?.exists }, success: true };
-      } catch (postErr: any) {
-        const detail = postErr?.response?.data?.detail || postErr?.message || 'Failed to check user';
-        // If backend signals not found, return exists=false
-        const notFound = String(detail).toLowerCase().includes('not') && String(detail).toLowerCase().includes('found');
-        if (notFound) {
-          return { data: { exists: false }, success: true };
-        }
-        return { success: false, error: detail };
-      }
+      const response = await apiClient.get(`/auth/exists`, { params: { phone } });
+      return { data: response.data, success: true };
+    } catch (error: any) {
+      return { data: { exists: false }, error: 'Failed to check user', success: false };
+    }
+  },
+
+  async phoneOrNationalIdExists(phone: string, nationalId: string): Promise<ApiResponse<{ exists: boolean; phone_exists: boolean; national_id_exists: boolean }>> {
+    try {
+      const response = await apiClient.get(`/auth/exists`, { params: { phone, national_id: nationalId } });
+      return { data: response.data, success: true };
+    } catch (error: any) {
+      return { data: { exists: false, phone_exists: false, national_id_exists: false }, error: 'Failed to check identity', success: false };
     }
   },
 
@@ -158,7 +165,7 @@ export const authService = {
    */
   async refreshToken(data: RefreshTokenRequest): Promise<ApiResponse<RefreshTokenResponse>> {
     try {
-      const response = await apiClient.post('/auth/refresh', data);
+      const response = await apiClient.post('/refresh', data);
       return {
         data: response.data,
         success: true,
@@ -255,6 +262,60 @@ export const authService = {
     } catch (error: any) {
       return {
         error: error.response?.data?.detail || 'Failed to signup',
+        success: false,
+      };
+    }
+  },
+
+  /**
+   * Get user sessions
+   */
+  async getSessions(): Promise<ApiResponse<UserSession[]>> {
+    try {
+      const response = await apiClient.get('/me/sessions');
+      return {
+        data: response.data,
+        success: true,
+      };
+    } catch (error: any) {
+      return {
+        error: error.response?.data?.detail || 'Failed to get sessions',
+        success: false,
+      };
+    }
+  },
+
+  /**
+   * Revoke a specific session
+   */
+  async revokeSession(sessionId: number): Promise<ApiResponse<{ detail: string }>> {
+    try {
+      const response = await apiClient.post(`/me/sessions/${sessionId}/revoke`);
+      return {
+        data: response.data,
+        success: true,
+      };
+    } catch (error: any) {
+      return {
+        error: error.response?.data?.detail || 'Failed to revoke session',
+        success: false,
+      };
+    }
+  },
+
+  /**
+   * Logout from all sessions
+   */
+  async logoutAllSessions(): Promise<ApiResponse<{ detail: string }>> {
+    try {
+      const response = await apiClient.post('/me/sessions/logout-all');
+      return {
+        data: response.data,
+        success: true,
+      };
+    } catch (error: any) {
+      return {
+        error: error.response?.data?.detail || 'Failed to logout from all sessions',
         success: false,
       };
     }

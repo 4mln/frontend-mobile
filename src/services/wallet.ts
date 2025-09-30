@@ -224,6 +224,24 @@ export const walletService = {
       };
     }
   },
+
+  /**
+   * Transfer funds to another user
+   */
+  async transfer(data: { recipientId: string; amount: number; description?: string }): Promise<ApiResponse<Transaction>> {
+    try {
+      const response = await apiClient.post('/wallet/transfer', data);
+      return {
+        data: response.data,
+        success: true,
+      };
+    } catch (error: any) {
+      return {
+        error: error.response?.data?.detail || 'Failed to transfer funds',
+        success: false,
+      };
+    }
+  },
 };
 
 

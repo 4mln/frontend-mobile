@@ -1,6 +1,7 @@
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     Modal,
     ScrollView,
@@ -39,6 +40,7 @@ export const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
   onClose,
   onApplyFilters,
 }) => {
+  const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   
@@ -48,38 +50,38 @@ export const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
   const filterSections: FilterSection[] = [
     {
       id: 'category',
-      title: 'Category',
+      title: t('search.filters', 'Filters'),
       type: 'single',
       options: [
-        { id: '1', label: 'Construction', value: 'construction' },
-        { id: '2', label: 'Electronics', value: 'electronics' },
-        { id: '3', label: 'Textiles', value: 'textiles' },
-        { id: '4', label: 'Food & Beverage', value: 'food' },
-        { id: '5', label: 'Automotive', value: 'automotive' },
-        { id: '6', label: 'Chemicals', value: 'chemicals' },
+        { id: '1', label: t('categories.Construction', 'Construction'), value: 'construction' },
+        { id: '2', label: t('categories.Electronics', 'Electronics'), value: 'electronics' },
+        { id: '3', label: t('categories.Textiles', 'Textiles'), value: 'textiles' },
+        { id: '4', label: t('categories.Food & Beverage', 'Food & Beverage'), value: 'food' },
+        { id: '5', label: t('categories.Automotive', 'Automotive'), value: 'automotive' },
+        { id: '6', label: t('categories.Chemicals', 'Chemicals'), value: 'chemicals' },
       ],
     },
     {
       id: 'brand',
-      title: 'Brand',
+      title: t('search.brand', 'Brand'),
       type: 'multiple',
       options: [
-        { id: '1', label: 'Brand A', value: 'brand-a' },
-        { id: '2', label: 'Brand B', value: 'brand-b' },
-        { id: '3', label: 'Brand C', value: 'brand-c' },
-        { id: '4', label: 'Brand D', value: 'brand-d' },
+        { id: '1', label: t('search.brandA', 'Brand A'), value: 'brand-a' },
+        { id: '2', label: t('search.brandB', 'Brand B'), value: 'brand-b' },
+        { id: '3', label: t('search.brandC', 'Brand C'), value: 'brand-c' },
+        { id: '4', label: t('search.brandD', 'Brand D'), value: 'brand-d' },
       ],
     },
     {
       id: 'location',
-      title: 'Location',
+      title: t('search.location', 'Location'),
       type: 'single',
       options: [
-        { id: '1', label: 'Tehran', value: 'tehran' },
-        { id: '2', label: 'Isfahan', value: 'isfahan' },
-        { id: '3', label: 'Shiraz', value: 'shiraz' },
-        { id: '4', label: 'Tabriz', value: 'tabriz' },
-        { id: '5', label: 'Mashhad', value: 'mashhad' },
+        { id: '1', label: t('cities.Tehran', 'Tehran'), value: 'tehran' },
+        { id: '2', label: t('cities.Isfahan', 'Isfahan'), value: 'isfahan' },
+        { id: '3', label: t('cities.Shiraz', 'Shiraz'), value: 'shiraz' },
+        { id: '4', label: t('cities.Tabriz', 'Tabriz'), value: 'tabriz' },
+        { id: '5', label: t('cities.Mashhad', 'Mashhad'), value: 'mashhad' },
       ],
     },
   ];
@@ -272,7 +274,7 @@ export const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
         <View style={styles.container}>
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.headerTitle}>Filters</Text>
+            <Text style={styles.headerTitle}>{t('search.filters', 'Filters')}</Text>
             <TouchableOpacity style={styles.closeButton} onPress={onClose}>
               <Ionicons 
                 name="close" 
@@ -285,20 +287,20 @@ export const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
           <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
             {/* Price Range */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Price Range</Text>
+              <Text style={styles.sectionTitle}>{t('search.priceRange', 'Price Range')}</Text>
               <View style={styles.priceRangeContainer}>
                 <TextInput
                   style={styles.priceInput}
-                  placeholder="Min"
+                  placeholder={t('search.min', 'Min')}
                   placeholderTextColor={isDark ? colors.gray[400] : colors.gray[500]}
                   value={priceRange.min}
                   onChangeText={(text) => setPriceRange(prev => ({ ...prev, min: text }))}
                   keyboardType="numeric"
                 />
-                <Text style={styles.priceSeparator}>to</Text>
+                <Text style={styles.priceSeparator}>{t('search.to', 'to')}</Text>
                 <TextInput
                   style={styles.priceInput}
-                  placeholder="Max"
+                  placeholder={t('search.max', 'Max')}
                   placeholderTextColor={isDark ? colors.gray[400] : colors.gray[500]}
                   value={priceRange.max}
                   onChangeText={(text) => setPriceRange(prev => ({ ...prev, max: text }))}
@@ -342,10 +344,10 @@ export const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
           {/* Actions */}
           <View style={styles.actions}>
             <TouchableOpacity style={styles.clearButton} onPress={handleClearFilters}>
-              <Text style={styles.clearButtonText}>Clear All</Text>
+              <Text style={styles.clearButtonText}>{t('search.clearFilters')}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.applyButton} onPress={handleApplyFilters}>
-              <Text style={styles.applyButtonText}>Apply Filters</Text>
+              <Text style={styles.applyButtonText}>{t('search.applyFilters', 'Apply Filters')}</Text>
             </TouchableOpacity>
           </View>
         </View>

@@ -30,12 +30,12 @@ export const API_CONFIG = {
   ENDPOINTS: {
     // Auth endpoints
     AUTH: {
-      SEND_OTP: '/otp/request',
-      VERIFY_OTP: '/otp/verify',
-      REFRESH_TOKEN: '/auth/refresh',
-      PROFILE: '/me/profile',
-      CURRENT_USER: '/me',
-      LOGOUT: '/me/sessions/logout-all',
+      SEND_OTP: '/auth/otp/request',
+      VERIFY_OTP: '/auth/otp/verify',
+      REFRESH_TOKEN: '/refresh',
+      PROFILE: '/auth/me/profile',
+      CURRENT_USER: '/auth/me',
+      LOGOUT: '/auth/me/sessions/logout-all',
     },
     
     // Product endpoints
@@ -48,11 +48,18 @@ export const API_CONFIG = {
       SEARCH: '/products/search',
     },
     
-    // Guild endpoints
+    // Guild endpoints (categories)
     GUILDS: {
       LIST: '/guilds',
       GET: '/guilds/:id',
       PRODUCTS: '/guilds/:id/products',
+    },
+    
+    // Seller endpoints
+    SELLERS: {
+      LIST: '/sellers',
+      GET: '/sellers/:id',
+      STOREFRONT: '/sellers/:id/storefront',
     },
     
     // RFQ endpoints

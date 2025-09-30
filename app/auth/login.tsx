@@ -26,7 +26,8 @@ import { fontWeights, lineHeights, typography } from '@/theme/typography';
 import { ensureOnlineOrMessage } from '@/utils/connection';
 
 type LoginScreenProps = {
-  onNavigateToSignup?: () => void;
+  initialPhone?: string;
+  onNavigateToSignup?: (phone?: string) => void;
   onOtpRequested?: (phone: string) => void;
 };
 
@@ -38,7 +39,7 @@ export default function LoginScreen(props: LoginScreenProps) {
   // If OTP bypass is enabled, we will skip OTP screen and navigate directly
   const isBypassEnabled = process.env.EXPO_PUBLIC_BYPASS_OTP === 'true' || process.env.EXPO_PUBLIC_BYPASS_OTP === '1';
   
-  const [phone, setPhone] = useState('');
+  const [phone, setPhone] = useState(props.initialPhone || '');
   const [isLoading, setIsLoading] = useState(false);
   const [phoneError, setPhoneError] = useState<string | undefined>(undefined);
   
@@ -63,8 +64,23 @@ export default function LoginScreen(props: LoginScreenProps) {
       // First: check whether user exists
       const existsResp = await authService.userExists(phone.trim());
       if (existsResp.success && existsResp.data && !existsResp.data.exists) {
-        const msg = i18n.t('errors.userNotFound');
-        useMessageBoxStore.getState().show({ message: msg, actions: [{ label: i18n.t('common.back') }] });
+        // Debug trace to ensure handler is hit
+        console.log('[login] user not found, prompting to signup', phone.trim());
+        useMessageBoxStore.getState().show({
+          message: i18n.t('auth.userNotFoundProceedSignup', 'User not found, proceed to signup.'),
+          actions: [
+            {
+              label: i18n.t('auth.signup', 'Signup'),
+              onPress: () => {
+                if (props?.onNavigateToSignup) {
+                  props.onNavigateToSignup(phone.trim());
+                } else {
+                  router.replace({ pathname: '/auth/signup', params: { phone: phone.trim() } });
+                }
+              },
+            },
+          ],
+        });
         return;
       }
 
@@ -85,7 +101,7 @@ export default function LoginScreen(props: LoginScreenProps) {
         useMessageBoxStore.getState().show({ message: msg, actions: [{ label: i18n.t('common.back') }] });
       }
     } catch (error) {
-      Alert.alert('خطا', 'ارسال کد تایید با مشکل مواجه شد. لطفا دوباره تلاش کنید.');
+      Alert.alert(t('login.alerts.sendFailedTitle'), t('login.alerts.sendFailed'));
     } finally {
       setIsLoading(false);
     }
@@ -229,19 +245,19 @@ export default function LoginScreen(props: LoginScreenProps) {
             <View style={styles.logo}>
               <Ionicons name="person" size={40} color="white" />
             </View>
-            <Text style={styles.title}>خوش آمدید</Text>
-            <Text style={styles.subtitle}>برای ورود شماره موبایل خود را وارد کنید</Text>
+            <Text style={styles.title}>{t('login.title')}</Text>
+            <Text style={styles.subtitle}>{t('login.subtitle')}</Text>
           </View>
 
           {/* Form */}
           <View style={styles.form}>
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>شماره موبایل</Text>
+              <Text style={styles.label}>{t('login.phone')}</Text>
               <View style={styles.inputWrapper}>
                 
                 <TextInput
                   style={styles.input}
-                  placeholder="09xxxxxxxxx"
+                  placeholder={t('login.phonePlaceholder')}
                   placeholderTextColor={isDark ? colors.gray[400] : colors.gray[500]}
                   value={phone}
                   onChangeText={(text) => {
@@ -266,7 +282,7 @@ export default function LoginScreen(props: LoginScreenProps) {
               disabled={!phone.trim() || isLoading}
             >
               <Text style={styles.buttonText}>
-                {isLoading ? "در حال بارگذاری..." : "ارسال کد تایید"}
+                {isLoading ? t('common.loading') : t('login.sendCode')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -274,28 +290,15 @@ export default function LoginScreen(props: LoginScreenProps) {
           {/* Footer */}
           <View style={styles.footer}>
             <Text style={styles.footerText}>
-              با ادامه دادن، شما با {' '}
-              <Text style={styles.link}>شرایط استفاده</Text>
-              {' '}و{' '}
-              <Text style={styles.link}>سیاست حفظ حریم خصوصی</Text>
-              {' '}ما موافقت می‌کنید
+              {t('login.terms')}
+              <Text style={styles.link}>{t('login.termsLink')}</Text>
+              {t('login.and')}
+              <Text style={styles.link}>{t('login.privacyLink')}</Text>
+              {t('login.agree')}
             </Text>
           </View>
           
-          <View style={styles.signupLink}>
-            <Text style={styles.signupText}>حساب کاربری ندارید؟</Text>
-            {props?.onNavigateToSignup ? (
-              <TouchableOpacity style={styles.signupButton} onPress={props.onNavigateToSignup}>
-                <Text style={styles.signupButtonText}>ثبت نام</Text>
-              </TouchableOpacity>
-            ) : (
-              <Link href="/auth/signup" asChild>
-                <TouchableOpacity style={styles.signupButton}>
-                  <Text style={styles.signupButtonText}>ثبت نام</Text>
-                </TouchableOpacity>
-              </Link>
-            )}
-          </View>
+          {/* Signup UI removed by request */}
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>

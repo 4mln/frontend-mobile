@@ -3,6 +3,8 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { colors } from '@/theme/colors';
 import { Ionicons } from '@expo/vector-icons';
 import { router, usePathname } from 'expo-router';
+import { useMessageBoxStore } from '@/context/messageBoxStore';
+import { useTranslation } from 'react-i18next';
 import React from 'react';
 import { Animated, Easing, Modal, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import LoginScreen from '../../app/auth/login';
@@ -13,6 +15,8 @@ export const LoginWall: React.FC = () => {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const pathname = usePathname();
+  const { t } = useTranslation();
+  const messageBox = useMessageBoxStore();
   const isAuthRoute = pathname?.startsWith('/auth/');
   const [mode, setMode] = React.useState<'login' | 'signup' | 'otp'>('login');
   const [prevMode, setPrevMode] = React.useState<'login' | 'signup'>('login');
@@ -43,7 +47,11 @@ export const LoginWall: React.FC = () => {
           <Animated.View style={{ opacity: fade }}>
             {mode === 'login' && (
               <LoginScreen
-                onNavigateToSignup={() => switchMode('signup')}
+                initialPhone={pendingPhone}
+                onNavigateToSignup={(phone) => {
+                  if (phone) setPendingPhone(phone);
+                  switchMode('signup');
+                }}
                 onOtpRequested={async (phone) => {
                   setPrevMode('login');
                   setPendingPhone(phone);
@@ -53,6 +61,7 @@ export const LoginWall: React.FC = () => {
             )}
             {mode === 'signup' && (
               <SignupScreen
+                initialPhone={pendingPhone}
                 onNavigateToLogin={() => switchMode('login')}
                 onOtpRequested={async (phone) => {
                   setPrevMode('signup'); setPendingPhone(phone); switchMode('otp');
@@ -63,7 +72,23 @@ export const LoginWall: React.FC = () => {
               <InlineOtp
                 phone={pendingPhone}
                 onBack={() => switchMode(prevMode)}
-                onSuccess={() => {}}
+                onSuccess={() => {
+                  if (prevMode === 'signup') {
+                    // Show congrats message, then go to login
+                    messageBox.show({
+                      message: t('auth.signupCongratsLogin', 'Congrats! you signed up successfully, login now.'),
+                      actions: [
+                        {
+                          label: t('auth.login', 'Login'),
+                          onPress: () => switchMode('login'),
+                        },
+                      ],
+                    });
+                  } else {
+                    // After login verification, proceed into the app
+                    try { router.replace('/(tabs)'); } catch {}
+                  }
+                }}
               />
             )}
           </Animated.View>
@@ -166,14 +191,14 @@ const InlineOtp: React.FC<InlineOtpProps> = ({ phone, onBack, onSuccess }) => {
         hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         style={{ position: 'absolute', top: 16, left: 16, flexDirection: 'row', alignItems: 'center', zIndex: 10, elevation: 1 }}
       >
-        <Text style={{ color: colors.primary[600], fontWeight: '500' }}>بازگشت</Text>
+        <Text style={{ color: colors.primary[600], fontWeight: '500' }}>{t('common.back','Back')}</Text>
       </TouchableOpacity>
       <View style={{ alignItems: 'center', marginBottom: 24 }}>
         <View style={{ width: 80, height: 80, borderRadius: 40, backgroundColor: colors.primary[100], justifyContent: 'center', alignItems: 'center', marginBottom: 12 }}>
           <Ionicons name="shield-checkmark" size={40} color={colors.primary[600]} />
         </View>
-        <Text style={{ fontSize: 20, fontWeight: '700', color: isDark ? colors.text.primary : colors.text.primary, textAlign: 'center', marginBottom: 6 }}>کد تأیید را وارد کنید</Text>
-        <Text style={{ fontSize: 14, color: isDark ? colors.text.secondary : colors.text.secondary, textAlign: 'center' }}>ارسال به:</Text>
+        <Text style={{ fontSize: 20, fontWeight: '700', color: isDark ? colors.text.primary : colors.text.primary, textAlign: 'center', marginBottom: 6 }}>{t('otp.title','Enter Authentication Code')}</Text>
+        <Text style={{ fontSize: 14, color: isDark ? colors.text.secondary : colors.text.secondary, textAlign: 'center' }}>{t('otp.sentTo','Sent to:')}</Text>
         {!!phone && (
           <Text style={{ fontSize: 14, color: colors.primary[600] }}>+98 {phone}</Text>
         )}
@@ -211,16 +236,16 @@ const InlineOtp: React.FC<InlineOtpProps> = ({ phone, onBack, onSuccess }) => {
         disabled={otp.join('').length !== 6 || isLoading}
         style={{ backgroundColor: colors.primary[500], borderRadius: 12, paddingVertical: 12, alignItems: 'center', opacity: (otp.join('').length !== 6 || isLoading) ? 0.6 : 1 }}
       >
-        <Text style={{ color: colors.background.light, fontWeight: '700' }}>{isLoading ? 'در حال بارگذاری...' : 'تأیید کد'}</Text>
+        <Text style={{ color: colors.background.light, fontWeight: '700' }}>{isLoading ? t('common.loading','Loading...') : t('auth.verifyOTP','Verify')}</Text>
       </TouchableOpacity>
       <View style={{ alignItems: 'center', marginTop: 16 }}>
         {canResend ? (
           <TouchableOpacity onPress={() => { setTimeLeft(60); setCanResend(false); setOtp(['', '', '', '', '', '']); }}>
-            <Text style={{ color: colors.primary[600], fontWeight: '500' }}>ارسال مجدد کد</Text>
+            <Text style={{ color: colors.primary[600], fontWeight: '500' }}>{t('otp.resend','Resend Code')}</Text>
           </TouchableOpacity>
         ) : (
           <>
-            <Text style={{ color: isDark ? colors.text.secondary : colors.text.secondary, marginBottom: 6 }}>{t('auth.otpNotReceived', 'کد را دریافت نکردید؟')}</Text>
+            <Text style={{ color: isDark ? colors.text.secondary : colors.text.secondary, marginBottom: 6 }}>{t('auth.otpNotReceived', "Didn't receive the code?")}</Text>
             <Text style={{ color: colors.primary[600], fontWeight: '600' }}>{formatTime(timeLeft)}</Text>
           </>
         )}

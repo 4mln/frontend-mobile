@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
@@ -23,6 +24,7 @@ interface WalletScreenProps {
 }
 
 export const WalletScreen: React.FC<WalletScreenProps> = ({ onBack }) => {
+  const { t } = useTranslation();
   const [selectedWallet, setSelectedWallet] = useState<Wallet | null>(null);
   const [showDepositModal, setShowDepositModal] = useState(false);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
@@ -49,11 +51,11 @@ export const WalletScreen: React.FC<WalletScreenProps> = ({ onBack }) => {
   const handleDeposit = async (amount: number, currency: string) => {
     try {
       await deposit(amount, currency);
-      Alert.alert('Success', 'Deposit initiated successfully');
+      Alert.alert(t('common.done'), t('wallet.topUpSuccess', 'Deposit initiated successfully'));
       setShowDepositModal(false);
       refreshWallets();
     } catch (error) {
-      Alert.alert('Error', 'Failed to initiate deposit');
+      Alert.alert(t('errors.error', 'Error'), t('wallet.topUpFailed', 'Failed to initiate deposit'));
     }
   };
 
@@ -61,11 +63,11 @@ export const WalletScreen: React.FC<WalletScreenProps> = ({ onBack }) => {
   const handleWithdraw = async (amount: number, currency: string) => {
     try {
       await withdraw(amount, currency);
-      Alert.alert('Success', 'Withdrawal initiated successfully');
+      Alert.alert(t('common.done'), t('wallet.withdrawSuccess', 'Withdrawal initiated successfully'));
       setShowWithdrawModal(false);
       refreshWallets();
     } catch (error) {
-      Alert.alert('Error', 'Failed to initiate withdrawal');
+      Alert.alert(t('errors.error', 'Error'), t('wallet.withdrawFailed', 'Failed to initiate withdrawal'));
     }
   };
 
@@ -73,10 +75,10 @@ export const WalletScreen: React.FC<WalletScreenProps> = ({ onBack }) => {
   const handleTransfer = async (amount: number, currency: string, recipientId: string) => {
     try {
       await transfer(amount, currency, recipientId);
-      Alert.alert('Success', 'Transfer completed successfully');
+      Alert.alert(t('common.done'), t('wallet.transferSuccess', 'Transfer completed successfully'));
       refreshWallets();
     } catch (error) {
-      Alert.alert('Error', 'Failed to complete transfer');
+      Alert.alert(t('errors.error', 'Error'), t('wallet.transferFailed', 'Failed to complete transfer'));
     }
   };
 
@@ -156,7 +158,7 @@ export const WalletScreen: React.FC<WalletScreenProps> = ({ onBack }) => {
     return (
       <View style={walletStyles.loadingContainer}>
         <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={walletStyles.loadingText}>Loading wallet...</Text>
+        <Text style={walletStyles.loadingText}>{t('wallet.loading', 'Loading wallet...')}</Text>
       </View>
     );
   }
@@ -164,9 +166,9 @@ export const WalletScreen: React.FC<WalletScreenProps> = ({ onBack }) => {
   if (error) {
     return (
       <View style={walletStyles.errorContainer}>
-        <Text style={walletStyles.errorText}>{error}</Text>
+        <Text style={walletStyles.errorText}>{error || t('errors.unknownError')}</Text>
         <TouchableOpacity style={walletStyles.retryButton} onPress={refreshWallets}>
-          <Text style={walletStyles.retryButtonText}>Retry</Text>
+          <Text style={walletStyles.retryButtonText}>{t('common.retry')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -177,9 +179,9 @@ export const WalletScreen: React.FC<WalletScreenProps> = ({ onBack }) => {
       {/* Header */}
       <View style={walletStyles.header}>
         <TouchableOpacity onPress={onBack} style={walletStyles.backButton}>
-          <Text style={walletStyles.backButtonText}>← Back</Text>
+          <Text style={walletStyles.backButtonText}>← {t('common.back')}</Text>
         </TouchableOpacity>
-        <Text style={walletStyles.headerTitle}>Wallet</Text>
+        <Text style={walletStyles.headerTitle}>{t('wallet.title')}</Text>
         <TouchableOpacity style={walletStyles.addWalletButton}>
           <Text style={walletStyles.addWalletButtonText}>+</Text>
         </TouchableOpacity>
@@ -187,7 +189,7 @@ export const WalletScreen: React.FC<WalletScreenProps> = ({ onBack }) => {
 
       {/* Wallets Section */}
       <View style={walletStyles.walletsSection}>
-        <Text style={walletStyles.sectionTitle}>Your Wallets</Text>
+        <Text style={walletStyles.sectionTitle}>{t('wallet.yourWallets', 'Your Wallets')}</Text>
         <FlatList
           data={wallets}
           renderItem={renderWallet}
@@ -204,7 +206,7 @@ export const WalletScreen: React.FC<WalletScreenProps> = ({ onBack }) => {
       {selectedWallet && (
         <View style={walletStyles.transactionsSection}>
           <Text style={walletStyles.sectionTitle}>
-            Transactions - {selectedWallet.currency}
+            {t('wallet.transactions')} - {selectedWallet.currency}
           </Text>
           <FlatList
             data={transactions}
@@ -216,7 +218,7 @@ export const WalletScreen: React.FC<WalletScreenProps> = ({ onBack }) => {
             ListEmptyComponent={
               <View style={walletStyles.emptyState}>
                 <Text style={walletStyles.emptyStateText}>
-                  No transactions yet
+                  {t('wallet.noTransactions')}
                 </Text>
               </View>
             }
@@ -231,28 +233,28 @@ export const WalletScreen: React.FC<WalletScreenProps> = ({ onBack }) => {
           onPress={() => setShowDepositModal(true)}
         >
           <Text style={walletStyles.quickActionIcon}>💰</Text>
-          <Text style={walletStyles.quickActionText}>Deposit</Text>
+          <Text style={walletStyles.quickActionText}>{t('wallet.topUp')}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={walletStyles.quickActionButton}
           onPress={() => setShowWithdrawModal(true)}
         >
           <Text style={walletStyles.quickActionIcon}>💸</Text>
-          <Text style={walletStyles.quickActionText}>Withdraw</Text>
+          <Text style={walletStyles.quickActionText}>{t('wallet.withdraw')}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={walletStyles.quickActionButton}
           onPress={() => {/* Handle transfer */}}
         >
           <Text style={walletStyles.quickActionIcon}>↔️</Text>
-          <Text style={walletStyles.quickActionText}>Transfer</Text>
+          <Text style={walletStyles.quickActionText}>{t('wallet.transfer')}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={walletStyles.quickActionButton}
           onPress={() => {/* Handle history */}}
         >
           <Text style={walletStyles.quickActionIcon}>📊</Text>
-          <Text style={walletStyles.quickActionText}>History</Text>
+          <Text style={walletStyles.quickActionText}>{t('wallet.history', 'History')}</Text>
         </TouchableOpacity>
       </View>
 </View>

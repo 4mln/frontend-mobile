@@ -282,7 +282,7 @@ export default function ChatDetailScreen() {
           <View style={styles.headerText}>
             <Text style={styles.headerName}>{conversation.name}</Text>
             <Text style={styles.onlineStatus}>
-              {conversation.isOnline ? 'Online' : 'Offline'}
+              {conversation.isOnline ? t('chat.online') : t('chat.offline', 'Offline')}
             </Text>
           </View>
         </View>
@@ -327,7 +327,7 @@ export default function ChatDetailScreen() {
           <View style={styles.inputWrapper}>
             <TextInput
               style={styles.textInput}
-              placeholder="Type a message..."
+              placeholder={t('chat.typeMessage')}
               placeholderTextColor={isDark ? colors.gray[400] : colors.gray[500]}
               value={message}
               onChangeText={setMessage}

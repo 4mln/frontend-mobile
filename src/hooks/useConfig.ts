@@ -57,7 +57,7 @@ export const usePluginEnabled = (
 
       if (trackUsage && isEnabled) {
         // Track plugin usage
-        const { trackFeatureUsage } = await import('@/services/analytics');
+        const { trackFeatureUsage } = await import('../services/analytics');
         trackFeatureUsage(pluginName, 'plugin_check', {
           enabled: isEnabled,
         });
@@ -125,7 +125,7 @@ export const usePluginConfig = (
 
       if (trackUsage && pluginConfig) {
         // Track plugin usage
-        const { trackFeatureUsage } = await import('@/services/analytics');
+        const { trackFeatureUsage } = await import('../services/analytics');
         trackFeatureUsage(pluginName, 'config_check', {
           enabled: pluginConfig.enabled,
         });
@@ -193,7 +193,7 @@ export const useEnabledPlugins = (
 
       if (trackUsage) {
         // Track plugin usage
-        const { trackFeatureUsage } = await import('@/services/analytics');
+        const { trackFeatureUsage } = await import('../services/analytics');
         trackFeatureUsage('enabled_plugins', 'list_check', {
           count: enabledPlugins.length,
           plugins: enabledPlugins,
@@ -264,7 +264,7 @@ export const usePluginsByCategory = (
 
       if (trackUsage) {
         // Track plugin usage
-        const { trackFeatureUsage } = await import('@/services/analytics');
+        const { trackFeatureUsage } = await import('../services/analytics');
         trackFeatureUsage('category_plugins', 'list_check', {
           category,
           count: categoryPlugins.length,
@@ -337,7 +337,7 @@ export const useFeatureConfig = (
 
       if (trackUsage && isEnabled) {
         // Track feature usage
-        const { trackFeatureUsage } = await import('@/services/analytics');
+        const { trackFeatureUsage } = await import('../services/analytics');
         trackFeatureUsage(featureName, 'feature_check', {
           enabled: isEnabled,
         });
@@ -405,7 +405,7 @@ export const useSetting = (
 
       if (trackUsage) {
         // Track setting usage
-        const { trackFeatureUsage } = await import('@/services/analytics');
+        const { trackFeatureUsage } = await import('../services/analytics');
         trackFeatureUsage('setting', 'check', {
           key,
           value: settingValue,
@@ -474,7 +474,7 @@ export const useThemeConfig = (
 
       if (trackUsage && themeConfig) {
         // Track theme usage
-        const { trackFeatureUsage } = await import('@/services/analytics');
+        const { trackFeatureUsage } = await import('../services/analytics');
         trackFeatureUsage('theme', 'check', {
           darkMode: themeConfig.darkMode,
           primaryColor: themeConfig.primaryColor,

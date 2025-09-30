@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
@@ -21,6 +22,7 @@ import { refreshFeatureFlags, clearFeatureFlags } from '@/services/featureFlags'
  */
 
 export const ConfigScreen: React.FC = () => {
+  const { t } = useTranslation();
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -43,9 +45,9 @@ export const ConfigScreen: React.FC = () => {
         refreshConfig(),
         refreshFeatureFlags(),
       ]);
-      Alert.alert('Success', 'Configuration refreshed successfully');
+      Alert.alert(t('common.done'), t('config.refreshed', 'Configuration refreshed successfully'));
     } catch (error) {
-      Alert.alert('Error', 'Failed to refresh configuration');
+      Alert.alert(t('errors.error', 'Error'), t('config.refreshFailed', 'Failed to refresh configuration'));
     } finally {
       setRefreshing(false);
     }
@@ -57,27 +59,27 @@ export const ConfigScreen: React.FC = () => {
         clearConfig(),
         clearFeatureFlags(),
       ]);
-      Alert.alert('Success', 'Configuration cache cleared successfully');
+      Alert.alert(t('common.done'), t('config.cleared', 'Configuration cache cleared successfully'));
     } catch (error) {
-      Alert.alert('Error', 'Failed to clear configuration cache');
+      Alert.alert(t('errors.error', 'Error'), t('config.clearFailed', 'Failed to clear configuration cache'));
     }
   };
 
   const handleToggleFeature = (featureName: string, enabled: boolean) => {
     // In a real app, this would update the backend
     Alert.alert(
-      'Feature Toggle',
-      `${featureName} ${enabled ? 'enabled' : 'disabled'}`,
-      [{ text: 'OK' }]
+      t('config.featureToggle', 'Feature Toggle'),
+      `${featureName} ${enabled ? t('config.enabled', 'enabled') : t('config.disabled', 'disabled')}`,
+      [{ text: t('common.done') }]
     );
   };
 
   const handleUpdateSetting = (key: string, value: any) => {
     // In a real app, this would update the backend
     Alert.alert(
-      'Setting Updated',
-      `${key} set to ${value}`,
-      [{ text: 'OK' }]
+      t('config.settingUpdated', 'Setting Updated'),
+      t('config.settingSetTo', '{{key}} set to {{value}}', { key, value }),
+      [{ text: t('common.done') }]
     );
   };
 
@@ -85,7 +87,7 @@ export const ConfigScreen: React.FC = () => {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={styles.loadingText}>Loading configuration...</Text>
+        <Text style={styles.loadingText}>{t('config.loading', 'Loading configuration...')}</Text>
       </View>
     );
   }
@@ -93,9 +95,9 @@ export const ConfigScreen: React.FC = () => {
   if (themeError) {
     return (
       <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Failed to load configuration</Text>
+        <Text style={styles.errorText}>{t('config.loadFailed', 'Failed to load configuration')}</Text>
         <TouchableOpacity style={styles.retryButton} onPress={handleRefresh}>
-          <Text style={styles.retryButtonText}>Retry</Text>
+          <Text style={styles.retryButtonText}>{t('common.retry')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -104,7 +106,7 @@ export const ConfigScreen: React.FC = () => {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Configuration</Text>
+        <Text style={styles.title}>{t('config.title', 'Configuration')}</Text>
         <TouchableOpacity
           style={styles.refreshButton}
           onPress={handleRefresh}
@@ -113,7 +115,7 @@ export const ConfigScreen: React.FC = () => {
           {refreshing ? (
             <ActivityIndicator size="small" color="#007AFF" />
           ) : (
-            <Text style={styles.refreshButtonText}>Refresh</Text>
+            <Text style={styles.refreshButtonText}>{t('common.retry')}</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -122,7 +124,7 @@ export const ConfigScreen: React.FC = () => {
       <View style={styles.searchContainer}>
         <TextInput
           style={styles.searchInput}
-          placeholder="Search configuration..."
+          placeholder={t('config.searchPlaceholder', 'Search configuration...')}
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
@@ -130,33 +132,33 @@ export const ConfigScreen: React.FC = () => {
 
       {/* Theme Configuration */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Theme</Text>
+        <Text style={styles.sectionTitle}>{t('config.theme', 'Theme')}</Text>
         {theme && (
           <View style={styles.configItem}>
-            <Text style={styles.configLabel}>Primary Color</Text>
+            <Text style={styles.configLabel}>{t('config.primaryColor', 'Primary Color')}</Text>
             <Text style={styles.configValue}>{theme.primaryColor}</Text>
           </View>
         )}
         {theme && (
           <View style={styles.configItem}>
-            <Text style={styles.configLabel}>Secondary Color</Text>
+            <Text style={styles.configLabel}>{t('config.secondaryColor', 'Secondary Color')}</Text>
             <Text style={styles.configValue}>{theme.secondaryColor}</Text>
           </View>
         )}
         {theme && (
           <View style={styles.configItem}>
-            <Text style={styles.configLabel}>Background Color</Text>
+            <Text style={styles.configLabel}>{t('config.backgroundColor', 'Background Color')}</Text>
             <Text style={styles.configValue}>{theme.backgroundColor}</Text>
           </View>
         )}
         {theme && (
           <View style={styles.configItem}>
-            <Text style={styles.configLabel}>Text Color</Text>
+            <Text style={styles.configLabel}>{t('config.textColor', 'Text Color')}</Text>
             <Text style={styles.configValue}>{theme.textColor}</Text>
           </View>
         )}
         <View style={styles.configItem}>
-          <Text style={styles.configLabel}>Dark Mode</Text>
+          <Text style={styles.configLabel}>{t('profile.theme', 'Theme')}</Text>
           <Switch
             value={darkModeEnabled}
             onValueChange={(value) => handleToggleFeature('dark_mode', value)}
@@ -166,16 +168,16 @@ export const ConfigScreen: React.FC = () => {
 
       {/* Feature Flags */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Feature Flags</Text>
+        <Text style={styles.sectionTitle}>{t('config.featureFlags', 'Feature Flags')}</Text>
         <View style={styles.configItem}>
-          <Text style={styles.configLabel}>Analytics</Text>
+          <Text style={styles.configLabel}>{t('config.analytics', 'Analytics')}</Text>
           <Switch
             value={analyticsEnabled}
             onValueChange={(value) => handleToggleFeature('analytics', value)}
           />
         </View>
         <View style={styles.configItem}>
-          <Text style={styles.configLabel}>Monitoring</Text>
+          <Text style={styles.configLabel}>{t('config.monitoring', 'Monitoring')}</Text>
           <Switch
             value={monitoringEnabled}
             onValueChange={(value) => handleToggleFeature('monitoring', value)}
@@ -185,33 +187,33 @@ export const ConfigScreen: React.FC = () => {
 
       {/* Settings */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Settings</Text>
+        <Text style={styles.sectionTitle}>{t('config.settings', 'Settings')}</Text>
         <View style={styles.configItem}>
-          <Text style={styles.configLabel}>API Timeout</Text>
-          <Text style={styles.configValue}>{apiTimeout || 'Not set'}</Text>
+          <Text style={styles.configLabel}>{t('config.apiTimeout', 'API Timeout')}</Text>
+          <Text style={styles.configValue}>{apiTimeout || t('common.notSet','Not set')}</Text>
         </View>
         <View style={styles.configItem}>
-          <Text style={styles.configLabel}>Retry Attempts</Text>
-          <Text style={styles.configValue}>{retryAttempts || 'Not set'}</Text>
+          <Text style={styles.configLabel}>{t('config.retryAttempts', 'Retry Attempts')}</Text>
+          <Text style={styles.configValue}>{retryAttempts || t('common.notSet','Not set')}</Text>
         </View>
       </View>
 
       {/* Actions */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Actions</Text>
+        <Text style={styles.sectionTitle}>{t('config.actions', 'Actions')}</Text>
         <TouchableOpacity
           style={styles.actionButton}
           onPress={handleRefresh}
           disabled={refreshing}
         >
-          <Text style={styles.actionButtonText}>Refresh Configuration</Text>
+          <Text style={styles.actionButtonText}>{t('config.refreshConfiguration', 'Refresh Configuration')}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.actionButton, styles.clearButton]}
           onPress={handleClearCache}
         >
           <Text style={[styles.actionButtonText, styles.clearButtonText]}>
-            Clear Cache
+            {t('config.clearCache', 'Clear Cache')}
           </Text>
         </TouchableOpacity>
       </View>

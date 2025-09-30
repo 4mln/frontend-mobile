@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
@@ -23,6 +24,7 @@ interface NotificationsScreenProps {
 }
 
 export const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack }) => {
+  const { t } = useTranslation();
   const [selectedTab, setSelectedTab] = useState<'all' | 'unread' | 'settings'>('all');
   
   const {
@@ -51,9 +53,9 @@ export const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack
   const handleMarkAllAsRead = async () => {
     try {
       await markAllAsRead();
-      Alert.alert('Success', 'All notifications marked as read');
+      Alert.alert(t('common.done'), t('notifications.markedAllRead', 'All notifications marked as read'));
     } catch (error) {
-      Alert.alert('Error', 'Failed to mark all as read');
+      Alert.alert(t('errors.error', 'Error'), t('notifications.markAllFailed', 'Failed to mark all as read'));
     }
   };
 
@@ -61,9 +63,9 @@ export const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack
   const handleDeleteNotification = async (notificationId: string) => {
     try {
       await deleteNotification(notificationId);
-      Alert.alert('Success', 'Notification deleted');
+      Alert.alert(t('common.done'), t('notifications.deleted', 'Notification deleted'));
     } catch (error) {
-      Alert.alert('Error', 'Failed to delete notification');
+      Alert.alert(t('errors.error', 'Error'), t('notifications.deleteFailed', 'Failed to delete notification'));
     }
   };
 
@@ -72,7 +74,7 @@ export const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack
     try {
       await updatePreferences({ [key]: value });
     } catch (error) {
-      Alert.alert('Error', 'Failed to update preferences');
+      Alert.alert(t('errors.error', 'Error'), t('notifications.prefUpdateFailed', 'Failed to update preferences'));
     }
   };
 
@@ -180,7 +182,7 @@ export const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack
     return (
       <View style={notificationsStyles.loadingContainer}>
         <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={notificationsStyles.loadingText}>Loading notifications...</Text>
+        <Text style={notificationsStyles.loadingText}>{t('notifications.loading', 'Loading notifications...')}</Text>
       </View>
     );
   }
@@ -188,9 +190,9 @@ export const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack
   if (error) {
     return (
       <View style={notificationsStyles.errorContainer}>
-        <Text style={notificationsStyles.errorText}>{error}</Text>
+        <Text style={notificationsStyles.errorText}>{error || t('errors.unknownError')}</Text>
         <TouchableOpacity style={notificationsStyles.retryButton} onPress={refreshNotifications}>
-          <Text style={notificationsStyles.retryButtonText}>Retry</Text>
+          <Text style={notificationsStyles.retryButtonText}>{t('common.retry')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -201,14 +203,14 @@ export const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack
       {/* Header */}
       <View style={notificationsStyles.header}>
         <TouchableOpacity onPress={onBack} style={notificationsStyles.backButton}>
-          <Text style={notificationsStyles.backButtonText}>← Back</Text>
+          <Text style={notificationsStyles.backButtonText}>← {t('common.back')}</Text>
         </TouchableOpacity>
-        <Text style={notificationsStyles.headerTitle}>Notifications</Text>
+        <Text style={notificationsStyles.headerTitle}>{t('profile.notifications')}</Text>
         <TouchableOpacity 
           style={notificationsStyles.markAllButton}
           onPress={handleMarkAllAsRead}
         >
-          <Text style={notificationsStyles.markAllButtonText}>Mark All</Text>
+          <Text style={notificationsStyles.markAllButtonText}>{t('notifications.markAll', 'Mark All')}</Text>
         </TouchableOpacity>
       </View>
 
@@ -225,7 +227,7 @@ export const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack
             notificationsStyles.tabText,
             selectedTab === 'all' && notificationsStyles.tabTextActive
           ]}>
-            All
+            {t('notifications.all', 'All')}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -239,7 +241,7 @@ export const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack
             notificationsStyles.tabText,
             selectedTab === 'unread' && notificationsStyles.tabTextActive
           ]}>
-            Unread
+            {t('notifications.unread', 'Unread')}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -253,7 +255,7 @@ export const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack
             notificationsStyles.tabText,
             selectedTab === 'settings' && notificationsStyles.tabTextActive
           ]}>
-            Settings
+            {t('profile.settings')}
           </Text>
         </TouchableOpacity>
       </View>
@@ -261,7 +263,7 @@ export const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack
       {/* Content */}
       {selectedTab === 'settings' ? (
         <View style={notificationsStyles.settingsContainer}>
-          <Text style={notificationsStyles.settingsTitle}>Notification Preferences</Text>
+          <Text style={notificationsStyles.settingsTitle}>{t('notifications.preferences', 'Notification Preferences')}</Text>
           <FlatList
             data={getPreferenceItems()}
             renderItem={renderPreference}
@@ -273,10 +275,10 @@ export const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack
         <View style={notificationsStyles.notificationsContainer}>
           <View style={notificationsStyles.notificationsHeader}>
             <Text style={notificationsStyles.notificationsTitle}>
-              {selectedTab === 'unread' ? 'Unread Notifications' : 'All Notifications'}
+              {selectedTab === 'unread' ? t('notifications.unreadTitle', 'Unread Notifications') : t('notifications.allTitle', 'All Notifications')}
             </Text>
             <Text style={notificationsStyles.notificationsCount}>
-              {getFilteredNotifications().length} notifications
+              {t('notifications.count', '{{count}} notifications', { count: getFilteredNotifications().length })}
             </Text>
           </View>
           
@@ -290,7 +292,7 @@ export const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack
             ListEmptyComponent={
               <View style={notificationsStyles.emptyState}>
                 <Text style={notificationsStyles.emptyStateText}>
-                  {selectedTab === 'unread' ? 'No unread notifications' : 'No notifications yet'}
+                  {selectedTab === 'unread' ? t('notifications.noneUnread', 'No unread notifications') : t('notifications.none', 'No notifications yet')}
                 </Text>
               </View>
             }

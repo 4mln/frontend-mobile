@@ -1,6 +1,7 @@
 import { useMessageBoxStore } from '@/context/messageBoxStore';
 import i18n from '@/i18n';
 import { runBackendTests } from '@/utils/backendTest';
+import NetInfo from '@react-native-community/netinfo';
 
 export const ensureOnlineOrMessage = async (): Promise<boolean> => {
   try {
@@ -8,7 +9,6 @@ export const ensureOnlineOrMessage = async (): Promise<boolean> => {
     let isConnected = true;
     let isInternetReachable = true;
     try {
-      const NetInfo = (await import('@react-native-community/netinfo')).default;
       const net = await NetInfo.fetch();
       isConnected = !!net.isConnected;
       isInternetReachable = net.isInternetReachable !== false;

@@ -40,7 +40,7 @@ export default function ExploreScreen() {
   const [products, setProducts] = useState<Product[]>([]);
   const [sellers, setSellers] = useState<Seller[]>([]);
   const [banners, setBanners] = useState<BannerData[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [categories, setCategories] = useState<Category[]>([{ id: "all", name: "All" }]);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -68,24 +68,22 @@ export default function ExploreScreen() {
 
   const fetchData = async () => {
     try {
-      const [productsRes, sellersRes, bannersRes, categoriesRes] = await Promise.all([
+      const [productsRes, sellersRes, guildsRes] = await Promise.all([
         apiClient.get("/products").catch(() => ({ data: [] })),
         apiClient.get("/sellers").catch(() => ({ data: [] })),
-        apiClient.get("/banners").catch(() => ({ data: [] })),
-        apiClient.get("/categories").catch(() => ({ data: [] })),
+        apiClient.get("/guilds").catch(() => ({ data: [] })),
       ]);
       
       // Define variables with proper fallbacks to prevent undefined values
       const productData = safeData<Product[]>(productsRes, []);
       const sellerData = safeData<Seller[]>(sellersRes, []);
-      const bannerData = safeData<BannerData[]>(bannersRes, []);
-      const categoryData = safeData<Category[]>(categoriesRes, []);
+      const guildData = safeData<Category[]>(guildsRes, []);
       
       // Ensure we're setting arrays, not undefined values
       setProducts(ensureArray(productData));
       setSellers(ensureArray(sellerData));
-      setBanners(ensureArray(bannerData));
-      setCategories([{ id: "all", name: t("explore.all") }, ...ensureArray(categoryData)]);
+      setBanners([]); // No banners endpoint available, use empty array
+      setCategories([{ id: "all", name: t("explore.all") }, ...ensureArray(guildData)]);
     } catch (error) {
       console.error("Error fetching data:", error);
       // Ensure state is at least empty arrays
@@ -115,9 +113,9 @@ export default function ExploreScreen() {
   const onRefresh = () => { setRefreshing(true); fetchData(); };
 
   // Filter & sort products
-  const filteredProducts = products
+  const filteredProducts = Array.isArray(products) ? products
     .filter((p) =>
-      p.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
+      p && p.name && p.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
       (selectedCategory === "all" || p.category === selectedCategory)
     )
     .sort((a, b) => {
@@ -125,7 +123,7 @@ export default function ExploreScreen() {
       if (sortOption === "priceHigh") return b.price - a.price;
       if (sortOption === "rating") return (b.rating || 0) - (a.rating || 0);
       return 0;
-    });
+    }) : [];
 
   if (loading) {
     return (
@@ -154,8 +152,8 @@ export default function ExploreScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: isDark ? colors.background.dark : colors.background.light }}>
       <FlatList
-        data={filteredProducts}
-        keyExtractor={(item) => item.id.toString()}
+        data={Array.isArray(filteredProducts) ? filteredProducts : []}
+        keyExtractor={(item) => item?.id?.toString() || Math.random().toString()}
         numColumns={numColumns}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         ListHeaderComponent={() => (
@@ -179,7 +177,7 @@ export default function ExploreScreen() {
 
           {/* Category Chips */}
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: SPACING.base }}>
-            {categories.map((cat) => (
+            {Array.isArray(categories) && categories.length > 0 && categories.map((cat) => (
               <TouchableOpacity
                 key={cat.id}
                 style={[
@@ -295,18 +293,21 @@ export default function ExploreScreen() {
           </View>
         </View>
       )}
-      renderItem={({ item }) => (
-        <View style={{ width: productItemWidth }}>
-          <ProductCard
-            id={item.id}
-            name={item.name}
-            price={item.price}
-            image={item.image || "https://via.placeholder.com/150"}
-            rating={item.rating}
-            onPress={() => console.log("Clicked product", item.id)}
-          />
-        </View>
-        )}
+      renderItem={({ item }) => {
+        if (!item) return null;
+        return (
+          <View style={{ width: productItemWidth }}>
+            <ProductCard
+              id={item.id}
+              name={item.name || "Unknown Product"}
+              price={item.price || 0}
+              image={item.image || "https://via.placeholder.com/150"}
+              rating={item.rating}
+              onPress={() => console.log("Clicked product", item.id)}
+            />
+          </View>
+        );
+      }}
         contentContainerStyle={{ padding: SPACING.base }}
       />
     </View>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
@@ -24,6 +25,7 @@ interface ExploreScreenProps {
 }
 
 export const ExploreScreen: React.FC<ExploreScreenProps> = ({ onBack }) => {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [showFilters, setShowFilters] = useState(false);
@@ -85,7 +87,7 @@ export const ExploreScreen: React.FC<ExploreScreenProps> = ({ onBack }) => {
         </Text>
         <View style={exploreStyles.productMeta}>
           <Text style={exploreStyles.productPrice}>
-            ${item.price?.toFixed(2) || 'Price on request'}
+            {item.price ? `${t('product.currency', 'Toman')} ${item.price.toLocaleString?.()}` : t('explore.priceOnRequest', 'Price on request')}
           </Text>
           <Text style={exploreStyles.productCategory}>
             {item.category}
@@ -120,13 +122,13 @@ export const ExploreScreen: React.FC<ExploreScreenProps> = ({ onBack }) => {
             ⭐ {item.rating || 'N/A'}
           </Text>
           <Text style={exploreStyles.sellerProducts}>
-            {item.productCount || 0} products
+            {t('explore.productsCount', '{{count}} products', { count: item.productCount || 0 })}
           </Text>
         </View>
       </View>
       <View style={exploreStyles.sellerActions}>
         <TouchableOpacity style={exploreStyles.sellerActionButton}>
-          <Text style={exploreStyles.sellerActionText}>View</Text>
+          <Text style={exploreStyles.sellerActionText}>{t('explore.view', 'View')}</Text>
         </TouchableOpacity>
       </View>
     </TouchableOpacity>
@@ -154,7 +156,7 @@ export const ExploreScreen: React.FC<ExploreScreenProps> = ({ onBack }) => {
     return (
       <View style={exploreStyles.loadingContainer}>
         <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={exploreStyles.loadingText}>Searching...</Text>
+        <Text style={exploreStyles.loadingText}>{t('explore.searching', 'Searching...')}</Text>
       </View>
     );
   }
@@ -162,9 +164,9 @@ export const ExploreScreen: React.FC<ExploreScreenProps> = ({ onBack }) => {
   if (error) {
     return (
       <View style={exploreStyles.errorContainer}>
-        <Text style={exploreStyles.errorText}>{error}</Text>
+        <Text style={exploreStyles.errorText}>{error || t('errors.unknownError')}</Text>
         <TouchableOpacity style={exploreStyles.retryButton} onPress={refreshResults}>
-          <Text style={exploreStyles.retryButtonText}>Retry</Text>
+          <Text style={exploreStyles.retryButtonText}>{t('common.retry')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -175,9 +177,9 @@ export const ExploreScreen: React.FC<ExploreScreenProps> = ({ onBack }) => {
       {/* Header */}
       <View style={exploreStyles.header}>
         <TouchableOpacity onPress={onBack} style={exploreStyles.backButton}>
-          <Text style={exploreStyles.backButtonText}>← Back</Text>
+          <Text style={exploreStyles.backButtonText}>← {t('common.back')}</Text>
         </TouchableOpacity>
-        <Text style={exploreStyles.headerTitle}>Explore</Text>
+        <Text style={exploreStyles.headerTitle}>{t('explore.title', 'Explore')}</Text>
         <TouchableOpacity 
           style={exploreStyles.filterButton}
           onPress={() => setShowFilters(!showFilters)}
@@ -190,7 +192,7 @@ export const ExploreScreen: React.FC<ExploreScreenProps> = ({ onBack }) => {
       <View style={exploreStyles.searchContainer}>
         <TextInput
           style={exploreStyles.searchInput}
-          placeholder="Search products, sellers..."
+          placeholder={t('explore.placeholder', 'Search products, sellers...')}
           value={searchQuery}
           onChangeText={handleSearch}
         />
@@ -211,46 +213,46 @@ export const ExploreScreen: React.FC<ExploreScreenProps> = ({ onBack }) => {
       {/* Filters */}
       {showFilters && (
         <View style={exploreStyles.filtersContainer}>
-          <Text style={exploreStyles.filtersTitle}>Filters</Text>
+          <Text style={exploreStyles.filtersTitle}>{t('search.filters')}</Text>
           <ScrollView style={exploreStyles.filtersContent}>
             <View style={exploreStyles.filterGroup}>
-              <Text style={exploreStyles.filterLabel}>Price Range</Text>
+              <Text style={exploreStyles.filterLabel}>{t('search.priceRange')}</Text>
               <View style={exploreStyles.filterInputs}>
                 <TextInput
                   style={exploreStyles.filterInput}
-                  placeholder="Min"
+                  placeholder={t('search.min')}
                   keyboardType="numeric"
                 />
                 <TextInput
                   style={exploreStyles.filterInput}
-                  placeholder="Max"
+                  placeholder={t('search.max')}
                   keyboardType="numeric"
                 />
               </View>
             </View>
             <View style={exploreStyles.filterGroup}>
-              <Text style={exploreStyles.filterLabel}>Rating</Text>
+              <Text style={exploreStyles.filterLabel}>{t('explore.rating', 'Rating')}</Text>
               <View style={exploreStyles.filterOptions}>
                 {[5, 4, 3, 2, 1].map(rating => (
                   <TouchableOpacity
                     key={rating}
                     style={exploreStyles.filterOption}
                   >
-                    <Text style={exploreStyles.filterOptionText}>
-                      {rating}+ ⭐
-                    </Text>
+                  <Text style={exploreStyles.filterOptionText}>
+                    {t('explore.ratingStarPlus', '{{rating}}+ ⭐', { rating })}
+                  </Text>
                   </TouchableOpacity>
                 ))}
               </View>
             </View>
             <View style={exploreStyles.filterGroup}>
-              <Text style={exploreStyles.filterLabel}>Availability</Text>
+              <Text style={exploreStyles.filterLabel}>{t('explore.availability', 'Availability')}</Text>
               <View style={exploreStyles.filterOptions}>
                 <TouchableOpacity style={exploreStyles.filterOption}>
-                  <Text style={exploreStyles.filterOptionText}>In Stock</Text>
+                  <Text style={exploreStyles.filterOptionText}>{t('explore.inStock', 'In Stock')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={exploreStyles.filterOption}>
-                  <Text style={exploreStyles.filterOptionText}>On Order</Text>
+                  <Text style={exploreStyles.filterOptionText}>{t('explore.onOrder', 'On Order')}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -260,13 +262,13 @@ export const ExploreScreen: React.FC<ExploreScreenProps> = ({ onBack }) => {
               style={[exploreStyles.filterActionButton, exploreStyles.clearButton]}
               onPress={() => setFilters({})}
             >
-              <Text style={exploreStyles.clearButtonText}>Clear</Text>
+              <Text style={exploreStyles.clearButtonText}>{t('search.clearFilters')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[exploreStyles.filterActionButton, exploreStyles.applyButton]}
               onPress={() => setShowFilters(false)}
             >
-              <Text style={exploreStyles.applyButtonText}>Apply</Text>
+              <Text style={exploreStyles.applyButtonText}>{t('search.applyFilters')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -276,10 +278,10 @@ export const ExploreScreen: React.FC<ExploreScreenProps> = ({ onBack }) => {
       <View style={exploreStyles.resultsSection}>
         <View style={exploreStyles.resultsHeader}>
           <Text style={exploreStyles.resultsTitle}>
-            {searchQuery ? `Results for "${searchQuery}"` : 'Popular Products'}
+            {searchQuery ? t('explore.resultsFor', 'Results for "{{q}}"', { q: searchQuery }) : t('explore.popularProducts', 'Popular Products')}
           </Text>
           <Text style={exploreStyles.resultsCount}>
-            {products.length} products
+            {t('explore.productsCount', '{{count}} products', { count: products.length })}
           </Text>
         </View>
         
@@ -293,7 +295,7 @@ export const ExploreScreen: React.FC<ExploreScreenProps> = ({ onBack }) => {
           ListEmptyComponent={
             <View style={exploreStyles.emptyState}>
               <Text style={exploreStyles.emptyStateText}>
-                {searchQuery ? 'No products found' : 'Start searching to find products'}
+                {searchQuery ? t('home.noProducts') : t('explore.startSearching', 'Start searching to find products')}
               </Text>
             </View>
           }
@@ -304,19 +306,19 @@ export const ExploreScreen: React.FC<ExploreScreenProps> = ({ onBack }) => {
       <View style={exploreStyles.quickActions}>
         <TouchableOpacity style={exploreStyles.quickActionButton}>
           <Text style={exploreStyles.quickActionIcon}>🔍</Text>
-          <Text style={exploreStyles.quickActionText}>Advanced Search</Text>
+          <Text style={exploreStyles.quickActionText}>{t('explore.advancedSearch', 'Advanced Search')}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={exploreStyles.quickActionButton}>
           <Text style={exploreStyles.quickActionIcon}>🏪</Text>
-          <Text style={exploreStyles.quickActionText}>Browse Sellers</Text>
+          <Text style={exploreStyles.quickActionText}>{t('explore.browseSellers', 'Browse Sellers')}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={exploreStyles.quickActionButton}>
           <Text style={exploreStyles.quickActionIcon}>📊</Text>
-          <Text style={exploreStyles.quickActionText}>Trending</Text>
+          <Text style={exploreStyles.quickActionText}>{t('home.trending')}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={exploreStyles.quickActionButton}>
           <Text style={exploreStyles.quickActionIcon}>⭐</Text>
-          <Text style={exploreStyles.quickActionText}>Top Rated</Text>
+          <Text style={exploreStyles.quickActionText}>{t('explore.topRated', 'Top Rated')}</Text>
         </TouchableOpacity>
       </View>
     </View>

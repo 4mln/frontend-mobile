@@ -4,26 +4,30 @@ import { Ionicons } from '@expo/vector-icons';
 import { Link, router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Alert, I18nManager, Platform } from 'react-native';
 import {
-    ActivityIndicator,
-    Alert,
-    KeyboardAvoidingView,
-    Modal,
-    Platform,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
-} from 'react-native';
+  Box,
+  Button,
+  Heading,
+  HStack,
+  Icon,
+  Input,
+  KeyboardAvoidingView,
+  Modal,
+  Pressable,
+  ScrollView,
+  Spinner,
+  Text,
+  VStack,
+} from 'native-base';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { authService } from '@/services/auth';
-import { colors } from '@/theme/colors';
 import { semanticSpacing } from '@/theme/spacing';
 import { fontWeights, lineHeights, typography } from '@/theme/typography';
 import { ensureOnlineOrMessage } from '@/utils/connection';
+import { useMessageBoxStore } from '@/context/messageBoxStore';
+import i18n from '@/i18n';
 
 type Guild = {
   id: string;
@@ -31,6 +35,7 @@ type Guild = {
 };
 
 type SignupScreenProps = {
+  initialPhone?: string;
   onNavigateToLogin?: () => void;
   onOtpRequested?: (phone: string) => void;
 };
@@ -39,11 +44,12 @@ export default function SignupScreen(props: SignupScreenProps) {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const { t } = useTranslation();
+  const isRTL = I18nManager.isRTL;
   
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [nationalId, setNationalId] = useState('');
-  const [phone, setPhone] = useState('');
+  const [phone, setPhone] = useState(props.initialPhone || '');
   const [selectedGuild, setSelectedGuild] = useState('');
   const [guilds, setGuilds] = useState<Guild[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -86,15 +92,16 @@ export default function SignupScreen(props: SignupScreenProps) {
     fetchGuilds();
   }, []);
 
+
   const validateName = (value: string): string | undefined => {
     const val = String(value || '').trim();
-    if (val.length < 2) return 'طول نام باید حداقل 2 کاراکتر باشد';
+    if (val.length < 2) return t('signup.errors.firstNameTooShort');
     // Allow Persian letters, Arabic letters, English letters, spaces, and hyphen
     const nameRegex = /^[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FFa-zA-Z\s\-]+$/;
-    if (!nameRegex.test(val)) return 'نام فقط می‌تواند شامل حروف باشد';
+    if (!nameRegex.test(val)) return t('signup.errors.firstNameInvalid');
     // Disallow multiple consecutive spaces or hyphens
-    if (/\s{2,}/.test(val)) return 'از فاصله‌های متعدد استفاده نکنید';
-    if (/--+/.test(val)) return 'از خط تیره‌ی متعدد استفاده نکنید';
+    if (/\s{2,}/.test(val)) return t('signup.errors.noMultipleSpaces');
+    if (/--+/.test(val)) return t('signup.errors.noMultipleHyphens');
     return undefined;
   };
 
@@ -112,7 +119,7 @@ export default function SignupScreen(props: SignupScreenProps) {
     // Validate national ID
     const isValidNational = validateIranianNationalId(nationalId);
     if (!isValidNational) {
-      setNationalIdError('کد ملی نامعتبر است');
+      setNationalIdError(t('signup.errors.invalidNationalId'));
       isValid = false;
     } else {
       setNationalIdError(undefined);
@@ -121,7 +128,7 @@ export default function SignupScreen(props: SignupScreenProps) {
     // Validate phone number
     const phoneValidation = validateIranianMobileNumber(phone);
     if (!phoneValidation.isValid) {
-      setPhoneError(phoneValidation.error);
+      setPhoneError(t('signup.errors.invalidPhone'));
       isValid = false;
     } else {
       setPhoneError(undefined);
@@ -129,7 +136,7 @@ export default function SignupScreen(props: SignupScreenProps) {
     
     // Validate guild selection
     if (!selectedGuild) {
-      setGuildError('انتخاب صنف الزامی است');
+      setGuildError(t('signup.errors.guildRequired'));
       isValid = false;
     } else {
       setGuildError(undefined);
@@ -148,6 +155,16 @@ export default function SignupScreen(props: SignupScreenProps) {
     try {
       const online = await ensureOnlineOrMessage();
       if (!online) return;
+      // Pre-check phone and national ID existence
+      const existsResp = await authService.phoneOrNationalIdExists(phone.trim(), nationalId.trim());
+      if (existsResp.success && existsResp.data?.exists) {
+        useMessageBoxStore.getState().show({
+          message: i18n.t('auth.idOrPhoneExists', 'This ID or phone number exists.'),
+          actions: [{ label: i18n.t('common.back') }],
+        });
+        return;
+      }
+
       // Call backend signup
       const resp = await authService.signup({
         firstName: firstName.trim(),
@@ -168,334 +185,250 @@ export default function SignupScreen(props: SignupScreenProps) {
           router.push({ pathname: '/auth/verify-otp', params: { phone: phone.trim(), from: 'signup' } });
         }
       } else {
-        Alert.alert('خطا', resp.error || 'ثبت نام با مشکل مواجه شد.');
+        Alert.alert(t('signup.alerts.signupFailedTitle'), resp.error || t('signup.alerts.signupFailed'));
       }
     } catch (error) {
-      Alert.alert('خطا', 'ثبت نام با مشکل مواجه شد. لطفا دوباره تلاش کنید.');
+      Alert.alert(t('signup.alerts.signupFailedTitle'), t('signup.alerts.signupFailedRetry'));
     } finally {
       setIsLoading(false);
     }
   };
 
+  // If opened from LoginWall with pre-filled phone, keep it
+  // (LoginWall passes pendingPhone via state; we can accept it through props/hooks later if needed)
+
   return (
-    <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={{ flex: 1 }}
-      >
-        <ScrollView contentContainerStyle={styles.content}>
-          <View style={styles.header}>
-            <View style={styles.logo}>
-              <Ionicons name="person-add" size={40} color="white" />
-            </View>
-            <Text style={styles.title}>ثبت نام</Text>
-            <Text style={styles.subtitle}>لطفا اطلاعات خود را وارد کنید</Text>
-          </View>
-          
-          <View style={styles.form}>
-            {/* First/Last Name Inputs (side-by-side) */}
-            <View style={styles.inputContainer}>
-              <View style={{ flexDirection: 'row', gap: 12 }}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.label}>نام</Text>
-                  <TextInput
-                    style={[styles.input, firstNameError && styles.inputError, { backgroundColor: isDark ? colors.gray[800] : colors.background.light, color: isDark ? colors.text.primary : colors.text.primary, borderColor: isDark ? colors.border.light : colors.border.light }]}
-                    placeholder="نام"
+    <Box flex={1} safeArea>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+          <VStack px={semanticSpacing.lg} py={semanticSpacing.lg} maxW={400} alignSelf="center" w="100%" space={semanticSpacing.sm}>
+            <VStack alignItems="center" mb={semanticSpacing.md}>
+              <Animated.View entering={FadeInDown.duration(300)}>
+                <Box w={20} h={20} rounded="full" bg="primary.600" alignItems="center" justifyContent="center" mb={semanticSpacing.lg} shadow="3">
+                  <Icon as={Ionicons} name="person-add" color="white" size="xl" />
+                </Box>
+              </Animated.View>
+              <Heading size="lg" textAlign="center" mb={semanticSpacing.xs}>
+                {t('signup.title')}
+              </Heading>
+              <Text textAlign="center" color="text.secondary">
+                {t('signup.subtitle')}
+              </Text>
+            </VStack>
+
+            <VStack space={semanticSpacing.sm}>
+              <HStack space={3}>
+                <VStack flex={1}>
+                  <Text fontSize={16} fontWeight={fontWeights.medium as any} mb={semanticSpacing.xs} textAlign="right">
+                    {t('signup.firstName')}
+                  </Text>
+                  <Input
+                    placeholder={t('signup.firstName')}
                     value={firstName}
                     onChangeText={(text) => {
                       setFirstName(text);
                       if (firstNameError) setFirstNameError(undefined);
                     }}
-                    editable={!isLoading}
-                    textAlign="right"
+                    isDisabled={isLoading}
+                    textAlign={isRTL ? 'right' : 'left'}
+                    height={44}
+                    variant="outline"
+                    isInvalid={!!firstNameError}
                   />
-                  {firstNameError && <Text style={styles.errorText}>{firstNameError}</Text>}
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.label}>نام خانوادگی</Text>
-                  <TextInput
-                    style={[styles.input, lastNameError && styles.inputError, { backgroundColor: isDark ? colors.gray[800] : colors.background.light, color: isDark ? colors.text.primary : colors.text.primary, borderColor: isDark ? colors.border.light : colors.border.light }]}
-                    placeholder="نام خانوادگی"
+                  {firstNameError ? (
+                    <Text color="error.500" fontSize={14} mt={semanticSpacing.xs} textAlign="right">
+                      {firstNameError}
+                    </Text>
+                  ) : null}
+                </VStack>
+                <VStack flex={1}>
+                  <Text fontSize={16} fontWeight={fontWeights.medium as any} mb={semanticSpacing.xs} textAlign="right">
+                    {t('signup.lastName')}
+                  </Text>
+                  <Input
+                    placeholder={t('signup.lastName')}
                     value={lastName}
                     onChangeText={(text) => {
                       setLastName(text);
                       if (lastNameError) setLastNameError(undefined);
                     }}
-                    editable={!isLoading}
-                    textAlign="right"
+                    isDisabled={isLoading}
+                    textAlign={isRTL ? 'right' : 'left'}
+                    height={44}
+                    variant="outline"
+                    isInvalid={!!lastNameError}
                   />
-                  {lastNameError && <Text style={styles.errorText}>{lastNameError}</Text>}
-                </View>
-              </View>
-            </View>
-            
-            {/* National ID Input */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>کد ملی</Text>
-              <TextInput
-                style={[styles.input, nationalIdError && styles.inputError, { backgroundColor: isDark ? colors.gray[800] : colors.background.light, color: isDark ? colors.text.primary : colors.text.primary, borderColor: isDark ? colors.border.light : colors.border.light }]}
-                placeholder="کد ملی 10 رقمی"
-                keyboardType="number-pad"
-                value={nationalId}
-                onChangeText={(text) => {
-                  setNationalId(text);
-                  if (nationalIdError) setNationalIdError(undefined);
-                }}
-                editable={!isLoading}
-                maxLength={10}
-                textAlign="left"
-                writingDirection="ltr"
-              />
-              {nationalIdError && <Text style={styles.errorText}>{nationalIdError}</Text>}
-            </View>
-            
-            {/* Phone Number Input */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>شماره موبایل</Text>
-              <TextInput
-                style={[styles.input, phoneError && styles.inputError, { backgroundColor: isDark ? colors.gray[800] : colors.background.light, color: isDark ? colors.text.primary : colors.text.primary, borderColor: isDark ? colors.border.light : colors.border.light }]}
-                placeholder="09xxxxxxxxx"
-                keyboardType="phone-pad"
-                value={phone}
-                onChangeText={(text) => {
-                  setPhone(text);
-                  if (phoneError) setPhoneError(undefined);
-                }}
-                editable={!isLoading}
-                textAlign="left"
-                writingDirection="ltr"
-              />
-              {phoneError && <Text style={styles.errorText}>{phoneError}</Text>}
-            </View>
-            
-            {/* Guild Selection */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>صنف</Text>
-              {isLoadingGuilds ? (
-                <View style={styles.loadingContainer}>
-                  <ActivityIndicator size="small" color={colors.primary[500]} />
-                  <Text style={styles.loadingText}>در حال بارگذاری صنف‌ها...</Text>
-                </View>
-              ) : (
-                <>
-                  <TouchableOpacity
-                    activeOpacity={0.7}
-                    onPress={() => setIsGuildModalOpen(true)}
-                    disabled={isLoading}
-                    style={[
-                      styles.pickerContainer,
-                      guildError && styles.inputError,
-                      { backgroundColor: isDark ? colors.gray[800] : colors.background.light, borderColor: isDark ? colors.border.light : colors.border.light, height: 44, justifyContent: 'center', paddingHorizontal: semanticSpacing.md }
-                    ]}
-                  >
-                    <Text style={{ color: selectedGuild ? (isDark ? colors.text.primary : colors.text.primary) : (isDark ? colors.text.secondary : colors.text.secondary), fontSize: 16 }}>
-                      {selectedGuild ? (guilds.find(g => g.id === selectedGuild)?.name || '') : 'انتخاب صنف'}
+                  {lastNameError ? (
+                    <Text color="error.500" fontSize={14} mt={semanticSpacing.xs} textAlign="right">
+                      {lastNameError}
                     </Text>
-                  </TouchableOpacity>
+                  ) : null}
+                </VStack>
+              </HStack>
 
-                  <Modal transparent visible={isGuildModalOpen} animationType="fade" onRequestClose={() => setIsGuildModalOpen(false)}>
-                    <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', paddingHorizontal: semanticSpacing.lg }}>
-                      <View style={{ backgroundColor: isDark ? colors.background.dark : colors.background.light, borderRadius: 12, maxHeight: '70%', overflow: 'hidden', width: '30%', alignSelf: 'center' }}>
-                        <View style={{ padding: semanticSpacing.md, borderBottomWidth: 1, borderColor: isDark ? colors.border.light : colors.border.light }}>
-                          <Text style={{ color: isDark ? colors.text.primary : colors.text.primary, fontWeight: '700', fontSize: 16, textAlign: 'center' }}>انتخاب صنف</Text>
-                          <Text style={{ marginTop: 6, color: isDark ? colors.text.secondary : colors.text.secondary, fontSize: 12, textAlign: 'center' }}>{t('signup.guildNote')}</Text>
-                        </View>
-                        <ScrollView>
-                          {guilds.map((guild) => (
-                            <TouchableOpacity
-                              key={guild.id}
-                              onPress={() => {
-                                setSelectedGuild(guild.id);
-                                if (guildError) setGuildError(undefined);
-                                setIsGuildModalOpen(false);
-                              }}
-                              style={{ paddingVertical: 12, paddingHorizontal: semanticSpacing.md, backgroundColor: selectedGuild === guild.id ? (isDark ? colors.gray[800] : colors.gray[100]) : 'transparent' }}
-                            >
-                              <Text style={{ color: isDark ? colors.text.primary : colors.text.primary, fontSize: 16 }}>{guild.name}</Text>
-                            </TouchableOpacity>
-                          ))}
-                        </ScrollView>
-                        <TouchableOpacity onPress={() => setIsGuildModalOpen(false)} style={{ padding: semanticSpacing.md, borderTopWidth: 1, borderColor: isDark ? colors.border.light : colors.border.light, alignItems: 'center' }}>
-                          <Text style={{ color: isDark ? colors.text.primary : colors.text.primary, fontWeight: '700' }}>بستن</Text>
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                  </Modal>
-                </>
-              )}
-              {guildError && <Text style={styles.errorText}>{guildError}</Text>}
-            </View>
-            
-            {/* Signup Button */}
-            <TouchableOpacity
-              style={[
-                styles.button,
-                isLoading && styles.buttonDisabled,
-              ]}
-              onPress={handleSignup}
-              disabled={isLoading || isLoadingGuilds}
-            >
-              {isLoading ? (
-                <ActivityIndicator color="white" />
+              <VStack>
+                <Text fontSize={16} fontWeight={fontWeights.medium as any} mb={semanticSpacing.xs} textAlign="right">
+                  {t('signup.nationalId')}
+                </Text>
+                <Input
+                  placeholder={t('signup.nationalIdPlaceholder')}
+                  keyboardType="number-pad"
+                  value={nationalId}
+                  onChangeText={(text) => {
+                    setNationalId(text);
+                    if (nationalIdError) setNationalIdError(undefined);
+                  }}
+                  isDisabled={isLoading}
+                  maxLength={10}
+                  textAlign="left"
+                  height={44}
+                  variant="outline"
+                  isInvalid={!!nationalIdError}
+                />
+                {nationalIdError ? (
+                  <Text color="error.500" fontSize={14} mt={semanticSpacing.xs} textAlign="right">
+                    {nationalIdError}
+                  </Text>
+                ) : null}
+              </VStack>
+
+              <VStack>
+                <Text fontSize={16} fontWeight={fontWeights.medium as any} mb={semanticSpacing.xs} textAlign="right">
+                  {t('signup.phone')}
+                </Text>
+                <Input
+                  placeholder={t('signup.phonePlaceholder')}
+                  keyboardType="phone-pad"
+                  value={phone}
+                  onChangeText={(text) => {
+                    setPhone(text);
+                    if (phoneError) setPhoneError(undefined);
+                  }}
+                  isDisabled={isLoading}
+                  textAlign="left"
+                  height={44}
+                  variant="outline"
+                  isInvalid={!!phoneError}
+                />
+                {phoneError ? (
+                  <Text color="error.500" fontSize={14} mt={semanticSpacing.xs} textAlign="right">
+                    {phoneError}
+                  </Text>
+                ) : null}
+              </VStack>
+
+              <VStack>
+                <Text fontSize={16} fontWeight={fontWeights.medium as any} mb={semanticSpacing.xs} textAlign="right">
+                  {t('signup.guild')}
+                </Text>
+                {isLoadingGuilds ? (
+                  <HStack height={44} px={semanticSpacing.md} borderWidth={1} borderColor="gray.300" rounded="md" alignItems="center" justifyContent="center" bg="background.light">
+                    <Spinner size="sm" color="primary.500" />
+                    <Text ml={semanticSpacing.sm} color="text.secondary" fontSize={16}>
+                      {t('signup.loadingGuilds')}
+                    </Text>
+                  </HStack>
+                ) : (
+                  <Pressable onPress={() => setIsGuildModalOpen(true)} isDisabled={isLoading}>
+                    {({ isPressed }) => (
+                      <HStack
+                        height={44}
+                        px={semanticSpacing.md}
+                        borderWidth={1}
+                        borderColor={guildError ? 'error.500' : 'gray.300'}
+                        rounded="md"
+                        alignItems="center"
+                        justifyContent="space-between"
+                        bg="background.light"
+                        opacity={isPressed ? 0.9 : 1}
+                      >
+                        <Text color={selectedGuild ? 'text.primary' : 'text.secondary'} fontSize={16}>
+                          {selectedGuild ? (guilds.find(g => g.id === selectedGuild)?.name || '') : t('signup.selectGuild')}
+                        </Text>
+                        <Icon as={Ionicons} name={isRTL ? 'chevron-back' : 'chevron-forward'} color="gray.400" size="sm" />
+                      </HStack>
+                    )}
+                  </Pressable>
+                )}
+                {guildError ? (
+                  <Text color="error.500" fontSize={14} mt={semanticSpacing.xs} textAlign="right">
+                    {guildError}
+                  </Text>
+                ) : null}
+
+                <Modal isOpen={isGuildModalOpen} onClose={() => setIsGuildModalOpen(false)} size="lg">
+                  <Modal.Content maxH="70%">
+                    <Modal.CloseButton />
+                    <Modal.Header alignItems="center">
+                      <VStack alignItems="center" w="100%">
+                        <Heading size="md">{t('signup.selectGuild')}</Heading>
+                        <Text mt={1} color="text.secondary" fontSize={12} textAlign="center">
+                          {t('signup.guildNote')}
+                        </Text>
+                      </VStack>
+                    </Modal.Header>
+                    <Modal.Body>
+                      <VStack>
+                        {guilds.map((guild) => (
+                          <Pressable
+                            key={guild.id}
+                            onPress={() => {
+                              setSelectedGuild(guild.id);
+                              if (guildError) setGuildError(undefined);
+                              setIsGuildModalOpen(false);
+                            }}
+                          >
+                            {({ isPressed }) => (
+                              <Box px={semanticSpacing.md} py={3} bg={selectedGuild === guild.id ? 'gray.100' : 'transparent'} opacity={isPressed ? 0.9 : 1} rounded="md">
+                                <Text fontSize={16}>{guild.name}</Text>
+                              </Box>
+                            )}
+                          </Pressable>
+                        ))}
+                      </VStack>
+                    </Modal.Body>
+                  </Modal.Content>
+                </Modal>
+              </VStack>
+
+              <Button
+                mt={semanticSpacing.sm}
+                isDisabled={isLoading || isLoadingGuilds}
+                onPress={handleSignup}
+                height={44}
+                leftIcon={isLoading ? undefined : <Icon as={Ionicons} name="checkmark" color="white" />}
+              >
+                {isLoading ? <Spinner color="white" /> : t('signup.submit')}
+              </Button>
+            </VStack>
+
+            <HStack mt={semanticSpacing.xl} justifyContent="center" alignItems="center" space={2}>
+              <Text color="text.secondary" fontSize={16}>
+                {t('signup.haveAccount')}
+              </Text>
+              {props?.onNavigateToLogin ? (
+                <Pressable onPress={props.onNavigateToLogin}>
+                  {({ isPressed }) => (
+                    <Text color="primary.600" fontSize={16} fontWeight={fontWeights.medium as any} opacity={isPressed ? 0.8 : 1}>
+                      {t('signup.login')}
+                    </Text>
+                  )}
+                </Pressable>
               ) : (
-                <Text style={styles.buttonText}>ثبت نام</Text>
+                <Link href="/auth/login" asChild>
+                  <Pressable>
+                    {({ isPressed }) => (
+                      <Text color="primary.600" fontSize={16} fontWeight={fontWeights.medium as any} opacity={isPressed ? 0.8 : 1}>
+                        {t('signup.login')}
+                      </Text>
+                    )}
+                  </Pressable>
+                </Link>
               )}
-            </TouchableOpacity>
-          </View>
-          
-          <View style={styles.loginLink}>
-            <Text style={styles.loginText}>قبلا ثبت نام کرده‌اید؟</Text>
-            {props?.onNavigateToLogin ? (
-              <TouchableOpacity style={styles.loginButton} onPress={props.onNavigateToLogin}>
-                <Text style={styles.loginButtonText}>ورود</Text>
-              </TouchableOpacity>
-            ) : (
-              <Link href="/auth/login" asChild>
-                <TouchableOpacity style={styles.loginButton}>
-                  <Text style={styles.loginButtonText}>ورود</Text>
-                </TouchableOpacity>
-              </Link>
-            )}
-          </View>
+            </HStack>
+          </VStack>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </Box>
   );
-}const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: 'transparent',
-  },
-  content: {
-    flexGrow: 1,
-    paddingHorizontal: semanticSpacing.lg,
-    paddingVertical: semanticSpacing.lg,
-    maxWidth: 400,
-    alignSelf: 'center',
-    width: '100%',
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: semanticSpacing.md,
-  },
-  logo: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: colors.primary[500],
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: semanticSpacing.lg,
-  },
-  title: {
-    fontSize: typography.h2.fontSize,
-    fontWeight: typography.h2.fontWeight,
-    color: colors.text.primary,
-    textAlign: 'center',
-    marginBottom: semanticSpacing.sm,
-  },
-  subtitle: {
-    fontSize: typography.bodyLarge.fontSize,
-    color: colors.text.secondary,
-    textAlign: 'center',
-    lineHeight: typography.bodyLarge.fontSize * lineHeights.normal,
-  },
-  form: {
-    marginBottom: semanticSpacing.md,
-  },
-  inputContainer: {
-    marginBottom: semanticSpacing.sm,
-  },
-  label: {
-    fontSize: 16, // Fixed from typography.body.fontSize
-    fontWeight: fontWeights.medium,
-    color: colors.text.primary,
-    marginBottom: semanticSpacing.xs,
-    textAlign: 'right',
-  },
-  input: {
-    height: 44,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
-    paddingHorizontal: semanticSpacing.md,
-    fontSize: 16, // Fixed from typography.body.fontSize
-    color: colors.text.primary,
-    backgroundColor: colors.background.light,
-  },
-  inputError: {
-    borderColor: colors.error[500],
-  },
-  errorText: {
-    color: colors.error[500],
-    fontSize: 14, // Fixed from typography.small.fontSize
-    marginTop: semanticSpacing.xs,
-    textAlign: 'right',
-  },
-  helperText: {
-    color: colors.text.secondary,
-    fontSize: 12,
-    marginBottom: semanticSpacing.xs,
-    textAlign: 'right',
-  },
-  pickerContainer: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
-    backgroundColor: colors.background.light,
-  },
-  picker: {
-    height: 44,
-    width: '100%',
-  },
-  loadingContainer: {
-    height: 44,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
-    paddingHorizontal: semanticSpacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.background.light,
-  },
-  loadingText: {
-    marginLeft: semanticSpacing.sm,
-    color: colors.text.secondary,
-    fontSize: 16, // Fixed from typography.body.fontSize
-  },
-  button: {
-    height: 44,
-    backgroundColor: colors.primary[500],
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: semanticSpacing.sm,
-  },
-  buttonDisabled: {
-    backgroundColor: colors.primary[300],
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 16, // Fixed from typography.body.fontSize
-    fontWeight: fontWeights.medium,
-  },
-  loginLink: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: semanticSpacing.xl,
-  },
-  loginText: {
-    color: colors.text.secondary,
-    fontSize: 16, // Fixed from typography.body.fontSize
-  },
-  loginButton: {
-    marginLeft: semanticSpacing.xs,
-  },
-  loginButtonText: {
-    color: colors.primary[500],
-    fontSize: 16, // Fixed from typography.body.fontSize
-    fontWeight: fontWeights.medium,
-  },
-});
-
+}

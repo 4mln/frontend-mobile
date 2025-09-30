@@ -27,4 +27,7 @@ if (process.env.EXPO_PLATFORM === 'web') {
   config.resolver.platforms = ['web', 'native', 'ios', 'android'];
 }
 
+// Ensure proper module resolution for dynamic imports
+config.resolver.unstable_enablePackageExports = true;
+
 module.exports = config;

@@ -5,6 +5,7 @@ import { typography } from '@/theme/typography';
 import { BackendTestResult, runBackendTests } from '@/utils/backendTest';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface BackendStatusProps {
@@ -16,6 +17,7 @@ export const BackendStatus: React.FC<BackendStatusProps> = ({
   showDetails = false, 
   onStatusChange 
 }) => {
+  const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   
@@ -59,31 +61,31 @@ export const BackendStatus: React.FC<BackendStatusProps> = ({
   };
 
   const getStatusText = () => {
-    if (isLoading) return 'Testing...';
-    if (isConnected === null) return 'Unknown';
-    return isConnected ? 'Connected' : 'Disconnected';
+    if (isLoading) return t('backend.testing', 'Testing...');
+    if (isConnected === null) return t('backend.unknown', 'Unknown');
+    return isConnected ? t('backend.connected', 'Connected') : t('backend.disconnected', 'Disconnected');
   };
 
   const showDetailedResults = () => {
     if (!testResults) return;
     
     const message = `
-Backend Status: ${testResults.overall ? 'Connected' : 'Disconnected'}
+${t('backend.status', 'Backend Status')}: ${testResults.overall ? t('backend.connected', 'Connected') : t('backend.disconnected', 'Disconnected')}
 
-Health Check:
-- Status: ${testResults.health.isConnected ? 'OK' : 'Failed'}
-- Response Time: ${testResults.health.responseTime}ms
-- Error: ${testResults.health.error || 'None'}
+${t('backend.healthCheck', 'Health Check')}:
+- ${t('backend.statusLabel', 'Status')}: ${testResults.health.isConnected ? t('backend.ok', 'OK') : t('backend.failed', 'Failed')}
+- ${t('backend.responseTime', 'Response Time')}: ${testResults.health.responseTime}ms
+- ${t('backend.error', 'Error')}: ${testResults.health.error || t('backend.none', 'None')}
 
-OTP Endpoint:
-- Status: ${testResults.otp.isConnected ? 'OK' : 'Failed'}
-- Response Time: ${testResults.otp.responseTime}ms
-- Error: ${testResults.otp.error || 'None'}
+${t('backend.otpEndpoint', 'OTP Endpoint')}:
+- ${t('backend.statusLabel', 'Status')}: ${testResults.otp.isConnected ? t('backend.ok', 'OK') : t('backend.failed', 'Failed')}
+- ${t('backend.responseTime', 'Response Time')}: ${testResults.otp.responseTime}ms
+- ${t('backend.error', 'Error')}: ${testResults.otp.error || t('backend.none', 'None')}
 
-Backend URL: ${testResults.health.backendUrl}
+${t('backend.url', 'Backend URL')}: ${testResults.health.backendUrl}
     `;
     
-    Alert.alert('Backend Connection Details', message.trim());
+    Alert.alert(t('backend.detailsTitle', 'Backend Connection Details'), message.trim());
   };
 
   const styles = StyleSheet.create({
@@ -122,7 +124,7 @@ Backend URL: ${testResults.health.backendUrl}
     <View style={styles.container}>
       <View style={styles.statusIndicator} />
       <Text style={styles.statusText}>
-        Backend: {getStatusText()}
+        {t('backend.label', 'Backend')}: {getStatusText()}
       </Text>
       
       <TouchableOpacity

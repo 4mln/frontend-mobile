@@ -59,7 +59,7 @@ export const useTheme = (options: UseThemeOptions = {}): UseThemeReturn => {
       
       if (trackUsage) {
         // Track theme change
-        const { trackFeatureUsage } = await import('@/services/analytics');
+        const { trackFeatureUsage } = await import('../services/analytics');
         trackFeatureUsage('theme', 'change', {
           themeName: name,
           isDark: theme?.isDark || false,
@@ -82,7 +82,7 @@ export const useTheme = (options: UseThemeOptions = {}): UseThemeReturn => {
       
       if (trackUsage) {
         // Track dark mode toggle
-        const { trackFeatureUsage } = await import('@/services/analytics');
+        const { trackFeatureUsage } = await import('../services/analytics');
         trackFeatureUsage('theme', 'toggle_dark_mode', {
           wasDark: theme?.isDark || false,
         });
@@ -104,7 +104,7 @@ export const useTheme = (options: UseThemeOptions = {}): UseThemeReturn => {
       
       if (trackUsage) {
         // Track auto dark mode setting
-        const { trackFeatureUsage } = await import('@/services/analytics');
+        const { trackFeatureUsage } = await import('../services/analytics');
         trackFeatureUsage('theme', 'auto_dark_mode', {
           enabled,
         });
@@ -126,7 +126,7 @@ export const useTheme = (options: UseThemeOptions = {}): UseThemeReturn => {
       
       if (trackUsage) {
         // Track custom theme creation
-        const { trackFeatureUsage } = await import('@/services/analytics');
+        const { trackFeatureUsage } = await import('../services/analytics');
         trackFeatureUsage('theme', 'create_custom', {
           themeName: name,
           isDark: customTheme.isDark,
@@ -149,7 +149,7 @@ export const useTheme = (options: UseThemeOptions = {}): UseThemeReturn => {
       
       if (trackUsage) {
         // Track custom theme deletion
-        const { trackFeatureUsage } = await import('@/services/analytics');
+        const { trackFeatureUsage } = await import('../services/analytics');
         trackFeatureUsage('theme', 'delete_custom', {
           themeName: name,
         });
@@ -171,7 +171,7 @@ export const useTheme = (options: UseThemeOptions = {}): UseThemeReturn => {
       
       if (trackUsage) {
         // Track theme reset
-        const { trackFeatureUsage } = await import('@/services/analytics');
+        const { trackFeatureUsage } = await import('../services/analytics');
         trackFeatureUsage('theme', 'reset', {});
       }
     } catch (err) {

@@ -56,7 +56,7 @@ export const useOffline = (options: UseOfflineOptions = {}): UseOfflineReturn =>
       
       if (trackUsage) {
         // Track sync usage
-        const { trackFeatureUsage } = await import('@/services/analytics');
+        const { trackFeatureUsage } = await import('../services/analytics');
         trackFeatureUsage('offline_sync', 'manual_sync', {
           pendingItems: status.pendingItems,
         });
@@ -72,7 +72,7 @@ export const useOffline = (options: UseOfflineOptions = {}): UseOfflineReturn =>
       
       if (trackUsage) {
         // Track data clearing
-        const { trackFeatureUsage } = await import('@/services/analytics');
+        const { trackFeatureUsage } = await import('../services/analytics');
         trackFeatureUsage('offline_clear', 'manual_clear', {});
       }
     } catch (error) {

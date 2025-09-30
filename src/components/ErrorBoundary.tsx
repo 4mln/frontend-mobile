@@ -1,11 +1,12 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { withTranslation, WithTranslation } from 'react-i18next';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '@/theme/colors';
 import { semanticSpacing } from '@/theme/spacing';
 import { typography } from '@/theme/typography';
 
-interface Props {
+interface Props extends WithTranslation {
   children: ReactNode;
   fallback?: ReactNode;
 }
@@ -16,7 +17,7 @@ interface State {
   errorInfo?: ErrorInfo;
 }
 
-export class ErrorBoundary extends Component<Props, State> {
+class ErrorBoundaryBase extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = { hasError: false };
@@ -41,6 +42,7 @@ export class ErrorBoundary extends Component<Props, State> {
         return this.props.fallback;
       }
 
+      const { t } = this.props;
       return (
         <View style={styles.container}>
           <View style={styles.content}>
@@ -48,14 +50,14 @@ export class ErrorBoundary extends Component<Props, State> {
               <Ionicons name="warning-outline" size={64} color={colors.error[500]} />
             </View>
             
-            <Text style={styles.title}>Something went wrong</Text>
+            <Text style={styles.title}>{t('errors.somethingWrong', 'Something went wrong')}</Text>
             <Text style={styles.message}>
-              We're sorry, but something unexpected happened. Please try again.
+              {t('errors.somethingUnexpected', "We're sorry, but something unexpected happened. Please try again.")}
             </Text>
             
             {__DEV__ && this.state.error && (
               <View style={styles.errorDetails}>
-                <Text style={styles.errorTitle}>Error Details (Development):</Text>
+                <Text style={styles.errorTitle}>{t('errors.detailsDev', 'Error Details (Development):')}</Text>
                 <Text style={styles.errorText}>{this.state.error.message}</Text>
                 {this.state.errorInfo && (
                   <Text style={styles.errorText}>
@@ -66,7 +68,7 @@ export class ErrorBoundary extends Component<Props, State> {
             )}
             
             <TouchableOpacity style={styles.retryButton} onPress={this.handleRetry}>
-              <Text style={styles.retryButtonText}>Try Again</Text>
+              <Text style={styles.retryButtonText}>{t('common.retry')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -76,6 +78,8 @@ export class ErrorBoundary extends Component<Props, State> {
     return this.props.children;
   }
 }
+
+export const ErrorBoundary = withTranslation()(ErrorBoundaryBase);
 
 const styles = StyleSheet.create({
   container: {

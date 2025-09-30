@@ -108,7 +108,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         // Proactively fetch user profile using shared API service
         // Dynamic import to avoid circular deps at module load
         try {
-          const { authService } = await import('@/services/auth');
+          const { authService } = await import('../../services/auth');
           const profileResp = await authService.getProfile();
           if (profileResp.success && profileResp.data) {
             set({

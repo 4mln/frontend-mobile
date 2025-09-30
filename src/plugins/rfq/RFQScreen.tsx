@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
@@ -24,6 +25,7 @@ interface RFQScreenProps {
 }
 
 export const RFQScreen: React.FC<RFQScreenProps> = ({ onBack }) => {
+  const { t } = useTranslation();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [selectedRFQ, setSelectedRFQ] = useState<RFQ | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -44,11 +46,11 @@ export const RFQScreen: React.FC<RFQScreenProps> = ({ onBack }) => {
   const handleCreateRFQ = async (rfqData: any) => {
     try {
       await createRFQ(rfqData);
-      Alert.alert('Success', 'RFQ created successfully');
+      Alert.alert(t('common.done'), t('rfq.created', 'RFQ created successfully'));
       setShowCreateForm(false);
       refreshRFQs();
     } catch (error) {
-      Alert.alert('Error', 'Failed to create RFQ');
+      Alert.alert(t('errors.error', 'Error'), t('rfq.createFailed', 'Failed to create RFQ'));
     }
   };
 
@@ -56,10 +58,10 @@ export const RFQScreen: React.FC<RFQScreenProps> = ({ onBack }) => {
   const handleSubmitQuote = async (quoteData: any) => {
     try {
       await createQuote(quoteData);
-      Alert.alert('Success', 'Quote submitted successfully');
+      Alert.alert(t('common.done'), t('rfq.quoteSubmitted', 'Quote submitted successfully'));
       refreshQuotes(selectedRFQ?.id || '');
     } catch (error) {
-      Alert.alert('Error', 'Failed to submit quote');
+      Alert.alert(t('errors.error', 'Error'), t('rfq.quoteSubmitFailed', 'Failed to submit quote'));
     }
   };
 
@@ -92,7 +94,7 @@ export const RFQScreen: React.FC<RFQScreenProps> = ({ onBack }) => {
       <View style={rfqStyles.rfqMeta}>
         <Text style={rfqStyles.rfqCategory}>{item.category}</Text>
         <Text style={rfqStyles.rfqBudget}>
-          Budget: ${item.budget?.toFixed(2) || 'Not specified'}
+          {t('rfq.budget', 'Budget')}: {item.budget ? item.budget.toLocaleString?.() : t('rfq.notSpecified', 'Not specified')}
         </Text>
       </View>
       <View style={rfqStyles.rfqFooter}>
@@ -100,7 +102,7 @@ export const RFQScreen: React.FC<RFQScreenProps> = ({ onBack }) => {
           {new Date(item.createdAt).toLocaleDateString()}
         </Text>
         <Text style={rfqStyles.rfqQuotes}>
-          {item.quoteCount || 0} quotes
+          {t('rfq.quotesCount', '{{count}} quotes', { count: item.quoteCount || 0 })}
         </Text>
       </View>
     </TouchableOpacity>
@@ -141,7 +143,7 @@ export const RFQScreen: React.FC<RFQScreenProps> = ({ onBack }) => {
     return (
       <View style={rfqStyles.loadingContainer}>
         <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={rfqStyles.loadingText}>Loading RFQs...</Text>
+        <Text style={rfqStyles.loadingText}>{t('rfq.loading', 'Loading RFQs...')}</Text>
       </View>
     );
   }
@@ -149,9 +151,9 @@ export const RFQScreen: React.FC<RFQScreenProps> = ({ onBack }) => {
   if (error) {
     return (
       <View style={rfqStyles.errorContainer}>
-        <Text style={rfqStyles.errorText}>{error}</Text>
+        <Text style={rfqStyles.errorText}>{error || t('errors.unknownError')}</Text>
         <TouchableOpacity style={rfqStyles.retryButton} onPress={refreshRFQs}>
-          <Text style={rfqStyles.retryButtonText}>Retry</Text>
+          <Text style={rfqStyles.retryButtonText}>{t('common.retry')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -162,14 +164,14 @@ export const RFQScreen: React.FC<RFQScreenProps> = ({ onBack }) => {
       {/* Header */}
       <View style={rfqStyles.header}>
         <TouchableOpacity onPress={onBack} style={rfqStyles.backButton}>
-          <Text style={rfqStyles.backButtonText}>← Back</Text>
+          <Text style={rfqStyles.backButtonText}>← {t('common.back')}</Text>
         </TouchableOpacity>
-        <Text style={rfqStyles.headerTitle}>RFQ</Text>
+        <Text style={rfqStyles.headerTitle}>{t('rfq.title', 'RFQ')}</Text>
         <TouchableOpacity 
           style={rfqStyles.createButton}
           onPress={() => setShowCreateForm(true)}
         >
-          <Text style={rfqStyles.createButtonText}>+ Create</Text>
+          <Text style={rfqStyles.createButtonText}>+ {t('rfq.create', 'Create')}</Text>
         </TouchableOpacity>
       </View>
 
@@ -177,7 +179,7 @@ export const RFQScreen: React.FC<RFQScreenProps> = ({ onBack }) => {
       <View style={rfqStyles.searchContainer}>
         <TextInput
           style={rfqStyles.searchInput}
-          placeholder="Search RFQs..."
+          placeholder={t('rfq.searchPlaceholder', 'Search RFQs...')}
           value={searchQuery}
           onChangeText={handleSearch}
         />
@@ -185,7 +187,7 @@ export const RFQScreen: React.FC<RFQScreenProps> = ({ onBack }) => {
 
       {/* RFQs List */}
       <View style={rfqStyles.rfqsSection}>
-        <Text style={rfqStyles.sectionTitle}>Request for Quotes</Text>
+        <Text style={rfqStyles.sectionTitle}>{t('rfq.listTitle', 'Request for Quotes')}</Text>
         <FlatList
           data={rfqs}
           renderItem={renderRFQ}
@@ -196,13 +198,13 @@ export const RFQScreen: React.FC<RFQScreenProps> = ({ onBack }) => {
           ListEmptyComponent={
             <View style={rfqStyles.emptyState}>
               <Text style={rfqStyles.emptyStateText}>
-                No RFQs found
+                {t('rfq.none', 'No RFQs found')}
               </Text>
               <TouchableOpacity 
                 style={rfqStyles.emptyStateButton}
                 onPress={() => setShowCreateForm(true)}
               >
-                <Text style={rfqStyles.emptyStateButtonText}>Create RFQ</Text>
+                <Text style={rfqStyles.emptyStateButtonText}>{t('rfq.createRfq', 'Create RFQ')}</Text>
               </TouchableOpacity>
             </View>
           }
@@ -213,7 +215,7 @@ export const RFQScreen: React.FC<RFQScreenProps> = ({ onBack }) => {
       {selectedRFQ && (
         <View style={rfqStyles.quotesSection}>
           <Text style={rfqStyles.sectionTitle}>
-            Quotes for "{selectedRFQ.title}"
+            {t('rfq.quotesFor', 'Quotes for "{{title}}"', { title: selectedRFQ.title })}
           </Text>
           <FlatList
             data={quotes}
@@ -225,7 +227,7 @@ export const RFQScreen: React.FC<RFQScreenProps> = ({ onBack }) => {
             ListEmptyComponent={
               <View style={rfqStyles.emptyState}>
                 <Text style={rfqStyles.emptyStateText}>
-                  No quotes yet
+                  {t('rfq.noQuotes', 'No quotes yet')}
                 </Text>
               </View>
             }
@@ -237,31 +239,31 @@ export const RFQScreen: React.FC<RFQScreenProps> = ({ onBack }) => {
       {showCreateForm && (
         <View style={rfqStyles.modalOverlay}>
           <View style={rfqStyles.modalContent}>
-            <Text style={rfqStyles.modalTitle}>Create New RFQ</Text>
+            <Text style={rfqStyles.modalTitle}>{t('rfq.createNew', 'Create New RFQ')}</Text>
             <ScrollView style={rfqStyles.modalForm}>
               <TextInput
                 style={rfqStyles.modalInput}
-                placeholder="RFQ Title"
+                placeholder={t('rfq.titlePlaceholder', 'RFQ Title')}
                 multiline
               />
               <TextInput
                 style={[rfqStyles.modalInput, rfqStyles.textArea]}
-                placeholder="Description"
+                placeholder={t('rfq.description', 'Description')}
                 multiline
                 numberOfLines={4}
               />
               <TextInput
                 style={rfqStyles.modalInput}
-                placeholder="Category"
+                placeholder={t('rfq.category', 'Category')}
               />
               <TextInput
                 style={rfqStyles.modalInput}
-                placeholder="Budget (optional)"
+                placeholder={t('rfq.budgetOptional', 'Budget (optional)')}
                 keyboardType="numeric"
               />
               <TextInput
                 style={rfqStyles.modalInput}
-                placeholder="Delivery Requirements"
+                placeholder={t('rfq.deliveryRequirements', 'Delivery Requirements')}
                 multiline
               />
             </ScrollView>
@@ -270,13 +272,13 @@ export const RFQScreen: React.FC<RFQScreenProps> = ({ onBack }) => {
                 style={[rfqStyles.modalButton, rfqStyles.modalButtonSecondary]}
                 onPress={() => setShowCreateForm(false)}
               >
-                <Text style={rfqStyles.modalButtonTextSecondary}>Cancel</Text>
+                <Text style={rfqStyles.modalButtonTextSecondary}>{t('common.cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[rfqStyles.modalButton, rfqStyles.modalButtonPrimary]}
                 onPress={() => {/* Handle create */}}
               >
-                <Text style={rfqStyles.modalButtonTextPrimary}>Create</Text>
+                <Text style={rfqStyles.modalButtonTextPrimary}>{t('common.create', 'Create')}</Text>
               </TouchableOpacity>
             </View>
           </View>

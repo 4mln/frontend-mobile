@@ -73,7 +73,7 @@ apiClient.interceptors.response.use(
         await SecureStore.deleteItemAsync('auth_token');
         await SecureStore.deleteItemAsync('refresh_token');
         try {
-          const { useAuthStore } = await import('@/features/auth/store');
+          const { useAuthStore } = await import('../features/auth/store');
           useAuthStore.getState().logout();
         } catch {}
       }

@@ -146,13 +146,13 @@ export default function AddScreen() {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Add New</Text>
+        <Text style={styles.headerTitle}>{t('add.header', 'Add New')}</Text>
       </View>
 
       <ScrollView style={styles.content}>
         {/* Main Options */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>What would you like to add?</Text>
+          <Text style={styles.sectionTitle}>{t('add.whatToAdd', 'What would you like to add?')}</Text>
           
           {/* Add Product */}
           <TouchableOpacity style={styles.optionCard} onPress={handleAddProduct}>
@@ -160,10 +160,10 @@ export default function AddScreen() {
               <View style={styles.optionIcon}>
                 <Ionicons name="cube-outline" size={24} color={colors.primary[600]} />
               </View>
-              <Text style={styles.optionTitle}>Add Product</Text>
+              <Text style={styles.optionTitle}>{t('add.addProduct', 'Add Product')}</Text>
             </View>
             <Text style={styles.optionDescription}>
-              List a new product or service for sale in the marketplace
+              {t('add.addProductDesc', 'List a new product or service for sale in the marketplace')}
             </Text>
           </TouchableOpacity>
 
@@ -173,55 +173,55 @@ export default function AddScreen() {
               <View style={styles.optionIcon}>
                 <Ionicons name="document-text-outline" size={24} color={colors.primary[600]} />
               </View>
-              <Text style={styles.optionTitle}>Create RFQ</Text>
+              <Text style={styles.optionTitle}>{t('add.createRfq', 'Create RFQ')}</Text>
             </View>
             <Text style={styles.optionDescription}>
-              Request quotes from suppliers for your business needs
+              {t('add.createRfqDesc', 'Request quotes from suppliers for your business needs')}
             </Text>
           </TouchableOpacity>
         </View>
 
         {/* Quick Actions */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Quick Actions</Text>
+          <Text style={styles.sectionTitle}>{t('add.quickActions', 'Quick Actions')}</Text>
           <View style={styles.quickActions}>
             <TouchableOpacity style={styles.quickActionButton} onPress={handleAddProduct}>
               <Ionicons name="add" size={20} color={colors.background.light} />
-              <Text style={styles.quickActionText}>Product</Text>
+              <Text style={styles.quickActionText}>{t('add.product', 'Product')}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.quickActionButton} onPress={handleAddRFQ}>
               <Ionicons name="document" size={20} color={colors.background.light} />
-              <Text style={styles.quickActionText}>RFQ</Text>
+              <Text style={styles.quickActionText}>{t('add.rfq', 'RFQ')}</Text>
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Recent Activity */}
         <View style={styles.recentSection}>
-          <Text style={styles.sectionTitle}>Recent Activity</Text>
+          <Text style={styles.sectionTitle}>{t('add.recentActivity', 'Recent Activity')}</Text>
           
           <TouchableOpacity style={styles.recentItem}>
             <View style={styles.recentIcon}>
               <Ionicons name="cube" size={20} color={colors.gray[600]} />
             </View>
-            <Text style={styles.recentText}>Industrial Steel Pipes</Text>
-            <Text style={styles.recentTime}>2 hours ago</Text>
+            <Text style={styles.recentText}>{t('add.sampleProduct1', 'Industrial Steel Pipes')}</Text>
+            <Text style={styles.recentTime}>{t('add.timeHours', { count: 2, defaultValue: '2 hours ago' })}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.recentItem}>
             <View style={styles.recentIcon}>
               <Ionicons name="document-text" size={20} color={colors.gray[600]} />
             </View>
-            <Text style={styles.recentText}>Construction Materials RFQ</Text>
-            <Text style={styles.recentTime}>1 day ago</Text>
+            <Text style={styles.recentText}>{t('add.sampleRfq1', 'Construction Materials RFQ')}</Text>
+            <Text style={styles.recentTime}>{t('add.timeDays', { count: 1, defaultValue: '1 day ago' })}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.recentItem}>
             <View style={styles.recentIcon}>
               <Ionicons name="cube" size={20} color={colors.gray[600]} />
             </View>
-            <Text style={styles.recentText}>Electrical Components</Text>
-            <Text style={styles.recentTime}>3 days ago</Text>
+            <Text style={styles.recentText}>{t('add.sampleProduct2', 'Electrical Components')}</Text>
+            <Text style={styles.recentTime}>{t('add.timeDays', { count: 3, defaultValue: '3 days ago' })}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

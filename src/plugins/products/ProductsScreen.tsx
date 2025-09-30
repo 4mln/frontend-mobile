@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
@@ -26,6 +27,7 @@ export const ProductsScreen: React.FC<ProductsScreenProps> = ({
   onProductSelect,
   onBack 
 }) => {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   
@@ -79,7 +81,7 @@ export const ProductsScreen: React.FC<ProductsScreenProps> = ({
         </Text>
         <View style={productsStyles.productMeta}>
           <Text style={productsStyles.productPrice}>
-            ${item.price.toFixed(2)}
+            {t('product.currency', 'Toman')} {item.price.toLocaleString?.() || item.price}
           </Text>
           <Text style={productsStyles.productCategory}>
             {item.category}
@@ -87,10 +89,10 @@ export const ProductsScreen: React.FC<ProductsScreenProps> = ({
         </View>
         <View style={productsStyles.productActions}>
           <TouchableOpacity style={productsStyles.actionButton}>
-            <Text style={productsStyles.actionButtonText}>View Details</Text>
+            <Text style={productsStyles.actionButtonText}>{t('products.viewDetails', 'View Details')}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={productsStyles.actionButton}>
-            <Text style={productsStyles.actionButtonText}>Add to Cart</Text>
+            <Text style={productsStyles.actionButtonText}>{t('products.addToCart', 'Add to Cart')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -111,7 +113,7 @@ export const ProductsScreen: React.FC<ProductsScreenProps> = ({
           productsStyles.categoryButtonText,
           !selectedCategory && productsStyles.categoryButtonTextActive
         ]}>
-          All
+          {t('products.all', 'All')}
         </Text>
       </TouchableOpacity>
       {categories.map((category) => (
@@ -127,7 +129,7 @@ export const ProductsScreen: React.FC<ProductsScreenProps> = ({
             productsStyles.categoryButtonText,
             selectedCategory === category && productsStyles.categoryButtonTextActive
           ]}>
-            {category}
+            {t(`categories.${category}`, category)}
           </Text>
         </TouchableOpacity>
       ))}
@@ -138,7 +140,7 @@ export const ProductsScreen: React.FC<ProductsScreenProps> = ({
     return (
       <View style={productsStyles.loadingContainer}>
         <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={productsStyles.loadingText}>Loading products...</Text>
+        <Text style={productsStyles.loadingText}>{t('products.loading', 'Loading products...')}</Text>
       </View>
     );
   }
@@ -146,9 +148,9 @@ export const ProductsScreen: React.FC<ProductsScreenProps> = ({
   if (error) {
     return (
       <View style={productsStyles.errorContainer}>
-        <Text style={productsStyles.errorText}>{error}</Text>
+        <Text style={productsStyles.errorText}>{error || t('errors.unknownError')}</Text>
         <TouchableOpacity style={productsStyles.retryButton} onPress={refreshProducts}>
-          <Text style={productsStyles.retryButtonText}>Retry</Text>
+          <Text style={productsStyles.retryButtonText}>{t('common.retry')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -159,9 +161,9 @@ export const ProductsScreen: React.FC<ProductsScreenProps> = ({
       {/* Header */}
       <View style={productsStyles.header}>
         <TouchableOpacity onPress={onBack} style={productsStyles.backButton}>
-          <Text style={productsStyles.backButtonText}>← Back</Text>
+          <Text style={productsStyles.backButtonText}>← {t('common.back')}</Text>
         </TouchableOpacity>
-        <Text style={productsStyles.headerTitle}>Products</Text>
+        <Text style={productsStyles.headerTitle}>{t('products.title', 'Products')}</Text>
         <TouchableOpacity style={productsStyles.searchButton}>
           <Text style={productsStyles.searchButtonText}>🔍</Text>
         </TouchableOpacity>
@@ -183,10 +185,10 @@ export const ProductsScreen: React.FC<ProductsScreenProps> = ({
         ListEmptyComponent={
           <View style={productsStyles.emptyState}>
             <Text style={productsStyles.emptyStateText}>
-              No products found
+              {t('home.noProducts')}
             </Text>
             <TouchableOpacity style={productsStyles.emptyStateButton} onPress={refreshProducts}>
-              <Text style={productsStyles.emptyStateButtonText}>Refresh</Text>
+              <Text style={productsStyles.emptyStateButtonText}>{t('common.retry')}</Text>
             </TouchableOpacity>
           </View>
         }

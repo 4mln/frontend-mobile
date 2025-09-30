@@ -198,6 +198,37 @@ export const useWalletStatistics = () => {
   });
 };
 
+export const useTransfer = () => {
+  const queryClient = useQueryClient();
+  const { addTransaction, setLoading, setError } = useWalletStore();
+
+  return useMutation({
+    mutationFn: async (data: { recipientId: string; amount: number; description?: string }) => {
+      const response = await walletService.transfer(data);
+      if (response.success && response.data) {
+        return response.data;
+      }
+      throw new Error(response.error || 'Failed to transfer funds');
+    },
+    onMutate: () => {
+      setLoading(true);
+      setError(null);
+    },
+    onSuccess: (transaction) => {
+      addTransaction(transaction);
+      queryClient.invalidateQueries({ queryKey: ['wallet-balance'] });
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['wallet-statistics'] });
+    },
+    onError: (error: any) => {
+      setError(error.message);
+    },
+    onSettled: () => {
+      setLoading(false);
+    },
+  });
+};
+
 
 
 

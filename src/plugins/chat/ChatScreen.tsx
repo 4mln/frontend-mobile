@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
@@ -27,6 +28,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
   conversationId, 
   onBack 
 }) => {
+  const { t } = useTranslation();
   const [messageText, setMessageText] = useState('');
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   
@@ -67,7 +69,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
       });
       setMessageText('');
     } catch (error) {
-      Alert.alert('Error', 'Failed to send message');
+      Alert.alert(t('errors.error', 'Error'), t('chat.sendFailed', 'Failed to send message'));
     }
   };
 
@@ -76,7 +78,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
     try {
       const newConversation = await createConversation({
         participantIds: [], // This would be populated from user selection
-        name: 'New Conversation',
+        name: t('chat.newConversation', 'New Conversation'),
       });
       setSelectedConversation(newConversation);
     } catch (error) {
@@ -140,7 +142,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
     return (
       <View style={chatStyles.loadingContainer}>
         <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={chatStyles.loadingText}>Loading conversations...</Text>
+        <Text style={chatStyles.loadingText}>{t('chat.loading', 'Loading conversations...')}</Text>
       </View>
     );
   }
@@ -148,9 +150,9 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
   if (error) {
     return (
       <View style={chatStyles.errorContainer}>
-        <Text style={chatStyles.errorText}>{error}</Text>
+        <Text style={chatStyles.errorText}>{error || t('errors.unknownError')}</Text>
         <TouchableOpacity style={chatStyles.retryButton} onPress={refreshConversations}>
-          <Text style={chatStyles.retryButtonText}>Retry</Text>
+          <Text style={chatStyles.retryButtonText}>{t('common.retry')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -161,10 +163,10 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
       {/* Header */}
       <View style={chatStyles.header}>
         <TouchableOpacity onPress={onBack} style={chatStyles.backButton}>
-          <Text style={chatStyles.backButtonText}>← Back</Text>
+          <Text style={chatStyles.backButtonText}>← {t('common.back')}</Text>
         </TouchableOpacity>
         <Text style={chatStyles.headerTitle}>
-          {selectedConversation ? selectedConversation.name : 'Chat'}
+          {selectedConversation ? selectedConversation.name : t('navigation.chat')}
         </Text>
         <TouchableOpacity onPress={handleCreateConversation} style={chatStyles.newChatButton}>
           <Text style={chatStyles.newChatButtonText}>+</Text>
@@ -204,7 +206,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
               style={chatStyles.messageInput}
               value={messageText}
               onChangeText={setMessageText}
-              placeholder="Type a message..."
+              placeholder={t('chat.typeMessage')}
               multiline
               maxLength={1000}
             />
@@ -216,7 +218,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
               onPress={handleSendMessage}
               disabled={!messageText.trim()}
             >
-              <Text style={chatStyles.sendButtonText}>Send</Text>
+              <Text style={chatStyles.sendButtonText}>{t('chat.send')}</Text>
             </TouchableOpacity>
           </View>
         </View>

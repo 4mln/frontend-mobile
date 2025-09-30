@@ -1,5 +1,7 @@
 import { useColorScheme } from "@/hooks/use-color-scheme";
-import apiClient from "@/services/api";
+import { useDebounce } from "@/hooks/useDebounce";
+import { productService } from "@/services/product";
+import { useQuery } from "@tanstack/react-query";
 import { colors } from "@/theme/colors";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -45,6 +47,7 @@ export default function ExploreScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedQuery = useDebounce(searchQuery, 400);
   const [sortOption, setSortOption] = useState<string>("default");
   const [sortModalVisible, setSortModalVisible] = useState(false);
   const bannerListRef = useRef<FlatList>(null);
@@ -66,38 +69,32 @@ export default function ExploreScreen() {
     return Array.isArray(data) ? data : [];
   };
 
-  const fetchData = async () => {
-    try {
-      const [productsRes, sellersRes, guildsRes] = await Promise.all([
-        apiClient.get("/products").catch(() => ({ data: [] })),
-        apiClient.get("/sellers").catch(() => ({ data: [] })),
-        apiClient.get("/guilds").catch(() => ({ data: [] })),
-      ]);
-      
-      // Define variables with proper fallbacks to prevent undefined values
-      const productData = safeData<Product[]>(productsRes, []);
-      const sellerData = safeData<Seller[]>(sellersRes, []);
-      const guildData = safeData<Category[]>(guildsRes, []);
-      
-      // Ensure we're setting arrays, not undefined values
-      setProducts(ensureArray(productData));
-      setSellers(ensureArray(sellerData));
-      setBanners([]); // No banners endpoint available, use empty array
-      setCategories([{ id: "all", name: t("explore.all") }, ...ensureArray(guildData)]);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-      // Ensure state is at least empty arrays
-      setProducts([]);
-      setSellers([]);
-      setBanners([]);
-      setCategories([{ id: "all", name: t("All") }]);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
+  const { data: productSearch, isFetching: productsLoading, refetch: refetchProducts } = useQuery({
+    queryKey: ["products", { q: debouncedQuery, category: selectedCategory, sort: sortOption }],
+    queryFn: async () => {
+      // Map local sort keys to service sortBy where possible
+      const sortBy = sortOption === "priceLow" ? "price_low" : sortOption === "priceHigh" ? "price_high" : sortOption === "rating" ? "popularity" : "newest";
+      const filters: any = { sortBy };
+      if (selectedCategory && selectedCategory !== "all") filters.category = selectedCategory;
+      if (debouncedQuery) filters.search = debouncedQuery;
+      const res = await productService.getProducts(filters);
+      if (res.success && res.data) return res.data.products || [];
+      return [] as Product[];
+    },
+  });
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    setLoading(productsLoading);
+    setProducts(ensureArray(productSearch as any));
+    // Placeholders for sellers/banners/categories until their services are wired
+    setBanners([]);
+  }, [productSearch, productsLoading]);
+
+  useEffect(() => {
+    // TODO: wire sellers and guilds via services when available
+    setSellers([]);
+    setCategories([{ id: "all", name: t("products.all", "All") }]);
+  }, []);
 
   // Auto-scroll banners
   useEffect(() => {
@@ -110,7 +107,7 @@ export default function ExploreScreen() {
     return () => clearInterval(interval);
   }, [banners]);
 
-  const onRefresh = () => { setRefreshing(true); fetchData(); };
+  const onRefresh = async () => { setRefreshing(true); try { await refetchProducts(); } finally { setRefreshing(false); } };
 
   // Filter & sort products
   const filteredProducts = Array.isArray(products) ? products

@@ -200,10 +200,6 @@ export default function LoginScreen(props: LoginScreenProps) {
       fontSize: 16, // Fixed from typography.body.fontSize
       fontWeight: fontWeights.medium,
     },
-    label: {
-      marginBottom: semanticSpacing.sm,
-      textAlign: 'right',
-    },
     inputWrapper: {
       borderWidth: 1,
       borderColor: isDark ? colors.border.light : colors.border.light,

@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import * as yup from 'yup';
+import { yupResolver } from '@hookform/resolvers/yup';
 import { useTranslation } from 'react-i18next';
 import {
   View,
@@ -39,13 +42,50 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onBack }) => {
     clearError,
   } = useProfileHooks();
 
+  type ProfileFormValues = {
+    fullName: string;
+    phone: string;
+    businessName?: string;
+    businessIndustry?: string;
+  };
+
+  const profileSchema = yup.object({
+    fullName: yup
+      .string()
+      .trim()
+      .min(2, t('signup.errors.firstNameTooShort'))
+      .optional(),
+    phone: yup
+      .string()
+      .trim()
+      .matches(/^\+?\d{7,15}$/,
+        { message: t('signup.errors.invalidPhone'), excludeEmptyString: true }
+      )
+      .optional(),
+    businessName: yup.string().optional(),
+    businessIndustry: yup.string().optional(),
+  });
+
+  const { control, handleSubmit, formState: { errors }, getValues, reset } = useForm<ProfileFormValues>({
+    resolver: yupResolver(profileSchema),
+    mode: 'onChange',
+    defaultValues: {
+      fullName: '',
+      phone: '',
+      businessName: '',
+      businessIndustry: '',
+    },
+  });
+
   // Handle profile update
   const handleUpdateProfile = async () => {
     try {
-      await updateProfile(editData);
+      const values = getValues();
+      await updateProfile({ ...editData, ...values });
       Alert.alert(t('common.done'), t('profile.updated', 'Profile updated successfully'));
       setIsEditing(false);
       setEditData({});
+      reset();
       refreshProfile();
     } catch (error) {
       Alert.alert(t('errors.error', 'Error'), t('profile.updateFailed', 'Failed to update profile'));
@@ -156,12 +196,24 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onBack }) => {
         <View style={profileStyles.fieldContainer}>
           <Text style={profileStyles.fieldLabel}>{t('profile.fullName', 'Full Name')}</Text>
           {isEditing ? (
-            <TextInput
-              style={profileStyles.fieldInput}
-              value={editData.fullName || profile.fullName || ''}
-              onChangeText={(value) => handleInputChange('fullName', value)}
-              placeholder={t('profile.enterFullName', 'Enter your full name')}
-            />
+            <>
+              <Controller
+                control={control}
+                name="fullName"
+                defaultValue={editData.fullName || profile.fullName || ''}
+                render={({ field: { onChange, value } }) => (
+                  <TextInput
+                    style={profileStyles.fieldInput}
+                    value={value}
+                    onChangeText={onChange}
+                    placeholder={t('profile.enterFullName', 'Enter your full name')}
+                  />
+                )}
+              />
+              {!!errors.fullName?.message && (
+                <Text style={{ color: '#FF3B30', marginTop: 4 }}>{String(errors.fullName.message)}</Text>
+              )}
+            </>
           ) : (
             <Text style={profileStyles.fieldValue}>
               {profile.fullName || t('profile.notProvided', 'Not provided')}
@@ -181,13 +233,25 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onBack }) => {
         <View style={profileStyles.fieldContainer}>
           <Text style={profileStyles.fieldLabel}>{t('profile.phone', 'Phone')}</Text>
           {isEditing ? (
-            <TextInput
-              style={profileStyles.fieldInput}
-              value={editData.phone || profile.phone || ''}
-              onChangeText={(value) => handleInputChange('phone', value)}
-              placeholder={t('profile.enterPhone', 'Enter your phone number')}
-              keyboardType="phone-pad"
-            />
+            <>
+              <Controller
+                control={control}
+                name="phone"
+                defaultValue={editData.phone || profile.phone || ''}
+                render={({ field: { onChange, value } }) => (
+                  <TextInput
+                    style={profileStyles.fieldInput}
+                    value={value}
+                    onChangeText={onChange}
+                    placeholder={t('profile.enterPhone', 'Enter your phone number')}
+                    keyboardType="phone-pad"
+                  />
+                )}
+              />
+              {!!errors.phone?.message && (
+                <Text style={{ color: '#FF3B30', marginTop: 4 }}>{String(errors.phone.message)}</Text>
+              )}
+            </>
           ) : (
             <Text style={profileStyles.fieldValue}>
               {profile.phone || t('profile.notProvided', 'Not provided')}
@@ -213,11 +277,18 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onBack }) => {
           <View style={profileStyles.fieldContainer}>
             <Text style={profileStyles.fieldLabel}>{t('profile.businessName', 'Business Name')}</Text>
             {isEditing ? (
-              <TextInput
-                style={profileStyles.fieldInput}
-                value={editData.businessName || profile.businessName || ''}
-                onChangeText={(value) => handleInputChange('businessName', value)}
-                placeholder={t('profile.enterBusinessName', 'Enter your business name')}
+              <Controller
+                control={control}
+                name="businessName"
+                defaultValue={editData.businessName || profile.businessName || ''}
+                render={({ field: { onChange, value } }) => (
+                  <TextInput
+                    style={profileStyles.fieldInput}
+                    value={value}
+                    onChangeText={onChange}
+                    placeholder={t('profile.enterBusinessName', 'Enter your business name')}
+                  />
+                )}
               />
             ) : (
               <Text style={profileStyles.fieldValue}>
@@ -231,11 +302,18 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onBack }) => {
             <View style={profileStyles.fieldContainer}>
               <Text style={profileStyles.fieldLabel}>{t('profile.industry', 'Industry')}</Text>
               {isEditing ? (
-                <TextInput
-                  style={profileStyles.fieldInput}
-                  value={editData.businessIndustry || profile.businessIndustry || ''}
-                  onChangeText={(value) => handleInputChange('businessIndustry', value)}
-                placeholder={t('profile.enterBusinessIndustry', 'Enter your business industry')}
+                <Controller
+                  control={control}
+                  name="businessIndustry"
+                  defaultValue={editData.businessIndustry || profile.businessIndustry || ''}
+                  render={({ field: { onChange, value } }) => (
+                    <TextInput
+                      style={profileStyles.fieldInput}
+                      value={value}
+                      onChangeText={onChange}
+                      placeholder={t('profile.enterBusinessIndustry', 'Enter your business industry')}
+                    />
+                  )}
                 />
               ) : (
                 <Text style={profileStyles.fieldValue}>

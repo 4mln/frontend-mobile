@@ -168,10 +168,12 @@ export default function ExploreScreen() {
   const numColumns = 2;
   const productItemWidth = (SCREEN_WIDTH - SPACING.base * 3) / numColumns;
 
+  const listData = Array.isArray(filteredProducts) ? filteredProducts : [];
+
   return (
     <View style={{ flex: 1, backgroundColor: isDark ? colors.background.dark : colors.background.light }}>
       <FlatList
-        data={Array.isArray(filteredProducts) ? filteredProducts : []}
+        data={listData}
         keyExtractor={(item) => item?.id?.toString() || Math.random().toString()}
         numColumns={numColumns}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}

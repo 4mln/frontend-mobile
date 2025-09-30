@@ -53,11 +53,12 @@ export default function LoginScreen(props: LoginScreenProps) {
       .test('iran-phone', t('signup.errors.invalidPhone'), (value) => !!validateIranianMobileNumber(value || '').isValid),
   });
 
-  const { control, handleSubmit, formState: { errors }, getValues, setValue, trigger } = useForm<LoginFormValues>({
+  const { control, handleSubmit, formState: { errors }, getValues, trigger, watch } = useForm<LoginFormValues>({
     mode: 'onChange',
     resolver: yupResolver(schema),
     defaultValues: { phone: props.initialPhone || '' },
   });
+  const watchedPhone = watch('phone');
   
   const sendOTPMutation = useSendOTP();
 
@@ -72,7 +73,6 @@ export default function LoginScreen(props: LoginScreenProps) {
       return;
     }
     
-    setPhoneError(undefined);
     setIsLoading(true);
     
     try {
@@ -293,7 +293,7 @@ export default function LoginScreen(props: LoginScreenProps) {
             <TouchableOpacity
               style={[
                 styles.button,
-                (!phone.trim() || isLoading) && styles.buttonDisabled,
+                (!watchedPhone?.trim() || isLoading) && styles.buttonDisabled,
               ]}
               onPress={handleSubmit(handleSendOTP)}
               disabled={isLoading}

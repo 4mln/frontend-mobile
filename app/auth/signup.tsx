@@ -3,6 +3,9 @@ import { validateIranianMobileNumber, validateIranianNationalId } from '@/utils/
 import { Ionicons } from '@expo/vector-icons';
 import { Link, router } from 'expo-router';
 import { useEffect, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import * as yup from 'yup';
+import { yupResolver } from '@hookform/resolvers/yup';
 import { useTranslation } from 'react-i18next';
 import { Alert, I18nManager, Platform } from 'react-native';
 import {
@@ -40,28 +43,68 @@ type SignupScreenProps = {
   onOtpRequested?: (phone: string) => void;
 };
 
+type SignupFormValues = {
+  firstName: string;
+  lastName: string;
+  nationalId: string;
+  phone: string;
+  guildId: string;
+};
+
 export default function SignupScreen(props: SignupScreenProps) {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const { t } = useTranslation();
   const isRTL = I18nManager.isRTL;
   
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [nationalId, setNationalId] = useState('');
-  const [phone, setPhone] = useState(props.initialPhone || '');
   const [selectedGuild, setSelectedGuild] = useState('');
   const [guilds, setGuilds] = useState<Guild[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingGuilds, setIsLoadingGuilds] = useState(true);
   const [isGuildModalOpen, setIsGuildModalOpen] = useState(false);
   
-  // Form validation errors
-  const [firstNameError, setFirstNameError] = useState<string | undefined>(undefined);
-  const [lastNameError, setLastNameError] = useState<string | undefined>(undefined);
-  const [nationalIdError, setNationalIdError] = useState<string | undefined>(undefined);
-  const [phoneError, setPhoneError] = useState<string | undefined>(undefined);
-  const [guildError, setGuildError] = useState<string | undefined>(undefined);
+  // RHF + Yup schema
+  const nameRegex = /^[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FFa-zA-Z\s\-]+$/;
+  const schema = yup.object({
+    firstName: yup
+      .string()
+      .required(t('signup.errors.firstNameTooShort'))
+      .min(2, t('signup.errors.firstNameTooShort'))
+      .matches(nameRegex, t('signup.errors.firstNameInvalid'))
+      .test('no-multi-spaces', t('signup.errors.noMultipleSpaces'), (v) => !(/\s{2,}/.test(v || '')))
+      .test('no-multi-hyphens', t('signup.errors.noMultipleHyphens'), (v) => !(/--+/.test(v || ''))),
+    lastName: yup
+      .string()
+      .required(t('signup.errors.firstNameTooShort'))
+      .min(2, t('signup.errors.firstNameTooShort'))
+      .matches(nameRegex, t('signup.errors.firstNameInvalid'))
+      .test('no-multi-spaces', t('signup.errors.noMultipleSpaces'), (v) => !(/\s{2,}/.test(v || '')))
+      .test('no-multi-hyphens', t('signup.errors.noMultipleHyphens'), (v) => !(/--+/.test(v || ''))),
+    nationalId: yup
+      .string()
+      .required(t('signup.errors.invalidNationalId'))
+      .length(10, t('signup.errors.invalidNationalId'))
+      .test('is-valid-nid', t('signup.errors.invalidNationalId'), (v) => validateIranianNationalId(String(v || ''))),
+    phone: yup
+      .string()
+      .required(t('signup.errors.invalidPhone'))
+      .test('iran-phone', t('signup.errors.invalidPhone'), (value) => !!validateIranianMobileNumber(value || '').isValid),
+    guildId: yup
+      .string()
+      .required(t('signup.errors.guildRequired')),
+  });
+
+  const { control, handleSubmit, formState: { errors }, getValues, setValue } = useForm<SignupFormValues>({
+    mode: 'onChange',
+    resolver: yupResolver(schema),
+    defaultValues: {
+      firstName: '',
+      lastName: '',
+      nationalId: '',
+      phone: props.initialPhone || '',
+      guildId: '',
+    },
+  });
 
   // Fetch guilds from API
   useEffect(() => {
@@ -105,50 +148,8 @@ export default function SignupScreen(props: SignupScreenProps) {
     return undefined;
   };
 
-  const validateForm = (): boolean => {
-    let isValid = true;
-    
-    // Validate first name
-    const fnError = validateName(firstName);
-    if (fnError) { setFirstNameError(fnError); isValid = false; } else { setFirstNameError(undefined); }
-
-    // Validate last name
-    const lnError = validateName(lastName);
-    if (lnError) { setLastNameError(lnError); isValid = false; } else { setLastNameError(undefined); }
-    
-    // Validate national ID
-    const isValidNational = validateIranianNationalId(nationalId);
-    if (!isValidNational) {
-      setNationalIdError(t('signup.errors.invalidNationalId'));
-      isValid = false;
-    } else {
-      setNationalIdError(undefined);
-    }
-    
-    // Validate phone number
-    const phoneValidation = validateIranianMobileNumber(phone);
-    if (!phoneValidation.isValid) {
-      setPhoneError(t('signup.errors.invalidPhone'));
-      isValid = false;
-    } else {
-      setPhoneError(undefined);
-    }
-    
-    // Validate guild selection
-    if (!selectedGuild) {
-      setGuildError(t('signup.errors.guildRequired'));
-      isValid = false;
-    } else {
-      setGuildError(undefined);
-    }
-    
-    return isValid;
-  };
-
   const handleSignup = async () => {
-    if (!validateForm()) {
-      return;
-    }
+    const { firstName, lastName, nationalId, phone, guildId } = getValues();
     
     setIsLoading(true);
     
@@ -171,7 +172,7 @@ export default function SignupScreen(props: SignupScreenProps) {
         lastName: lastName.trim(),
         nationalId: nationalId.trim(),
         phone: phone.trim(),
-        guildId: selectedGuild,
+        guildId: guildId || selectedGuild,
       });
 
       if (resp.success) {
@@ -222,47 +223,53 @@ export default function SignupScreen(props: SignupScreenProps) {
                   <Text fontSize={16} fontWeight={fontWeights.medium as any} mb={semanticSpacing.xs} textAlign="right">
                     {t('signup.firstName')}
                   </Text>
-                  <Input
-                    placeholder={t('signup.firstName')}
-                    value={firstName}
-                    onChangeText={(text) => {
-                      setFirstName(text);
-                      if (firstNameError) setFirstNameError(undefined);
-                    }}
-                    isDisabled={isLoading}
-                    textAlign={isRTL ? 'right' : 'left'}
-                    height={44}
-                    variant="outline"
-                    isInvalid={!!firstNameError}
+                  <Controller
+                    control={control}
+                    name="firstName"
+                    render={({ field: { onChange, value } }) => (
+                      <Input
+                        placeholder={t('signup.firstName')}
+                        value={value}
+                        onChangeText={onChange}
+                        isDisabled={isLoading}
+                        textAlign={isRTL ? 'right' : 'left'}
+                        height={44}
+                        variant="outline"
+                        isInvalid={!!errors.firstName}
+                      />
+                    )}
                   />
-                  {firstNameError ? (
+                  {!!errors.firstName?.message && (
                     <Text color="error.500" fontSize={14} mt={semanticSpacing.xs} textAlign="right">
-                      {firstNameError}
+                      {String(errors.firstName.message)}
                     </Text>
-                  ) : null}
+                  )}
                 </VStack>
                 <VStack flex={1}>
                   <Text fontSize={16} fontWeight={fontWeights.medium as any} mb={semanticSpacing.xs} textAlign="right">
                     {t('signup.lastName')}
                   </Text>
-                  <Input
-                    placeholder={t('signup.lastName')}
-                    value={lastName}
-                    onChangeText={(text) => {
-                      setLastName(text);
-                      if (lastNameError) setLastNameError(undefined);
-                    }}
-                    isDisabled={isLoading}
-                    textAlign={isRTL ? 'right' : 'left'}
-                    height={44}
-                    variant="outline"
-                    isInvalid={!!lastNameError}
+                  <Controller
+                    control={control}
+                    name="lastName"
+                    render={({ field: { onChange, value } }) => (
+                      <Input
+                        placeholder={t('signup.lastName')}
+                        value={value}
+                        onChangeText={onChange}
+                        isDisabled={isLoading}
+                        textAlign={isRTL ? 'right' : 'left'}
+                        height={44}
+                        variant="outline"
+                        isInvalid={!!errors.lastName}
+                      />
+                    )}
                   />
-                  {lastNameError ? (
+                  {!!errors.lastName?.message && (
                     <Text color="error.500" fontSize={14} mt={semanticSpacing.xs} textAlign="right">
-                      {lastNameError}
+                      {String(errors.lastName.message)}
                     </Text>
-                  ) : null}
+                  )}
                 </VStack>
               </HStack>
 
@@ -270,51 +277,57 @@ export default function SignupScreen(props: SignupScreenProps) {
                 <Text fontSize={16} fontWeight={fontWeights.medium as any} mb={semanticSpacing.xs} textAlign="right">
                   {t('signup.nationalId')}
                 </Text>
-                <Input
-                  placeholder={t('signup.nationalIdPlaceholder')}
-                  keyboardType="number-pad"
-                  value={nationalId}
-                  onChangeText={(text) => {
-                    setNationalId(text);
-                    if (nationalIdError) setNationalIdError(undefined);
-                  }}
-                  isDisabled={isLoading}
-                  maxLength={10}
-                  textAlign="left"
-                  height={44}
-                  variant="outline"
-                  isInvalid={!!nationalIdError}
+                <Controller
+                  control={control}
+                  name="nationalId"
+                  render={({ field: { onChange, value } }) => (
+                    <Input
+                      placeholder={t('signup.nationalIdPlaceholder')}
+                      keyboardType="number-pad"
+                      value={value}
+                      onChangeText={onChange}
+                      isDisabled={isLoading}
+                      maxLength={10}
+                      textAlign="left"
+                      height={44}
+                      variant="outline"
+                      isInvalid={!!errors.nationalId}
+                    />
+                  )}
                 />
-                {nationalIdError ? (
+                {!!errors.nationalId?.message && (
                   <Text color="error.500" fontSize={14} mt={semanticSpacing.xs} textAlign="right">
-                    {nationalIdError}
+                    {String(errors.nationalId.message)}
                   </Text>
-                ) : null}
+                )}
               </VStack>
 
               <VStack>
                 <Text fontSize={16} fontWeight={fontWeights.medium as any} mb={semanticSpacing.xs} textAlign="right">
                   {t('signup.phone')}
                 </Text>
-                <Input
-                  placeholder={t('signup.phonePlaceholder')}
-                  keyboardType="phone-pad"
-                  value={phone}
-                  onChangeText={(text) => {
-                    setPhone(text);
-                    if (phoneError) setPhoneError(undefined);
-                  }}
-                  isDisabled={isLoading}
-                  textAlign="left"
-                  height={44}
-                  variant="outline"
-                  isInvalid={!!phoneError}
+                <Controller
+                  control={control}
+                  name="phone"
+                  render={({ field: { onChange, value } }) => (
+                    <Input
+                      placeholder={t('signup.phonePlaceholder')}
+                      keyboardType="phone-pad"
+                      value={value}
+                      onChangeText={onChange}
+                      isDisabled={isLoading}
+                      textAlign="left"
+                      height={44}
+                      variant="outline"
+                      isInvalid={!!errors.phone}
+                    />
+                  )}
                 />
-                {phoneError ? (
+                {!!errors.phone?.message && (
                   <Text color="error.500" fontSize={14} mt={semanticSpacing.xs} textAlign="right">
-                    {phoneError}
+                    {String(errors.phone.message)}
                   </Text>
-                ) : null}
+                )}
               </VStack>
 
               <VStack>
@@ -350,11 +363,11 @@ export default function SignupScreen(props: SignupScreenProps) {
                     )}
                   </Pressable>
                 )}
-                {guildError ? (
+                {!!errors.guildId?.message && (
                   <Text color="error.500" fontSize={14} mt={semanticSpacing.xs} textAlign="right">
-                    {guildError}
+                    {String(errors.guildId.message)}
                   </Text>
-                ) : null}
+                )}
 
                 <Modal isOpen={isGuildModalOpen} onClose={() => setIsGuildModalOpen(false)} size="lg">
                   <Modal.Content maxH="70%">
@@ -374,7 +387,7 @@ export default function SignupScreen(props: SignupScreenProps) {
                             key={guild.id}
                             onPress={() => {
                               setSelectedGuild(guild.id);
-                              if (guildError) setGuildError(undefined);
+                              setValue('guildId', guild.id, { shouldValidate: true });
                               setIsGuildModalOpen(false);
                             }}
                           >
@@ -394,7 +407,7 @@ export default function SignupScreen(props: SignupScreenProps) {
               <Button
                 mt={semanticSpacing.sm}
                 isDisabled={isLoading || isLoadingGuilds}
-                onPress={handleSignup}
+                onPress={handleSubmit(handleSignup)}
                 height={44}
                 leftIcon={isLoading ? undefined : <Icon as={Ionicons} name="checkmark" color="white" />}
               >

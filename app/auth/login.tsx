@@ -5,6 +5,9 @@ import { validateIranianMobileNumber } from '@/utils/validation';
 import { Ionicons } from '@expo/vector-icons';
 import { Link, router } from 'expo-router';
 import { useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import * as yup from 'yup';
+import { yupResolver } from '@hookform/resolvers/yup';
 import { useTranslation } from 'react-i18next';
 import {
     Alert,
@@ -31,6 +34,8 @@ type LoginScreenProps = {
   onOtpRequested?: (phone: string) => void;
 };
 
+type LoginFormValues = { phone: string };
+
 export default function LoginScreen(props: LoginScreenProps) {
   const { t } = useTranslation();
   const colorScheme = useColorScheme();
@@ -39,18 +44,31 @@ export default function LoginScreen(props: LoginScreenProps) {
   // If OTP bypass is enabled, we will skip OTP screen and navigate directly
   const isBypassEnabled = process.env.EXPO_PUBLIC_BYPASS_OTP === 'true' || process.env.EXPO_PUBLIC_BYPASS_OTP === '1';
   
-  const [phone, setPhone] = useState(props.initialPhone || '');
   const [isLoading, setIsLoading] = useState(false);
-  const [phoneError, setPhoneError] = useState<string | undefined>(undefined);
+
+  const schema = yup.object({
+    phone: yup
+      .string()
+      .required(t('signup.errors.invalidPhone'))
+      .test('iran-phone', t('signup.errors.invalidPhone'), (value) => !!validateIranianMobileNumber(value || '').isValid),
+  });
+
+  const { control, handleSubmit, formState: { errors }, getValues, setValue, trigger } = useForm<LoginFormValues>({
+    mode: 'onChange',
+    resolver: yupResolver(schema),
+    defaultValues: { phone: props.initialPhone || '' },
+  });
   
   const sendOTPMutation = useSendOTP();
 
   const handleSendOTP = async () => {
     // Validate phone number using the Iranian mobile number validator
+    const { phone } = getValues();
     const validation = validateIranianMobileNumber(phone);
     
     if (!validation.isValid) {
-      setPhoneError(validation.error);
+      // RHF handles error display via schema; ensure validation triggers
+      await trigger('phone');
       return;
     }
     
@@ -254,23 +272,26 @@ export default function LoginScreen(props: LoginScreenProps) {
             <View style={styles.inputContainer}>
               <Text style={styles.label}>{t('login.phone')}</Text>
               <View style={styles.inputWrapper}>
-                
-                <TextInput
-                  style={styles.input}
-                  placeholder={t('login.phonePlaceholder')}
-                  placeholderTextColor={isDark ? colors.gray[400] : colors.gray[500]}
-                  value={phone}
-                  onChangeText={(text) => {
-                    setPhone(text);
-                    if (phoneError) setPhoneError(undefined);
-                  }}
-                  keyboardType="phone-pad"
-                  autoFocus
-                  textAlign="left"
-                  writingDirection="ltr"
+                <Controller
+                  control={control}
+                  name="phone"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <TextInput
+                      style={styles.input}
+                      placeholder={t('login.phonePlaceholder')}
+                      placeholderTextColor={isDark ? colors.gray[400] : colors.gray[500]}
+                      value={value}
+                      onChangeText={(text) => onChange(text)}
+                      onBlur={onBlur}
+                      keyboardType="phone-pad"
+                      autoFocus
+                      textAlign="left"
+                      writingDirection="ltr"
+                    />
+                  )}
                 />
               </View>
-              {phoneError && <Text style={styles.errorText}>{phoneError}</Text>}
+              {!!errors.phone?.message && <Text style={styles.errorText}>{String(errors.phone.message)}</Text>}
             </View>
 
             <TouchableOpacity
@@ -278,8 +299,8 @@ export default function LoginScreen(props: LoginScreenProps) {
                 styles.button,
                 (!phone.trim() || isLoading) && styles.buttonDisabled,
               ]}
-              onPress={handleSendOTP}
-              disabled={!phone.trim() || isLoading}
+              onPress={handleSubmit(handleSendOTP)}
+              disabled={isLoading}
             >
               <Text style={styles.buttonText}>
                 {isLoading ? t('common.loading') : t('login.sendCode')}

@@ -129,7 +129,8 @@
     "new": "جدید",
     "viewAll": "مشاهده همه",
     "noProducts": "محصولی یافت نشد",
-    "pullToRefresh": "برای تازه‌سازی بکشید"
+    "pullToRefresh": "برای تازه‌سازی بکشید",
+    "start": "ساخت مارکت‌پلیس خود را از اینجا شروع کنید."
   },
   "search": {
     "placeholder": "جستجوی محصولات، خدمات...",
@@ -316,5 +317,23 @@
     "minutesAgo": "{{count}} دقیقه پیش",
     "justNow": "همین حالا",
     "clear": "حذف"
+  }
+  ,
+  "add": {
+    "header": "افزودن مورد جدید",
+    "whatToAdd": "چه چیزی می‌خواهید اضافه کنید؟",
+    "addProduct": "افزودن محصول",
+    "addProductDesc": "یک محصول یا خدمت جدید را در مارکت‌پلیس ثبت کنید",
+    "createRfq": "ایجاد RFQ",
+    "createRfqDesc": "از تامین‌کنندگان برای نیازهای کسب‌وکار خود استعلام قیمت بگیرید",
+    "quickActions": "اقدامات سریع",
+    "product": "محصول",
+    "rfq": "RFQ",
+    "recentActivity": "فعالیت‌های اخیر",
+    "sampleProduct1": "لوله‌های فولادی صنعتی",
+    "sampleRfq1": "RFQ مصالح ساختمانی",
+    "sampleProduct2": "قطعات الکترونیکی",
+    "timeHours": "{{count}} ساعت پیش",
+    "timeDays": "{{count}} روز پیش"
   }
 }

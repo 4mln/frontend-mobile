@@ -22,6 +22,23 @@
     "seeAll": "See All",
     "notSet": "Not set"
   },
+  "add": {
+    "header": "Add New",
+    "whatToAdd": "What would you like to add?",
+    "addProduct": "Add Product",
+    "addProductDesc": "List a new product or service for sale in the marketplace",
+    "createRfq": "Create RFQ",
+    "createRfqDesc": "Request quotes from suppliers for your business needs",
+    "quickActions": "Quick Actions",
+    "product": "Product",
+    "rfq": "RFQ",
+    "recentActivity": "Recent Activity",
+    "sampleProduct1": "Industrial Steel Pipes",
+    "sampleRfq1": "Construction Materials RFQ",
+    "sampleProduct2": "Electrical Components",
+    "timeHours": "{{count}} hours ago",
+    "timeDays": "{{count}} days ago"
+  },
   "backend": {
     "label": "Backend",
     "testing": "Testing...",
@@ -163,7 +180,8 @@
     "new": "New",
     "viewAll": "View All",
     "noProducts": "No products found",
-    "pullToRefresh": "Pull to refresh"
+    "pullToRefresh": "Pull to refresh",
+    "start": "Start building your marketplace here."
   },
   "search": {
     "placeholder": "Search products, services...",

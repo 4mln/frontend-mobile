@@ -57,16 +57,18 @@ export const PluginGate: React.FC<PluginGateProps> = ({
 
   // Handle multiple plugins
   if (plugins.length > 0) {
-    const { value: allEnabled } = usePluginEnabled(plugin, { trackUsage });
-    const otherPlugins = usePluginEnabled(plugins[0], { trackUsage });
-    
-    if (requireAll) {
-      const allPluginsEnabled = allEnabled && otherPlugins.value;
-      return allPluginsEnabled ? <>{children}</> : <>{fallback}</>;
-    } else {
-      const anyPluginEnabled = allEnabled || otherPlugins.value;
-      return anyPluginEnabled ? <>{children}</> : <>{fallback}</>;
-    }
+    const results = [plugin, ...plugins].map((p) => usePluginEnabled(p, { trackUsage }));
+    const loadingAny = results.some(r => r.loading);
+    const errorAny = results.some(r => r.error);
+    const values = results.map(r => r.value);
+
+    if (loadingAny) return <>{loading}</>;
+    if (errorAny) return <>{error}</>;
+
+    const allEnabled = values.every(Boolean);
+    const anyEnabled = values.some(Boolean);
+    const condition = requireAll ? allEnabled : anyEnabled;
+    return condition ? <>{children}</> : <>{fallback}</>;
   }
 
   // Handle single plugin

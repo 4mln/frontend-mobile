@@ -57,16 +57,19 @@ export const FeatureFlag: React.FC<FeatureFlagProps> = ({
 
   // Handle multiple flags
   if (flags.length > 0) {
-    const { enabled: allEnabled } = useFeatureFlag(flag, { trackUsage });
-    const otherFlags = useFeatureFlag(flags[0], { trackUsage });
-    
-    if (requireAll) {
-      const allFlagsEnabled = allEnabled && otherFlags.enabled;
-      return allFlagsEnabled ? <>{children}</> : <>{fallback}</>;
-    } else {
-      const anyFlagEnabled = allEnabled || otherFlags.enabled;
-      return anyFlagEnabled ? <>{children}</> : <>{fallback}</>;
-    }
+    // Evaluate all flags in a single pass to respect hooks rules
+    const allResults = [flag, ...flags].map((f) => useFeatureFlag(f, { trackUsage }));
+    const loadingAny = allResults.some(r => r.loading);
+    const errorAny = allResults.some(r => r.error);
+    const enabledArr = allResults.map(r => r.enabled);
+
+    if (loadingAny) return <>{loading}</>;
+    if (errorAny) return <>{error}</>;
+
+    const allFlagsEnabled = enabledArr.every(Boolean);
+    const anyFlagEnabled = enabledArr.some(Boolean);
+    const condition = requireAll ? allFlagsEnabled : anyFlagEnabled;
+    return condition ? <>{children}</> : <>{fallback}</>;
   }
 
   // Handle single flag

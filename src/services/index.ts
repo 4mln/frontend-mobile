@@ -1,19 +1,25 @@
-export * from './product';
-export { default as sellerService } from './seller';
-// Export all services
+// Consolidated service exports without duplication
+export { default as apiClient } from './api';
 export { authService } from './auth';
 export { chatService } from './chat';
 export { productService } from './product';
 export { rfqService } from './rfq';
 export { walletService } from './wallet';
+export { default as sellerService } from './seller';
 
-// Export the API client
-export { default as apiClient } from './api';
-
-// Export types
-export type * from './auth';
-export type * from './chat';
-export type * from './product';
-export type * from './rfq';
-export type * from './wallet';
+// Re-export types explicitly from source modules
+export type { AuthUser, AuthTokens } from './auth';
+export type { ChatMessage, Conversation } from './chat';
+export type {
+  Product,
+  ProductSpecification,
+  Seller,
+  CreateProductRequest,
+  UpdateProductRequest,
+  ProductFilters,
+  ProductSearchResponse,
+  ApiResponse,
+} from './product';
+export type { RFQ, RFQCreateRequest } from './rfq';
+export type { Wallet, Transaction } from './wallet';
 

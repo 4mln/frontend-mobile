@@ -227,11 +227,11 @@ export default function CreateRFQScreen() {
     },
     stepNumber: {
       color: colors.white,
-      fontSize: typography.size.sm,
+      fontSize: typography.label.fontSize,
       fontWeight: fontWeights.semibold,
     },
     stepLabel: {
-      fontSize: typography.size.xs,
+      fontSize: typography.caption.fontSize,
       color: isDark ? colors.gray[400] : colors.gray[600],
       textAlign: 'center',
     },

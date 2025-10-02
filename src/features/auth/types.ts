@@ -18,6 +18,7 @@ export interface AuthState {
 
 export interface LoginRequest {
   phone: string;
+  is_signup?: boolean;
 }
 
 export interface VerifyOTPRequest {

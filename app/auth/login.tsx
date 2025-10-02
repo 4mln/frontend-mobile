@@ -79,31 +79,9 @@ export default function LoginScreen(props: LoginScreenProps) {
       // First: ensure connection
       const online = await ensureOnlineOrMessage();
       if (!online) return;
-      // First: check whether user exists
-      const existsResp = await authService.userExists(phone.trim());
-      if (existsResp.success && existsResp.data && !existsResp.data.exists) {
-        // Debug trace to ensure handler is hit
-        console.log('[login] user not found, prompting to signup', phone.trim());
-        useMessageBoxStore.getState().show({
-          message: i18n.t('auth.userNotFoundProceedSignup', 'User not found, proceed to signup.'),
-          actions: [
-            {
-              label: i18n.t('auth.signup', 'Signup'),
-              onPress: () => {
-                if (props?.onNavigateToSignup) {
-                  props.onNavigateToSignup(phone.trim());
-                } else {
-                  router.replace({ pathname: '/auth/signup', params: { phone: phone.trim() } });
-                }
-              },
-            },
-          ],
-        });
-        return;
-      }
 
-      // Then call backend to send OTP
-      const resp = await sendOTPMutation.mutateAsync({ phone: phone.trim() } as any);
+      // Call backend to send OTP (signin mode) - backend will check user existence
+      const resp = await sendOTPMutation.mutateAsync({ phone: phone.trim(), is_signup: false } as any);
       if (resp?.success) {
         if (props?.onOtpRequested) {
           props.onOtpRequested(phone.trim());
@@ -111,12 +89,32 @@ export default function LoginScreen(props: LoginScreenProps) {
           router.push({ pathname: '/auth/verify-otp', params: { phone: phone.trim(), from: 'login' } });
         }
       } else {
-        const userNotFoundMsg = i18n.t('errors.userNotFound');
-        const networkMsg = i18n.t('errors.networkErrorDetailed');
-        const msg = (resp?.error || '').toLowerCase().includes('not') && (resp?.error || '').toLowerCase().includes('found')
-          ? userNotFoundMsg
-          : (resp?.error || networkMsg);
-        useMessageBoxStore.getState().show({ message: msg, actions: [{ label: i18n.t('common.back') }] });
+        // Check if it's a "user not found" error
+        if ((resp?.error || '').toLowerCase().includes('not found')) {
+          useMessageBoxStore.getState().show({
+            message: i18n.t('auth.userNotFoundProceedSignup', 'User not found, proceed to signup.'),
+            actions: [
+              {
+                label: i18n.t('auth.signup', 'Signup'),
+                onPress: () => {
+                  if (props?.onNavigateToSignup) {
+                    props.onNavigateToSignup(phone.trim());
+                  } else {
+                    router.replace({ pathname: '/auth/signup', params: { phone: phone.trim() } });
+                  }
+                },
+              },
+              {
+                label: i18n.t('common.cancel', 'Cancel'),
+                onPress: () => {},
+              },
+            ],
+          });
+        } else {
+          const networkMsg = i18n.t('errors.networkErrorDetailed');
+          const msg = resp?.error || networkMsg;
+          useMessageBoxStore.getState().show({ message: msg, actions: [{ label: i18n.t('common.back') }] });
+        }
       }
     } catch (error) {
       Alert.alert(t('login.alerts.sendFailedTitle'), t('login.alerts.sendFailed'));
@@ -214,7 +212,6 @@ export default function LoginScreen(props: LoginScreenProps) {
       fontSize: 16, // Fixed from typography.body.fontSize
       color: isDark ? colors.text.primary : colors.text.primary,
       textAlign: 'left',
-      writingDirection: 'ltr',
     },
     button: {
       backgroundColor: colors.primary[500],
@@ -282,7 +279,6 @@ export default function LoginScreen(props: LoginScreenProps) {
                       keyboardType="phone-pad"
                       autoFocus
                       textAlign="left"
-                      writingDirection="ltr"
                     />
                   )}
                 />

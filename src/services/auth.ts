@@ -3,6 +3,7 @@ import apiClient from './api';
 // Types
 export interface LoginRequest {
   phone: string;
+  is_signup?: boolean;
 }
 
 export interface VerifyOTPRequest {

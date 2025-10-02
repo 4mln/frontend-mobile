@@ -178,7 +178,7 @@ export default function SignupScreen(props: SignupScreenProps) {
       if (resp.success) {
         // Ensure OTP is requested after successful signup
         try {
-          await authService.sendOTP({ phone: phone.trim() });
+          await authService.sendOTP({ phone: phone.trim(), is_signup: true });
         } catch {}
         if (props?.onOtpRequested) {
           props.onOtpRequested(phone.trim());
@@ -348,7 +348,7 @@ export default function SignupScreen(props: SignupScreenProps) {
                         height={44}
                         px={semanticSpacing.md}
                         borderWidth={1}
-                        borderColor={guildError ? 'error.500' : 'gray.300'}
+                        borderColor={errors.guildId ? 'error.500' : 'gray.300'}
                         rounded="md"
                         alignItems="center"
                         justifyContent="space-between"

@@ -51,15 +51,18 @@ export default function ExploreScreen() {
 
   const topSellers = useMemo(() => {
     const map = new Map<string, any>();
-    products.forEach((p: any) => {
-      if (p?.seller?.id && !map.has(p.seller.id)) {
-        map.set(p.seller.id, p.seller);
-      }
-    });
+    // Ensure products is an array before calling forEach
+    if (Array.isArray(products)) {
+      products.forEach((p: any) => {
+        if (p?.seller?.id && !map.has(p.seller.id)) {
+          map.set(p.seller.id, p.seller);
+        }
+      });
+    }
     return Array.from(map.values()).slice(0, 10);
   }, [products]);
 
-  if (isLoading && products.length === 0) {
+  if (isLoading && (!products || products.length === 0)) {
     return (
       <ThemedView style={styles.center}>
         <LoadingSpinner />
@@ -100,7 +103,7 @@ export default function ExploreScreen() {
         </View>
       )}
       <FlatList
-        data={products}
+        data={Array.isArray(products) ? products : []}
         keyExtractor={(item: any) => String(item.id)}
         numColumns={2}
         columnWrapperStyle={styles.row}

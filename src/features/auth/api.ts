@@ -4,7 +4,10 @@ import { AuthResponse, LoginRequest, VerifyOTPRequest } from './types';
 export const authApi = {
   // Send OTP to phone number
   sendOTP: async (data: LoginRequest): Promise<{ detail: string }> => {
-    const response = await apiClient.post('/auth/otp/request', data);
+    const response = await apiClient.post('/auth/otp/request', {
+      phone: data.phone,
+      is_signup: data.is_signup || false
+    });
     return response.data;
   },
 

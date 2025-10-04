@@ -28,14 +28,16 @@ export const API_CONFIG = {
   
   // Endpoints
   ENDPOINTS: {
-    // Auth endpoints
+    // Auth endpoints (updated for unified user model)
     AUTH: {
       SEND_OTP: '/auth/otp/request',
       VERIFY_OTP: '/auth/otp/verify',
       REFRESH_TOKEN: '/refresh',
-      PROFILE: '/auth/me/profile',
-      CURRENT_USER: '/auth/me',
+      PROFILE: '/users/profile',
+      CURRENT_USER: '/users/profile',
       LOGOUT: '/auth/me/sessions/logout-all',
+      REGISTER: '/users/register',
+      CAPABILITIES: '/users/capabilities',
     },
     
     // Product endpoints
@@ -55,7 +57,22 @@ export const API_CONFIG = {
       PRODUCTS: '/guilds/:id/products',
     },
     
-    // Seller endpoints
+    // Store endpoints (new unified store management)
+    STORES: {
+      LIST: '/stores',
+      GET: '/stores/:id',
+      CREATE: '/stores/create',
+      UPDATE: '/stores/:id/update',
+      ACTIVATE: '/stores/:id/activate',
+      STATS: '/stores/:id/stats',
+      PRODUCTS: '/stores/:id/products',
+      ADD_PRODUCT: '/stores/:id/products/:product_id/add',
+      REMOVE_PRODUCT: '/stores/:id/products/:product_id/remove',
+      PRODUCT_IMAGES: '/stores/:id/products/:product_id/images',
+      SET_PRIMARY_IMAGE: '/stores/:id/products/:product_id/images/:image_id/primary',
+    },
+    
+    // Seller endpoints (legacy - for backward compatibility)
     SELLERS: {
       LIST: '/sellers',
       GET: '/sellers/:id',

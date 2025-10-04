@@ -70,6 +70,8 @@ export interface ProductFilters {
   sortBy?: 'newest' | 'price_low' | 'price_high' | 'popularity';
   page?: number;
   limit?: number;
+  // New store filtering
+  store_id?: string;
 }
 
 export interface ProductSearchResponse {
@@ -285,6 +287,60 @@ export const productService = {
     } catch (error: any) {
       return {
         error: error.response?.data?.detail || 'Failed to fetch categories',
+        success: false,
+      };
+    }
+  },
+
+  /**
+   * Get products by store
+   */
+  async getProductsByStore(storeId: string, filters?: Omit<ProductFilters, 'store_id'>): Promise<ApiResponse<ProductSearchResponse>> {
+    try {
+      const response = await apiClient.get(`/stores/${storeId}/products`, {
+        params: { ...filters, store_id: storeId },
+      });
+      return {
+        data: response.data,
+        success: true,
+      };
+    } catch (error: any) {
+      return {
+        error: error.response?.data?.detail || 'Failed to fetch store products',
+        success: false,
+      };
+    }
+  },
+
+  /**
+   * Add product to store
+   */
+  async addProductToStore(storeId: string, productId: number): Promise<ApiResponse<void>> {
+    try {
+      await apiClient.post(`/stores/${storeId}/products/${productId}/add`);
+      return {
+        success: true,
+      };
+    } catch (error: any) {
+      return {
+        error: error.response?.data?.detail || 'Failed to add product to store',
+        success: false,
+      };
+    }
+  },
+
+  /**
+   * Remove product from store
+   */
+  async removeProductFromStore(storeId: string, productId: number): Promise<ApiResponse<void>> {
+    try {
+      await apiClient.delete(`/stores/${storeId}/products/${productId}/remove`);
+      return {
+        success: true,
+      };
+    } catch (error: any) {
+      return {
+        error: error.response?.data?.detail || 'Failed to remove product from store',
         success: false,
       };
     }

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { builder } from '@builder.io/sdk';
-import { Box, Heading, HStack, Icon, Image, Pressable, Spinner, Text, VStack } from 'native-base';
+import { Box, Heading, HStack, Icon, Image, Pressable, Spinner, Text, VStack } from '@gluestack-ui/themed';
 import { I18nManager } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
@@ -18,7 +18,7 @@ function renderBlock(block: any, onAction?: BuilderSectionProps['onAction']) {
   switch (block.component?.name) {
     case 'Text':
       return (
-        <Text key={key} fontSize="md">
+        <Text key={key} fontSize="$md">
           {block.options?.text || ''}
         </Text>
       );
@@ -33,16 +33,16 @@ function renderBlock(block: any, onAction?: BuilderSectionProps['onAction']) {
         <Pressable key={key} onPress={() => onAction?.({ type: 'button', data: block.options })}>
           {({ isPressed }) => (
             <HStack
-              px={4}
-              py={3}
-              bg="primary.600"
-              rounded="md"
+              paddingHorizontal={16}
+              paddingVertical={12}
+              backgroundColor="$primary500"
+              borderRadius="$md"
               alignItems="center"
-              space={2}
+              space={8}
               opacity={isPressed ? 0.8 : 1}
             >
-              <Icon as={Ionicons} name="pricetag" color="white" size="sm" />
-              <Text color="white" fontWeight="medium">
+              <Icon as={Ionicons} name="pricetag" color="$white" size="sm" />
+              <Text color="$white" fontWeight="$medium">
                 {block.options?.text || 'Action'}
               </Text>
             </HStack>
@@ -57,15 +57,15 @@ function renderBlock(block: any, onAction?: BuilderSectionProps['onAction']) {
           source={{ uri: block.options?.image || block.options?.src }}
           width="100%"
           height={block.options?.height || 160}
-          rounded="lg"
+          borderRadius="$lg"
         />
       );
     case 'IconRow':
       return (
-        <HStack key={key} space={4} alignItems="center">
+        <HStack key={key} space={16} alignItems="center">
           {(block.options?.items || []).map((it: any, idx: number) => (
-            <HStack key={`${key}-${idx}`} space={2} alignItems="center">
-              <Icon as={Ionicons} name={it.icon || 'star'} size="sm" color="primary.600" />
+            <HStack key={`${key}-${idx}`} space={8} alignItems="center">
+              <Icon as={Ionicons} name={it.icon || 'star'} size="sm" color="$primary500" />
               <Text>{it.label}</Text>
             </HStack>
           ))}
@@ -104,7 +104,7 @@ export const BuilderSection: React.FC<BuilderSectionProps> = ({ model, entry, op
 
   if (loading) {
     return (
-      <HStack alignItems="center" space={2} py={3} justifyContent="center">
+      <HStack alignItems="center" space={8} paddingVertical={12} justifyContent="center">
         <Spinner accessibilityLabel="Loading content" />
         <Text>Loading...</Text>
       </HStack>
@@ -117,8 +117,8 @@ export const BuilderSection: React.FC<BuilderSectionProps> = ({ model, entry, op
 
   return (
     <Animated.View entering={FadeIn} exiting={FadeOut} style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
-      <Box w="100%" px={4} py={3}>
-        <VStack space={3}>
+      <Box width="100%" paddingHorizontal={16} paddingVertical={12}>
+        <VStack space={12}>
           {blocks.map((b: any) => renderBlock(b, onAction))}
         </VStack>
       </Box>

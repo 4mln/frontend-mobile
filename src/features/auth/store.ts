@@ -1,6 +1,6 @@
 import '@/polyfills/web';
 import { deleteItem, getItem, saveItem } from "@/utils/secureStore";
-import { User } from "./types";
+import { User, hasCapability, CAPABILITIES } from "./types";
 // Ensure process.env before requiring zustand (SSR/web)
 // @ts-expect-error
 if (typeof globalThis.process === 'undefined') {
@@ -26,6 +26,8 @@ interface AuthState {
   setError: (error: string | null) => void;
   clearError: () => void;
   initializeAuth: () => Promise<void>;
+  hasCapability: (capability: string) => boolean;
+  updateUserCapabilities: (capabilities: string[]) => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -83,6 +85,17 @@ export const useAuthStore = create<AuthState>((set) => ({
   setLoading: (loading) => set({ isLoading: loading }),
   setError: (error) => set({ error }),
   clearError: () => set({ error: null }),
+
+  hasCapability: (capability: string) => {
+    const state = useAuthStore.getState();
+    return hasCapability(state.user, capability);
+  },
+
+  updateUserCapabilities: (capabilities: string[]) => {
+    set((state) => ({
+      user: state.user ? { ...state.user, capabilities } : null,
+    }));
+  },
 
   initializeAuth: async () => {
     set({ isLoading: true });

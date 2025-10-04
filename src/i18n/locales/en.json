@@ -170,7 +170,9 @@
     "search": "Search",
     "add": "Add",
     "chat": "Chat",
-    "profile": "Profile"
+    "profile": "Profile",
+    "wallet": "Wallet",
+    "stores": "Stores"
   },
   "home": {
     "title": "B2B Marketplace",
@@ -432,5 +434,33 @@
     "count": "{{count}} notifications",
     "none": "No notifications yet",
     "noneUnread": "No unread notifications"
+  },
+  "stores": {
+    "title": "Stores",
+    "myStores": "My Stores",
+    "createStore": "Create Store",
+    "storeName": "Store Name",
+    "storeAddress": "Store Address",
+    "subscriptionType": "Subscription Type",
+    "free": "Free",
+    "silver": "Silver",
+    "gold": "Gold",
+    "active": "Active",
+    "inactive": "Inactive",
+    "activate": "Activate",
+    "deactivate": "Deactivate",
+    "noStores": "No stores yet",
+    "createFirstStore": "Create your first store to start selling products",
+    "storeCreated": "Store created successfully",
+    "storeUpdated": "Store updated successfully",
+    "storeActivated": "Store activated successfully",
+    "storeDeactivated": "Store deactivated successfully",
+    "manageStores": "Manage Stores",
+    "manageStoresDesc": "Create and manage your stores",
+    "capabilities": "Capabilities",
+    "permissionDenied": "Permission Denied",
+    "needCapability": "You need the \"{{capability}}\" capability to perform this action.",
+    "storeAccessDenied": "Store Access Denied",
+    "storeAccessDeniedDesc": "You do not have permission to manage stores. Please contact support if you believe this is an error."
   }
 }

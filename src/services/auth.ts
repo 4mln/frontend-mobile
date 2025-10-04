@@ -184,7 +184,7 @@ export const authService = {
    */
   async getProfile(): Promise<ApiResponse<AuthResponse['user']>> {
     try {
-      const response = await apiClient.get('/auth/me/profile');
+      const response = await apiClient.get('/users/profile');
       return {
         data: response.data,
         success: true,
@@ -202,7 +202,7 @@ export const authService = {
    */
   async getCurrentUser(): Promise<ApiResponse<AuthResponse['user']>> {
     try {
-      const response = await apiClient.get('/auth/me');
+      const response = await apiClient.get('/users/profile');
       return {
         data: response.data,
         success: true,
@@ -220,7 +220,7 @@ export const authService = {
    */
   async updateProfile(data: UpdateProfileRequest): Promise<ApiResponse<AuthResponse['user']>> {
     try {
-      const response = await apiClient.patch('/auth/me/profile', data);
+      const response = await apiClient.patch('/users/profile', data);
       return {
         data: response.data,
         success: true,
@@ -228,6 +228,42 @@ export const authService = {
     } catch (error: any) {
       return {
         error: error.response?.data?.detail || 'Failed to update profile',
+        success: false,
+      };
+    }
+  },
+
+  /**
+   * Get user capabilities
+   */
+  async getCapabilities(): Promise<ApiResponse<string[]>> {
+    try {
+      const response = await apiClient.get('/users/capabilities');
+      return {
+        data: response.data,
+        success: true,
+      };
+    } catch (error: any) {
+      return {
+        error: error.response?.data?.detail || 'Failed to fetch capabilities',
+        success: false,
+      };
+    }
+  },
+
+  /**
+   * Update user capabilities
+   */
+  async updateCapabilities(capabilities: string[]): Promise<ApiResponse<string[]>> {
+    try {
+      const response = await apiClient.patch('/users/capabilities', { capabilities });
+      return {
+        data: response.data,
+        success: true,
+      };
+    } catch (error: any) {
+      return {
+        error: error.response?.data?.detail || 'Failed to update capabilities',
         success: false,
       };
     }

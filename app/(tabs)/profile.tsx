@@ -1,22 +1,15 @@
 import { useAuth, useProfile } from '@/features/auth/hooks';
 import { useWalletBalance } from '@/features/wallet/hooks';
+import { useStoreCapabilities } from '@/features/stores/hooks';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import i18n from '@/i18n';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-    Alert,
-    Image,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Switch,
-    Text,
-    TouchableOpacity,
-    View,
-} from 'react-native';
+import { Alert, Image, Switch, ScrollView } from 'react-native';
+import { Box, Text, VStack, HStack, Pressable } from '@gluestack-ui/themed';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { colors } from '@/theme/colors';
 import { useThemeModeStore } from '@/theme/modeStore';
@@ -30,6 +23,7 @@ export default function ProfileScreen() {
   const { user, logout } = useAuth();
   const { data: profile } = useProfile();
   const { data: walletBalance } = useWalletBalance();
+  const { canManageStores, canSell, canPurchase, user: storeUser } = useStoreCapabilities();
   const mode = useThemeModeStore((s) => s.mode);
   const setMode = useThemeModeStore((s) => s.setMode);
   
@@ -132,6 +126,33 @@ export default function ProfileScreen() {
     userRole: {
       fontSize: typography.body.fontSize,
       color: isDark ? '#cbd5e1' : colors.text.secondary,
+    },
+    capabilitiesContainer: {
+      marginTop: semanticSpacing.md,
+      alignItems: 'center',
+    },
+    capabilitiesTitle: {
+      fontSize: typography.bodySmall.fontSize,
+      color: isDark ? '#cbd5e1' : colors.text.secondary,
+      marginBottom: semanticSpacing.sm,
+    },
+    capabilitiesList: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'center',
+      gap: 4,
+    },
+    capabilityTag: {
+      backgroundColor: colors.primary[100],
+      paddingHorizontal: semanticSpacing.sm,
+      paddingVertical: 2,
+      borderRadius: semanticSpacing.radius.sm,
+      marginHorizontal: 2,
+    },
+    capabilityText: {
+      fontSize: typography.caption.fontSize,
+      color: colors.primary[700],
+      textTransform: 'capitalize',
     },
     content: {
       flex: 1,
@@ -270,183 +291,253 @@ export default function ProfileScreen() {
   });
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }}>
       {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.profileSection}>
+      <Box padding={16} borderBottomWidth={1} borderBottomColor="$borderLight200">
+        <VStack alignItems="center" space="md">
           <Image 
             source={{ uri: user?.avatar || 'https://via.placeholder.com/80' }} 
-            style={styles.avatar} 
+            style={{ width: 80, height: 80, borderRadius: 40 }}
           />
-          <Text style={styles.userName}>
-            {user?.name || profile?.name || 'User Name'}
+          <Text fontSize="$2xl" fontWeight="$bold" color="$textLight900">
+            {user?.name || profile?.name || storeUser?.name || 'User Name'}
           </Text>
-          <Text style={styles.userRole}>
-            {user?.email || user?.phone || 'Buyer/Seller'}
+          <Text fontSize="$md" color="$textLight600">
+            {user?.email || user?.phone || storeUser?.email || 'Buyer/Seller'}
           </Text>
-        </View>
-      </View>
+          {storeUser?.capabilities && storeUser.capabilities.length > 0 && (
+            <VStack alignItems="center" space="sm">
+              <Text fontSize="$sm" color="$textLight600">Capabilities:</Text>
+              <HStack space="xs" flexWrap="wrap" justifyContent="center">
+                {storeUser.capabilities.map((capability, index) => (
+                  <Box
+                    key={index}
+                    backgroundColor="$primary100"
+                    paddingHorizontal={8}
+                    paddingVertical={4}
+                    borderRadius="$sm"
+                  >
+                    <Text fontSize="$xs" color="$primary700" textTransform="capitalize">
+                      {capability.replace('can_', '').replace('_', ' ')}
+                    </Text>
+                  </Box>
+                ))}
+              </HStack>
+            </VStack>
+          )}
+        </VStack>
+      </Box>
 
-      <ScrollView style={styles.content}>
+      <ScrollView style={{ flex: 1, padding: 16 }}>
         {/* Account Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('profileScreen.account')}</Text>
+        <VStack space="lg" marginBottom={24}>
+          <Text fontSize="$lg" fontWeight="$semibold" color="$textLight900">
+            {t('profileScreen.account')}
+          </Text>
           
-          <TouchableOpacity style={styles.menuItem} onPress={handleEditProfile}>
-            <View style={styles.menuIcon}>
-              <Ionicons name="person-outline" size={20} color={colors.primary[600]} />
-            </View>
-            <View style={styles.menuContent}>
-              <Text style={styles.menuTitle}>{t('profile.editProfile')}</Text>
-              <Text style={styles.menuSubtitle}>{t('profileScreen.updateInfo')}</Text>
-            </View>
-            <Ionicons 
-              name="chevron-forward" 
-              size={20} 
-              color={isDark ? colors.gray[400] : colors.gray[500]} 
-              style={styles.menuArrow}
-            />
-          </TouchableOpacity>
+          <Pressable onPress={handleEditProfile}>
+            <HStack alignItems="center" padding={12} backgroundColor="$backgroundLight50" borderRadius="$lg" borderWidth={1} borderColor="$borderLight200">
+              <Box width={10} height={10} borderRadius="$full" backgroundColor="$primary100" justifyContent="center" alignItems="center" marginRight={12}>
+                <Ionicons name="person-outline" size={20} color="#3b82f6" />
+              </Box>
+              <VStack flex={1}>
+                <Text fontSize="$md" fontWeight="$medium" color="$textLight900">
+                  {t('profile.editProfile')}
+                </Text>
+                <Text fontSize="$sm" color="$textLight600">
+                  {t('profileScreen.updateInfo')}
+                </Text>
+              </VStack>
+              <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
+            </HStack>
+          </Pressable>
 
-          <TouchableOpacity style={styles.menuItem} onPress={handleWallet}>
-            <View style={styles.menuIcon}>
-              <Ionicons name="wallet-outline" size={20} color={colors.primary[600]} />
-            </View>
-            <View style={styles.menuContent}>
-              <Text style={styles.menuTitle}>{t('profile.wallet')}</Text>
-              <Text style={styles.menuSubtitle}>
-                {walletBalance ? `${t('wallet.balance')}: ${walletBalance.balance.toLocaleString()} ${walletBalance.currency}` : t('profileScreen.walletDesc')}
-              </Text>
-            </View>
-            <Ionicons 
-              name="chevron-forward" 
-              size={20} 
-              color={isDark ? colors.gray[400] : colors.gray[500]} 
-              style={styles.menuArrow}
-            />
-          </TouchableOpacity>
+          <Pressable onPress={handleWallet}>
+            <HStack alignItems="center" padding={12} backgroundColor="$backgroundLight50" borderRadius="$lg" borderWidth={1} borderColor="$borderLight200">
+              <Box width={10} height={10} borderRadius="$full" backgroundColor="$primary100" justifyContent="center" alignItems="center" marginRight={12}>
+                <Ionicons name="wallet-outline" size={20} color="#3b82f6" />
+              </Box>
+              <VStack flex={1}>
+                <Text fontSize="$md" fontWeight="$medium" color="$textLight900">
+                  {t('profile.wallet')}
+                </Text>
+                <Text fontSize="$sm" color="$textLight600">
+                  {walletBalance ? `${t('wallet.balance')}: ${walletBalance.balance.toLocaleString()} ${walletBalance.currency}` : t('profileScreen.walletDesc')}
+                </Text>
+              </VStack>
+              <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
+            </HStack>
+          </Pressable>
 
-          <TouchableOpacity style={styles.menuItem} onPress={handleSessions}>
-            <View style={styles.menuIcon}>
-              <Ionicons name="key-outline" size={20} color={colors.primary[600]} />
-            </View>
-            <View style={styles.menuContent}>
-              <Text style={styles.menuTitle}>{t('profileScreen.activeSessions')}</Text>
-              <Text style={styles.menuSubtitle}>{t('profileScreen.activeSessionsDesc')}</Text>
-            </View>
-            <Ionicons 
-              name="chevron-forward" 
-              size={20} 
-              color={isDark ? colors.gray[400] : colors.gray[500]} 
-              style={styles.menuArrow}
-            />
-          </TouchableOpacity>
-        </View>
+          {canManageStores && (
+            <Pressable onPress={() => router.push('/stores')}>
+              <HStack alignItems="center" padding={12} backgroundColor="$backgroundLight50" borderRadius="$lg" borderWidth={1} borderColor="$borderLight200">
+                <Box width={10} height={10} borderRadius="$full" backgroundColor="$primary100" justifyContent="center" alignItems="center" marginRight={12}>
+                  <Ionicons name="storefront-outline" size={20} color="#3b82f6" />
+                </Box>
+                <VStack flex={1}>
+                  <Text fontSize="$md" fontWeight="$medium" color="$textLight900">
+                    Manage Stores
+                  </Text>
+                  <Text fontSize="$sm" color="$textLight600">
+                    Create and manage your stores
+                  </Text>
+                </VStack>
+                <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
+              </HStack>
+            </Pressable>
+          )}
+
+          <Pressable onPress={handleSessions}>
+            <HStack alignItems="center" padding={12} backgroundColor="$backgroundLight50" borderRadius="$lg" borderWidth={1} borderColor="$borderLight200">
+              <Box width={10} height={10} borderRadius="$full" backgroundColor="$primary100" justifyContent="center" alignItems="center" marginRight={12}>
+                <Ionicons name="key-outline" size={20} color="#3b82f6" />
+              </Box>
+              <VStack flex={1}>
+                <Text fontSize="$md" fontWeight="$medium" color="$textLight900">
+                  {t('profileScreen.activeSessions')}
+                </Text>
+                <Text fontSize="$sm" color="$textLight600">
+                  {t('profileScreen.activeSessionsDesc')}
+                </Text>
+              </VStack>
+              <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
+            </HStack>
+          </Pressable>
+        </VStack>
 
         {/* Settings Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('profileScreen.settings')}</Text>
+        <VStack space="lg" marginBottom={24}>
+          <Text fontSize="$lg" fontWeight="$semibold" color="$textLight900">
+            {t('profileScreen.settings')}
+          </Text>
           
-          <View style={styles.switchContainer}>
-            <View style={styles.switchContent}>
-              <View style={styles.switchIcon}>
-                <Ionicons name="notifications-outline" size={20} color={colors.primary[600]} />
-              </View>
-              <Text style={styles.switchText}>{t('profile.notifications')}</Text>
-            </View>
+          <HStack alignItems="center" justifyContent="space-between" padding={12} backgroundColor="$backgroundLight50" borderRadius="$lg" borderWidth={1} borderColor="$borderLight200">
+            <HStack alignItems="center" flex={1}>
+              <Box width={10} height={10} borderRadius="$full" backgroundColor="$primary100" justifyContent="center" alignItems="center" marginRight={12}>
+                <Ionicons name="notifications-outline" size={20} color="#3b82f6" />
+              </Box>
+              <Text fontSize="$md" fontWeight="$medium" color="$textLight900">
+                {t('profile.notifications')}
+              </Text>
+            </HStack>
             <Switch
               value={notificationsEnabled}
               onValueChange={setNotificationsEnabled}
-              trackColor={{ false: colors.gray[300], true: colors.primary[200] }}
-              thumbColor={notificationsEnabled ? colors.primary[500] : colors.gray[400]}
+              trackColor={{ false: '#d1d5db', true: '#bfdbfe' }}
+              thumbColor={notificationsEnabled ? '#3b82f6' : '#9ca3af'}
             />
-          </View>
+          </HStack>
 
-          <View style={styles.switchContainer}>
-            <View style={styles.switchContent}>
-              <View style={styles.switchIcon}>
-                <Ionicons name="moon-outline" size={20} color={colors.primary[600]} />
-              </View>
-              <Text style={styles.switchText}>{t('profile.theme')} ({mode})</Text>
-            </View>
+          <HStack alignItems="center" justifyContent="space-between" padding={12} backgroundColor="$backgroundLight50" borderRadius="$lg" borderWidth={1} borderColor="$borderLight200">
+            <HStack alignItems="center" flex={1}>
+              <Box width={10} height={10} borderRadius="$full" backgroundColor="$primary100" justifyContent="center" alignItems="center" marginRight={12}>
+                <Ionicons name="moon-outline" size={20} color="#3b82f6" />
+              </Box>
+              <Text fontSize="$md" fontWeight="$medium" color="$textLight900">
+                {t('profile.theme')} ({mode})
+              </Text>
+            </HStack>
             <Switch
               value={mode === 'dark'}
               onValueChange={handleThemeToggle}
-              trackColor={{ false: colors.gray[300], true: colors.primary[200] }}
-              thumbColor={mode === 'dark' ? colors.primary[500] : colors.gray[400]}
+              trackColor={{ false: '#d1d5db', true: '#bfdbfe' }}
+              thumbColor={mode === 'dark' ? '#3b82f6' : '#9ca3af'}
             />
-          </View>
+          </HStack>
 
 
           {/* Language selector */}
-          <View style={styles.langRow}>
-            <View style={styles.switchContent}>
-              <View style={styles.switchIcon}>
-                <Ionicons name="language-outline" size={20} color={colors.primary[600]} />
-              </View>
-              <Text style={styles.switchText}>{t('profile.language') || 'Language'}</Text>
-            </View>
-            <View style={styles.langButtons}>
-              <TouchableOpacity
-                style={[styles.langBtn, currentLng === 'en' && styles.langBtnActive]}
+          <HStack alignItems="center" justifyContent="space-between" padding={12} backgroundColor="$backgroundLight50" borderRadius="$lg" borderWidth={1} borderColor="$borderLight200">
+            <HStack alignItems="center" flex={1}>
+              <Box width={10} height={10} borderRadius="$full" backgroundColor="$primary100" justifyContent="center" alignItems="center" marginRight={12}>
+                <Ionicons name="language-outline" size={20} color="#3b82f6" />
+              </Box>
+              <Text fontSize="$md" fontWeight="$medium" color="$textLight900">
+                {t('profile.language') || 'Language'}
+              </Text>
+            </HStack>
+            <HStack space="sm">
+              <Pressable
+                backgroundColor={currentLng === 'en' ? '$primary500' : 'transparent'}
+                borderWidth={1}
+                borderColor="$primary500"
+                paddingHorizontal={12}
+                paddingVertical={8}
+                borderRadius="$md"
                 onPress={() => changeLanguage('en')}
               >
-                <Text style={[styles.langBtnText, currentLng === 'en' && styles.langBtnTextActive]}>English</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.langBtn, currentLng === 'fa' && styles.langBtnActive]}
+                <Text color={currentLng === 'en' ? '$white' : '$primary600'} fontWeight="$semibold">
+                  English
+                </Text>
+              </Pressable>
+              <Pressable
+                backgroundColor={currentLng === 'fa' ? '$primary500' : 'transparent'}
+                borderWidth={1}
+                borderColor="$primary500"
+                paddingHorizontal={12}
+                paddingVertical={8}
+                borderRadius="$md"
                 onPress={() => changeLanguage('fa')}
               >
-                <Text style={[styles.langBtnText, currentLng === 'fa' && styles.langBtnTextActive]}>فارسی</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
+                <Text color={currentLng === 'fa' ? '$white' : '$primary600'} fontWeight="$semibold">
+                  فارسی
+                </Text>
+              </Pressable>
+            </HStack>
+          </HStack>
+        </VStack>
 
         {/* Support Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('profileScreen.support')}</Text>
+        <VStack space="lg" marginBottom={24}>
+          <Text fontSize="$lg" fontWeight="$semibold" color="$textLight900">
+            {t('profileScreen.support')}
+          </Text>
           
-          <TouchableOpacity style={styles.menuItem} onPress={handleHelp}>
-            <View style={styles.menuIcon}>
-              <Ionicons name="help-circle-outline" size={20} color={colors.primary[600]} />
-            </View>
-            <View style={styles.menuContent}>
-              <Text style={styles.menuTitle}>{t('profile.help')}</Text>
-              <Text style={styles.menuSubtitle}>{t('profileScreen.getHelp')}</Text>
-            </View>
-            <Ionicons 
-              name="chevron-forward" 
-              size={20} 
-              color={isDark ? colors.gray[400] : colors.gray[500]} 
-              style={styles.menuArrow}
-            />
-          </TouchableOpacity>
+          <Pressable onPress={handleHelp}>
+            <HStack alignItems="center" padding={12} backgroundColor="$backgroundLight50" borderRadius="$lg" borderWidth={1} borderColor="$borderLight200">
+              <Box width={10} height={10} borderRadius="$full" backgroundColor="$primary100" justifyContent="center" alignItems="center" marginRight={12}>
+                <Ionicons name="help-circle-outline" size={20} color="#3b82f6" />
+              </Box>
+              <VStack flex={1}>
+                <Text fontSize="$md" fontWeight="$medium" color="$textLight900">
+                  {t('profile.help')}
+                </Text>
+                <Text fontSize="$sm" color="$textLight600">
+                  {t('profileScreen.getHelp')}
+                </Text>
+              </VStack>
+              <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
+            </HStack>
+          </Pressable>
 
-          <TouchableOpacity style={styles.menuItem}>
-            <View style={styles.menuIcon}>
-              <Ionicons name="information-circle-outline" size={20} color={colors.primary[600]} />
-            </View>
-            <View style={styles.menuContent}>
-              <Text style={styles.menuTitle}>{t('profile.about')}</Text>
-              <Text style={styles.menuSubtitle}>{t('profileScreen.aboutDesc')}</Text>
-            </View>
-            <Ionicons 
-              name="chevron-forward" 
-              size={20} 
-              color={isDark ? colors.gray[400] : colors.gray[500]} 
-              style={styles.menuArrow}
-            />
-          </TouchableOpacity>
-        </View>
+          <Pressable>
+            <HStack alignItems="center" padding={12} backgroundColor="$backgroundLight50" borderRadius="$lg" borderWidth={1} borderColor="$borderLight200">
+              <Box width={10} height={10} borderRadius="$full" backgroundColor="$primary100" justifyContent="center" alignItems="center" marginRight={12}>
+                <Ionicons name="information-circle-outline" size={20} color="#3b82f6" />
+              </Box>
+              <VStack flex={1}>
+                <Text fontSize="$md" fontWeight="$medium" color="$textLight900">
+                  {t('profile.about')}
+                </Text>
+                <Text fontSize="$sm" color="$textLight600">
+                  {t('profileScreen.aboutDesc')}
+                </Text>
+              </VStack>
+              <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
+            </HStack>
+          </Pressable>
+        </VStack>
 
         {/* Logout Button */}
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutText}>{t('auth.logout')}</Text>
-        </TouchableOpacity>
+        <Pressable backgroundColor="$error500" borderRadius="$lg" paddingVertical={12} alignItems="center" marginBottom={24} onPress={handleLogout}>
+          <Text fontSize="$md" fontWeight="$semibold" color="$white">
+            {t('auth.logout')}
+          </Text>
+        </Pressable>
 
         {/* Version */}
-        <Text style={styles.versionText}>
+        <Text fontSize="$xs" color="$textLight500" textAlign="center" marginBottom={16}>
           {t('profile.version', { version: '2.1.0' })}
         </Text>
       </ScrollView>

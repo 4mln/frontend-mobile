@@ -1,8 +1,7 @@
 import '@/i18n';
 import '@/polyfills/web';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { NativeBaseProvider } from 'native-base';
-import { nativeBaseTheme, colorModeManager } from '@/theme/nativeBase';
+import { GluestackProvider } from '@/components/GluestackProvider';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
 import { useEffect } from 'react';
@@ -48,7 +47,7 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
           <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-            <NativeBaseProvider theme={nativeBaseTheme} colorModeManager={colorModeManager}>
+            <GluestackProvider>
               <ConnectionBanner />
               <LoginWall />
               <MessageBox />
@@ -60,9 +59,10 @@ export default function RootLayout() {
               <Stack.Screen name="product/create" options={{ headerShown: false, presentation: 'modal' }} />
               <Stack.Screen name="chat/[id]" options={{ headerShown: false, presentation: 'modal' }} />
               <Stack.Screen name="rfq/create" options={{ headerShown: false, presentation: 'modal' }} />
+              <Stack.Screen name="stores" options={{ headerShown: false }} />
               <Stack.Screen name="modal" options={{ presentation: 'modal', title: undefined }} />
               </Stack>
-            </NativeBaseProvider>
+            </GluestackProvider>
           </ThemeProvider>
         </QueryClientProvider>
       </SafeAreaProvider>

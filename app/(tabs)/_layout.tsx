@@ -7,11 +7,13 @@ import { HapticTab } from '@/components/haptic-tab';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { colors } from '@/theme/colors';
 import { fontWeights } from '@/theme/typography'; // added to fix fontWeight
+import { useStoreCapabilities } from '@/features/stores/hooks';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const { t } = useTranslation();
   const isDark = colorScheme === 'dark';
+  const { canManageStores, canSell, canPurchase } = useStoreCapabilities();
 
   return (
     <Tabs
@@ -69,19 +71,21 @@ export default function TabLayout() {
           ),
         }}
       />
-      <Tabs.Screen
-        name="add"
-        options={{
-          title: t('navigation.add'),
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons 
-              name={focused ? 'add-circle' : 'add-circle-outline'} 
-              size={28} 
-              color={color} 
-            />
-          ),
-        }}
-      />
+      {(canSell || canManageStores) && (
+        <Tabs.Screen
+          name="add"
+          options={{
+            title: t('navigation.add'),
+            tabBarIcon: ({ color, focused }) => (
+              <Ionicons 
+                name={focused ? 'add-circle' : 'add-circle-outline'} 
+                size={28} 
+                color={color} 
+              />
+            ),
+          }}
+        />
+      )}
       <Tabs.Screen
         name="chat"
         options={{
@@ -108,6 +112,21 @@ export default function TabLayout() {
           ),
         }}
       />
+      {canManageStores && (
+        <Tabs.Screen
+          name="stores"
+          options={{
+            title: t('navigation.stores'),
+            tabBarIcon: ({ color, focused }) => (
+              <Ionicons 
+                name={focused ? 'storefront' : 'storefront-outline'} 
+                size={24} 
+                color={color} 
+              />
+            ),
+          }}
+        />
+      )}
       <Tabs.Screen
         name="wallet"
         options={{

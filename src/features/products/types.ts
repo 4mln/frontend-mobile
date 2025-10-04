@@ -10,6 +10,11 @@ export interface Product {
   images: string[];
   specifications: ProductSpecification[];
   seller: Seller;
+  // New store association fields
+  seller_id?: number; // Legacy seller ID
+  store_id?: string; // New store association
+  stock?: number;
+  status?: 'pending' | 'approved' | 'rejected';
   rating: number;
   reviewCount: number;
   isAvailable: boolean;
@@ -75,6 +80,33 @@ export interface UpdateProductRequest {
   images?: string[];
   specifications?: ProductSpecification[];
   isAvailable?: boolean;
+  stock?: number;
+  status?: 'pending' | 'approved' | 'rejected';
+}
+
+// Store-related product management
+export interface AddProductToStoreRequest {
+  product_id: number;
+  store_id: string;
+}
+
+export interface StoreProductAssociation {
+  product_id: number;
+  store_id: string;
+  added_at: string;
+}
+
+export interface ProductStoreFilter {
+  store_id?: string;
+  category?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  condition?: string;
+  location?: string;
+  search?: string;
+  sortBy?: 'newest' | 'price_low' | 'price_high' | 'popularity';
+  page?: number;
+  limit?: number;
 }
 
 

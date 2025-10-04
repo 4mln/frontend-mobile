@@ -7,7 +7,7 @@ import { Controller, useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useTranslation } from 'react-i18next';
-import { Alert, I18nManager, Platform } from 'react-native';
+import { Alert, I18nManager, Platform, KeyboardAvoidingView, ScrollView } from 'react-native';
 import {
   Box,
   Button,
@@ -15,14 +15,12 @@ import {
   HStack,
   Icon,
   Input,
-  KeyboardAvoidingView,
   Modal,
   Pressable,
-  ScrollView,
   Spinner,
   Text,
   VStack,
-} from 'native-base';
+} from '@gluestack-ui/themed';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { authService } from '@/services/auth';
@@ -199,28 +197,61 @@ export default function SignupScreen(props: SignupScreenProps) {
   // (LoginWall passes pendingPhone via state; we can accept it through props/hooks later if needed)
 
   return (
-    <Box flex={1} safeArea>
+    <Box flex={1} backgroundColor="$backgroundLight0">
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
-        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-          <VStack px={semanticSpacing.lg} py={semanticSpacing.lg} maxW={400} alignSelf="center" w="100%" space={semanticSpacing.sm}>
-            <VStack alignItems="center" mb={semanticSpacing.md}>
-              <Animated.View entering={FadeInDown.duration(300)}>
-                <Box w={20} h={20} rounded="full" bg="primary.600" alignItems="center" justifyContent="center" mb={semanticSpacing.lg} shadow="3">
-                  <Icon as={Ionicons} name="person-add" color="white" size="xl" />
+        <ScrollView 
+          contentContainerStyle={{ flexGrow: 1, paddingBottom: 32 }}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <VStack 
+            paddingHorizontal={24} 
+            paddingTop={32} 
+            paddingBottom={16} 
+            maxWidth={420} 
+            alignSelf="center" 
+            width="100%" 
+            space={24}
+          >
+            {/* Header Section */}
+            <VStack alignItems="center" space={16}>
+              <Animated.View entering={FadeInDown.duration(400)}>
+                <Box 
+                  width={80} 
+                  height={80} 
+                  borderRadius="$full" 
+                  backgroundColor="$primary500" 
+                  alignItems="center" 
+                  justifyContent="center"
+                  softShadow="4"
+                  borderWidth={4}
+                  borderColor="$primary100"
+                >
+                  <Icon as={Ionicons} name="person-add" color="$white" size="xl" />
                 </Box>
               </Animated.View>
-              <Heading size="lg" textAlign="center" mb={semanticSpacing.xs}>
-                {t('signup.title')}
-              </Heading>
-              <Text textAlign="center" color="text.secondary">
-                {t('signup.subtitle')}
-              </Text>
+              <VStack alignItems="center" space={8}>
+                <Heading size="xl" textAlign="center" color="$textLight900">
+                  {t('signup.title')}
+                </Heading>
+                <Text 
+                  textAlign="center" 
+                  color="$textLight600" 
+                  fontSize="$md"
+                  lineHeight="$md"
+                  maxWidth={280}
+                >
+                  {t('signup.subtitle')}
+                </Text>
+              </VStack>
             </VStack>
 
-            <VStack space={semanticSpacing.sm}>
-              <HStack space={3}>
-                <VStack flex={1}>
-                  <Text fontSize={16} fontWeight={fontWeights.medium as any} mb={semanticSpacing.xs} textAlign="right">
+            {/* Form Section */}
+            <VStack space={20} backgroundColor="$backgroundLight50" borderRadius="$xl" padding={24} softShadow="2">
+              {/* Name Fields Row */}
+              <HStack space={16}>
+                <VStack flex={1} space={8}>
+                  <Text fontSize="$sm" fontWeight="$semibold" color="$textLight700" textAlign="right">
                     {t('signup.firstName')}
                   </Text>
                   <Controller
@@ -233,20 +264,28 @@ export default function SignupScreen(props: SignupScreenProps) {
                         onChangeText={onChange}
                         isDisabled={isLoading}
                         textAlign={isRTL ? 'right' : 'left'}
-                        height={44}
+                        height={52}
                         variant="outline"
                         isInvalid={!!errors.firstName}
+                        borderColor={errors.firstName ? '$error500' : '$borderLight300'}
+                        backgroundColor="$backgroundLight0"
+                        borderRadius="$lg"
+                        fontSize="$md"
+                        _focus={{
+                          borderColor: '$primary500',
+                          backgroundColor: '$backgroundLight0',
+                        }}
                       />
                     )}
                   />
                   {!!errors.firstName?.message && (
-                    <Text color="error.500" fontSize={14} mt={semanticSpacing.xs} textAlign="right">
+                    <Text color="$error500" fontSize="$sm" marginTop={4} textAlign="right">
                       {String(errors.firstName.message)}
                     </Text>
                   )}
                 </VStack>
-                <VStack flex={1}>
-                  <Text fontSize={16} fontWeight={fontWeights.medium as any} mb={semanticSpacing.xs} textAlign="right">
+                <VStack flex={1} space={8}>
+                  <Text fontSize="$sm" fontWeight="$semibold" color="$textLight700" textAlign="right">
                     {t('signup.lastName')}
                   </Text>
                   <Controller
@@ -259,22 +298,31 @@ export default function SignupScreen(props: SignupScreenProps) {
                         onChangeText={onChange}
                         isDisabled={isLoading}
                         textAlign={isRTL ? 'right' : 'left'}
-                        height={44}
+                        height={52}
                         variant="outline"
                         isInvalid={!!errors.lastName}
+                        borderColor={errors.lastName ? '$error500' : '$borderLight300'}
+                        backgroundColor="$backgroundLight0"
+                        borderRadius="$lg"
+                        fontSize="$md"
+                        _focus={{
+                          borderColor: '$primary500',
+                          backgroundColor: '$backgroundLight0',
+                        }}
                       />
                     )}
                   />
                   {!!errors.lastName?.message && (
-                    <Text color="error.500" fontSize={14} mt={semanticSpacing.xs} textAlign="right">
+                    <Text color="$error500" fontSize="$sm" marginTop={4} textAlign="right">
                       {String(errors.lastName.message)}
                     </Text>
                   )}
                 </VStack>
               </HStack>
 
-              <VStack>
-                <Text fontSize={16} fontWeight={fontWeights.medium as any} mb={semanticSpacing.xs} textAlign="right">
+              {/* National ID Field */}
+              <VStack space={8}>
+                <Text fontSize="$sm" fontWeight="$semibold" color="$textLight700" textAlign="right">
                   {t('signup.nationalId')}
                 </Text>
                 <Controller
@@ -289,21 +337,30 @@ export default function SignupScreen(props: SignupScreenProps) {
                       isDisabled={isLoading}
                       maxLength={10}
                       textAlign="left"
-                      height={44}
+                      height={52}
                       variant="outline"
                       isInvalid={!!errors.nationalId}
+                      borderColor={errors.nationalId ? '$error500' : '$borderLight300'}
+                      backgroundColor="$backgroundLight0"
+                      borderRadius="$lg"
+                      fontSize="$md"
+                      _focus={{
+                        borderColor: '$primary500',
+                        backgroundColor: '$backgroundLight0',
+                      }}
                     />
                   )}
                 />
                 {!!errors.nationalId?.message && (
-                  <Text color="error.500" fontSize={14} mt={semanticSpacing.xs} textAlign="right">
+                  <Text color="$error500" fontSize="$sm" marginTop={4} textAlign="right">
                     {String(errors.nationalId.message)}
                   </Text>
                 )}
               </VStack>
 
-              <VStack>
-                <Text fontSize={16} fontWeight={fontWeights.medium as any} mb={semanticSpacing.xs} textAlign="right">
+              {/* Phone Field */}
+              <VStack space={8}>
+                <Text fontSize="$sm" fontWeight="$semibold" color="$textLight700" textAlign="right">
                   {t('signup.phone')}
                 </Text>
                 <Controller
@@ -317,27 +374,45 @@ export default function SignupScreen(props: SignupScreenProps) {
                       onChangeText={onChange}
                       isDisabled={isLoading}
                       textAlign="left"
-                      height={44}
+                      height={52}
                       variant="outline"
                       isInvalid={!!errors.phone}
+                      borderColor={errors.phone ? '$error500' : '$borderLight300'}
+                      backgroundColor="$backgroundLight0"
+                      borderRadius="$lg"
+                      fontSize="$md"
+                      _focus={{
+                        borderColor: '$primary500',
+                        backgroundColor: '$backgroundLight0',
+                      }}
                     />
                   )}
                 />
                 {!!errors.phone?.message && (
-                  <Text color="error.500" fontSize={14} mt={semanticSpacing.xs} textAlign="right">
+                  <Text color="$error500" fontSize="$sm" marginTop={4} textAlign="right">
                     {String(errors.phone.message)}
                   </Text>
                 )}
               </VStack>
 
-              <VStack>
-                <Text fontSize={16} fontWeight={fontWeights.medium as any} mb={semanticSpacing.xs} textAlign="right">
+              {/* Guild Selection Field */}
+              <VStack space={8}>
+                <Text fontSize="$sm" fontWeight="$semibold" color="$textLight700" textAlign="right">
                   {t('signup.guild')}
                 </Text>
                 {isLoadingGuilds ? (
-                  <HStack height={44} px={semanticSpacing.md} borderWidth={1} borderColor="gray.300" rounded="md" alignItems="center" justifyContent="center" bg="background.light">
-                    <Spinner size="sm" color="primary.500" />
-                    <Text ml={semanticSpacing.sm} color="text.secondary" fontSize={16}>
+                  <HStack 
+                    height={52} 
+                    paddingHorizontal={16} 
+                    borderWidth={1} 
+                    borderColor="$borderLight300" 
+                    borderRadius="$lg" 
+                    alignItems="center" 
+                    justifyContent="center" 
+                    backgroundColor="$backgroundLight0"
+                  >
+                    <Spinner size="sm" color="$primary500" />
+                    <Text marginLeft={12} color="$textLight600" fontSize="$md">
                       {t('signup.loadingGuilds')}
                     </Text>
                   </HStack>
@@ -345,44 +420,57 @@ export default function SignupScreen(props: SignupScreenProps) {
                   <Pressable onPress={() => setIsGuildModalOpen(true)} isDisabled={isLoading}>
                     {({ isPressed }) => (
                       <HStack
-                        height={44}
-                        px={semanticSpacing.md}
+                        height={52}
+                        paddingHorizontal={16}
                         borderWidth={1}
-                        borderColor={errors.guildId ? 'error.500' : 'gray.300'}
-                        rounded="md"
+                        borderColor={errors.guildId ? '$error500' : '$borderLight300'}
+                        borderRadius="$lg"
                         alignItems="center"
                         justifyContent="space-between"
-                        bg="background.light"
+                        backgroundColor="$backgroundLight0"
                         opacity={isPressed ? 0.9 : 1}
+                        _focus={{
+                          borderColor: '$primary500',
+                        }}
                       >
-                        <Text color={selectedGuild ? 'text.primary' : 'text.secondary'} fontSize={16}>
+                        <Text 
+                          color={selectedGuild ? '$textLight900' : '$textLight500'} 
+                          fontSize="$md"
+                          fontWeight={selectedGuild ? '$medium' : '$normal'}
+                        >
                           {selectedGuild ? (guilds.find(g => g.id === selectedGuild)?.name || '') : t('signup.selectGuild')}
                         </Text>
-                        <Icon as={Ionicons} name={isRTL ? 'chevron-back' : 'chevron-forward'} color="gray.400" size="sm" />
+                        <Icon 
+                          as={Ionicons} 
+                          name={isRTL ? 'chevron-back' : 'chevron-forward'} 
+                          color="$textLight400" 
+                          size="sm" 
+                        />
                       </HStack>
                     )}
                   </Pressable>
                 )}
                 {!!errors.guildId?.message && (
-                  <Text color="error.500" fontSize={14} mt={semanticSpacing.xs} textAlign="right">
+                  <Text color="$error500" fontSize="$sm" marginTop={4} textAlign="right">
                     {String(errors.guildId.message)}
                   </Text>
                 )}
 
+                {/* Guild Selection Modal */}
                 <Modal isOpen={isGuildModalOpen} onClose={() => setIsGuildModalOpen(false)} size="lg">
-                  <Modal.Content maxH="70%">
+                  <Modal.Content maxHeight="70%" borderRadius="$xl">
                     <Modal.CloseButton />
-                    <Modal.Header alignItems="center">
-                      <VStack alignItems="center" w="100%">
-                        <Heading size="md">{t('signup.selectGuild')}</Heading>
-                        <Text mt={1} color="text.secondary" fontSize={12} textAlign="center">
+                    <Modal.Header alignItems="center" borderBottomWidth={1} borderBottomColor="$borderLight200">
+                      <VStack alignItems="center" width="100%" space={4}>
+                        <Heading size="lg" color="$textLight900">{t('signup.selectGuild')}</Heading>
+                        <Text color="$textLight600" fontSize="$sm" textAlign="center" maxWidth={280}>
                           {t('signup.guildNote')}
                         </Text>
                       </VStack>
                     </Modal.Header>
-                    <Modal.Body>
-                      <VStack>
-                        {guilds.map((guild) => (
+                    <Modal.Body padding={0}>
+                      <VStack space={0}>
+                        {guilds.map((guild, index) => (
                           <Pressable
                             key={guild.id}
                             onPress={() => {
@@ -392,8 +480,29 @@ export default function SignupScreen(props: SignupScreenProps) {
                             }}
                           >
                             {({ isPressed }) => (
-                              <Box px={semanticSpacing.md} py={3} bg={selectedGuild === guild.id ? 'gray.100' : 'transparent'} opacity={isPressed ? 0.9 : 1} rounded="md">
-                                <Text fontSize={16}>{guild.name}</Text>
+                              <Box 
+                                paddingHorizontal={20} 
+                                paddingVertical={16} 
+                                backgroundColor={selectedGuild === guild.id ? '$primary50' : 'transparent'} 
+                                opacity={isPressed ? 0.9 : 1} 
+                                borderBottomWidth={index < guilds.length - 1 ? 1 : 0}
+                                borderBottomColor="$borderLight100"
+                              >
+                                <HStack alignItems="center" space={12}>
+                                  <Box
+                                    width={8}
+                                    height={8}
+                                    borderRadius="$full"
+                                    backgroundColor={selectedGuild === guild.id ? '$primary500' : '$backgroundLight200'}
+                                  />
+                                  <Text 
+                                    fontSize="$md" 
+                                    fontWeight={selectedGuild === guild.id ? '$semibold' : '$normal'}
+                                    color={selectedGuild === guild.id ? '$primary700' : '$textLight900'}
+                                  >
+                                    {guild.name}
+                                  </Text>
+                                </HStack>
                               </Box>
                             )}
                           </Pressable>
@@ -404,25 +513,63 @@ export default function SignupScreen(props: SignupScreenProps) {
                 </Modal>
               </VStack>
 
-              <Button
-                mt={semanticSpacing.sm}
-                isDisabled={isLoading || isLoadingGuilds}
-                onPress={handleSubmit(handleSignup)}
-                height={44}
-                leftIcon={isLoading ? undefined : <Icon as={Ionicons} name="checkmark" color="white" />}
-              >
-                {isLoading ? <Spinner color="white" /> : t('signup.submit')}
-              </Button>
             </VStack>
 
-            <HStack mt={semanticSpacing.xl} justifyContent="center" alignItems="center" space={2}>
-              <Text color="text.secondary" fontSize={16}>
+            {/* Submit Button */}
+            <Button
+              marginTop={8}
+              isDisabled={isLoading || isLoadingGuilds}
+              onPress={handleSubmit(handleSignup)}
+              height={56}
+              backgroundColor="$primary500"
+              borderRadius="$xl"
+              softShadow="3"
+              _pressed={{
+                backgroundColor: '$primary600',
+                transform: [{ scale: 0.98 }],
+              }}
+              _disabled={{
+                backgroundColor: '$backgroundLight200',
+                opacity: 0.6,
+              }}
+            >
+              <HStack alignItems="center" space={8}>
+                {isLoading ? (
+                  <Spinner color="$white" size="sm" />
+                ) : (
+                  <Icon as={Ionicons} name="checkmark-circle" color="$white" size="md" />
+                )}
+                <Text 
+                  color="$white" 
+                  fontSize="$lg" 
+                  fontWeight="$semibold"
+                >
+                  {isLoading ? t('common.loading') : t('signup.submit')}
+                </Text>
+              </HStack>
+            </Button>
+
+            {/* Footer */}
+            <HStack 
+              marginTop={32} 
+              justifyContent="center" 
+              alignItems="center" 
+              space={8}
+              paddingHorizontal={16}
+            >
+              <Text color="$textLight600" fontSize="$md">
                 {t('signup.haveAccount')}
               </Text>
               {props?.onNavigateToLogin ? (
                 <Pressable onPress={props.onNavigateToLogin}>
                   {({ isPressed }) => (
-                    <Text color="primary.600" fontSize={16} fontWeight={fontWeights.medium as any} opacity={isPressed ? 0.8 : 1}>
+                    <Text 
+                      color="$primary500" 
+                      fontSize="$md" 
+                      fontWeight="$semibold" 
+                      opacity={isPressed ? 0.8 : 1}
+                      textDecorationLine="underline"
+                    >
                       {t('signup.login')}
                     </Text>
                   )}
@@ -431,7 +578,13 @@ export default function SignupScreen(props: SignupScreenProps) {
                 <Link href="/auth/login" asChild>
                   <Pressable>
                     {({ isPressed }) => (
-                      <Text color="primary.600" fontSize={16} fontWeight={fontWeights.medium as any} opacity={isPressed ? 0.8 : 1}>
+                      <Text 
+                        color="$primary500" 
+                        fontSize="$md" 
+                        fontWeight="$semibold" 
+                        opacity={isPressed ? 0.8 : 1}
+                        textDecorationLine="underline"
+                      >
                         {t('signup.login')}
                       </Text>
                     )}

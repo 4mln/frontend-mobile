@@ -1,12 +1,12 @@
 import { useAuth, useVerifyOTP } from '@/features/auth/hooks';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { colors } from '@/theme/colors';
 import { Ionicons } from '@expo/vector-icons';
 import { router, usePathname } from 'expo-router';
 import { useMessageBoxStore } from '@/context/messageBoxStore';
 import { useTranslation } from 'react-i18next';
 import React from 'react';
-import { Animated, Easing, Modal, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Animated, Easing, ScrollView, StatusBar, TextInput, TouchableOpacity } from 'react-native';
+import { Box, Modal, Text, VStack, HStack, Pressable, Spinner } from '@gluestack-ui/themed';
 import LoginScreen from '../../app/auth/login';
 import SignupScreen from '../../app/auth/signup';
 
@@ -23,6 +23,9 @@ export const LoginWall: React.FC = () => {
   const [pendingPhone, setPendingPhone] = React.useState<string | undefined>(undefined);
   const fade = React.useRef(new Animated.Value(1)).current;
 
+  // Debug logging
+  console.log('LoginWall - Auth State:', { approved, pathname, isAuthRoute });
+
   const switchMode = (next: 'login' | 'signup' | 'otp') => {
     Animated.timing(fade, { toValue: 0, duration: 150, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start(() => {
       setMode(next);
@@ -32,87 +35,95 @@ export const LoginWall: React.FC = () => {
 
   // Only dismiss when explicitly approved after OTP
   if (approved) {
+    console.log('LoginWall - User approved, hiding LoginWall');
     return null;
   }
 
+  console.log('LoginWall - User not approved, showing LoginWall modal');
+  
+  // Force show LoginWall for testing
+  console.log('LoginWall - FORCING LoginWall to show for testing');
+
   return (
-    <Modal visible={!approved} animationType="fade" transparent>
+    <Modal visible={true} animationType="fade" transparent>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} translucent backgroundColor="transparent" />
-      <View style={[styles.container, { backgroundColor: 'rgba(0,0,0,0.5)' }]}>
-        <View style={[
-          styles.sheet,
-          { backgroundColor: isDark ? colors.background.dark : colors.background.light }
-        ]}>
-          <ScrollView style={{ maxHeight: '100%' }} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 20 }} keyboardShouldPersistTaps="handled" nestedScrollEnabled>
-          <Animated.View style={{ opacity: fade }}>
-            {mode === 'login' && (
-              <LoginScreen
-                initialPhone={pendingPhone}
-                onNavigateToSignup={(phone) => {
-                  if (phone) setPendingPhone(phone);
-                  switchMode('signup');
-                }}
-                onOtpRequested={async (phone) => {
-                  setPrevMode('login');
-                  setPendingPhone(phone);
-                  switchMode('otp');
-                }}
-              />
-            )}
-            {mode === 'signup' && (
-              <SignupScreen
-                initialPhone={pendingPhone}
-                onNavigateToLogin={() => switchMode('login')}
-                onOtpRequested={async (phone) => {
-                  setPrevMode('signup'); setPendingPhone(phone); switchMode('otp');
-                }}
-              />
-            )}
-            {mode === 'otp' && (
-              <InlineOtp
-                phone={pendingPhone}
-                onBack={() => switchMode(prevMode)}
-                onSuccess={() => {
-                  if (prevMode === 'signup') {
-                    // Show congrats message, then go to login
-                    messageBox.show({
-                      message: t('auth.signupCongratsLogin', 'Congrats! you signed up successfully, login now.'),
-                      actions: [
-                        {
-                          label: t('auth.login', 'Login'),
-                          onPress: () => switchMode('login'),
-                        },
-                      ],
-                    });
-                  } else {
-                    // After login verification, proceed into the app
-                    try { router.replace('/(tabs)'); } catch {}
-                  }
-                }}
-              />
-            )}
-          </Animated.View>
+      <Box 
+        flex={1} 
+        backgroundColor="rgba(0,0,0,0.5)" 
+        justifyContent="center" 
+        alignItems="center"
+        paddingHorizontal={16}
+      >
+        <Box
+          backgroundColor={isDark ? '$backgroundDark0' : '$backgroundLight0'}
+          borderRadius="$xl"
+          overflow="hidden"
+          maxHeight="90%"
+          width="100%"
+          maxWidth={560}
+          softShadow="4"
+        >
+          <ScrollView 
+            style={{ maxHeight: '100%' }} 
+            contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 20 }} 
+            keyboardShouldPersistTaps="handled" 
+            nestedScrollEnabled
+            showsVerticalScrollIndicator={false}
+          >
+            <Animated.View style={{ opacity: fade }}>
+              {mode === 'login' && (
+                <LoginScreen
+                  initialPhone={pendingPhone}
+                  onNavigateToSignup={(phone) => {
+                    if (phone) setPendingPhone(phone);
+                    switchMode('signup');
+                  }}
+                  onOtpRequested={async (phone) => {
+                    setPrevMode('login');
+                    setPendingPhone(phone);
+                    switchMode('otp');
+                  }}
+                />
+              )}
+              {mode === 'signup' && (
+                <SignupScreen
+                  initialPhone={pendingPhone}
+                  onNavigateToLogin={() => switchMode('login')}
+                  onOtpRequested={async (phone) => {
+                    setPrevMode('signup'); setPendingPhone(phone); switchMode('otp');
+                  }}
+                />
+              )}
+              {mode === 'otp' && (
+                <InlineOtp
+                  phone={pendingPhone}
+                  onBack={() => switchMode(prevMode)}
+                  onSuccess={() => {
+                    if (prevMode === 'signup') {
+                      // Show congrats message, then go to login
+                      messageBox.show({
+                        message: t('auth.signupCongratsLogin', 'Congrats! you signed up successfully, login now.'),
+                        actions: [
+                          {
+                            label: t('auth.login', 'Login'),
+                            onPress: () => switchMode('login'),
+                          },
+                        ],
+                      });
+                    } else {
+                      // After login verification, proceed into the app
+                      try { router.replace('/(tabs)'); } catch {}
+                    }
+                  }}
+                />
+              )}
+            </Animated.View>
           </ScrollView>
-        </View>
-      </View>
+        </Box>
+      </Box>
     </Modal>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  sheet: {
-    borderRadius: 16,
-    overflow: 'hidden',
-    maxHeight: '90%',
-    width: '95%',
-    maxWidth: 560,
-    alignSelf: 'center',
-  },
-});
 
 type InlineOtpProps = {
   phone?: string;
@@ -121,8 +132,8 @@ type InlineOtpProps = {
 };
 
 const InlineOtp: React.FC<InlineOtpProps> = ({ phone, onBack, onSuccess }) => {
-  const { t } = require('react-i18next').useTranslation();
-  const colorScheme = require('@/hooks/use-color-scheme').useColorScheme();
+  const { t } = useTranslation();
+  const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const [otp, setOtp] = React.useState<string[]>(['', '', '', '', '', '']);
   const [isLoading, setIsLoading] = React.useState(false);
@@ -185,41 +196,74 @@ const InlineOtp: React.FC<InlineOtpProps> = ({ phone, onBack, onSuccess }) => {
   };
 
   return (
-    <View style={{ paddingHorizontal: 16, paddingVertical: 20, direction: 'ltr' }}>
-      <TouchableOpacity
+    <Box paddingHorizontal={16} paddingVertical={20} direction="ltr">
+      <Pressable
         onPress={onBack}
         hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        style={{ position: 'absolute', top: 16, left: 16, flexDirection: 'row', alignItems: 'center', zIndex: 10, elevation: 1 }}
+        position="absolute"
+        top={16}
+        left={16}
+        flexDirection="row"
+        alignItems="center"
+        zIndex={10}
+        elevation={1}
       >
-        <Text style={{ color: colors.primary[600], fontWeight: '500' }}>{t('common.back','Back')}</Text>
-      </TouchableOpacity>
-      <View style={{ alignItems: 'center', marginBottom: 24 }}>
-        <View style={{ width: 80, height: 80, borderRadius: 40, backgroundColor: colors.primary[100], justifyContent: 'center', alignItems: 'center', marginBottom: 12 }}>
-          <Ionicons name="shield-checkmark" size={40} color={colors.primary[600]} />
-        </View>
-        <Text style={{ fontSize: 20, fontWeight: '700', color: isDark ? colors.text.primary : colors.text.primary, textAlign: 'center', marginBottom: 6 }}>{t('otp.title','Enter Authentication Code')}</Text>
-        <Text style={{ fontSize: 14, color: isDark ? colors.text.secondary : colors.text.secondary, textAlign: 'center' }}>{t('otp.sentTo','Sent to:')}</Text>
-        {!!phone && (
-          <Text style={{ fontSize: 14, color: colors.primary[600] }}>+98 {phone}</Text>
-        )}
-      </View>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20, direction: 'ltr' }}>
+        <Text color="$primary500" fontWeight="$medium">{t('common.back','Back')}</Text>
+      </Pressable>
+      
+      <VStack alignItems="center" marginBottom={24} space={16}>
+        <Box 
+          width={80} 
+          height={80} 
+          borderRadius="$full" 
+          backgroundColor="$primary100" 
+          justifyContent="center" 
+          alignItems="center"
+          softShadow="2"
+        >
+          <Ionicons name="shield-checkmark" size={40} color="#3b82f6" />
+        </Box>
+        <VStack alignItems="center" space={8}>
+          <Text 
+            fontSize="$xl" 
+            fontWeight="$bold" 
+            color="$textLight900" 
+            textAlign="center"
+          >
+            {t('otp.title','Enter Authentication Code')}
+          </Text>
+          <Text 
+            fontSize="$sm" 
+            color="$textLight600" 
+            textAlign="center"
+          >
+            {t('otp.sentTo','Sent to:')}
+          </Text>
+          {!!phone && (
+            <Text fontSize="$sm" color="$primary500" fontWeight="$semibold">
+              +98 {phone}
+            </Text>
+          )}
+        </VStack>
+      </VStack>
+      
+      <HStack justifyContent="space-between" marginBottom={20} direction="ltr" space={12}>
         {otp.map((digit, index) => (
           <TextInput
             key={index}
             ref={(ref) => { if (ref) inputRefs.current[index] = ref; }}
             style={{
-              width: 45,
-              height: 55,
-              borderWidth: 1,
-              borderColor: isDark ? colors.border.light : colors.border.light,
-              borderRadius: 12,
+              width: 50,
+              height: 60,
+              borderWidth: 2,
+              borderColor: digit ? '#3b82f6' : '#e5e7eb',
+              borderRadius: 16,
               textAlign: 'center',
               writingDirection: 'ltr',
-              fontSize: 20,
+              fontSize: 24,
               fontWeight: '700',
-              color: isDark ? colors.text.primary : colors.text.primary,
-              backgroundColor: isDark ? colors.gray[800] : colors.background.light,
+              color: isDark ? '#f9fafb' : '#111827',
+              backgroundColor: isDark ? '#374151' : '#ffffff',
             }}
             value={digit}
             onChangeText={(value) => handleOtpChange(value, index)}
@@ -230,26 +274,48 @@ const InlineOtp: React.FC<InlineOtpProps> = ({ phone, onBack, onSuccess }) => {
             selectTextOnFocus
           />
         ))}
-      </View>
-      <TouchableOpacity
+      </HStack>
+      
+      <Pressable
         onPress={() => handleVerify()}
         disabled={otp.join('').length !== 6 || isLoading}
-        style={{ backgroundColor: colors.primary[500], borderRadius: 12, paddingVertical: 12, alignItems: 'center', opacity: (otp.join('').length !== 6 || isLoading) ? 0.6 : 1 }}
+        backgroundColor="$primary500"
+        borderRadius="$xl"
+        paddingVertical={16}
+        alignItems="center"
+        opacity={otp.join('').length !== 6 || isLoading ? 0.6 : 1}
+        softShadow="2"
+        _pressed={{
+          backgroundColor: '$primary600',
+          transform: [{ scale: 0.98 }],
+        }}
       >
-        <Text style={{ color: colors.background.light, fontWeight: '700' }}>{isLoading ? t('common.loading','Loading...') : t('auth.verifyOTP','Verify')}</Text>
-      </TouchableOpacity>
-      <View style={{ alignItems: 'center', marginTop: 16 }}>
+        <HStack alignItems="center" space={8}>
+          {isLoading && <Spinner color="$white" size="sm" />}
+          <Text color="$white" fontWeight="$bold" fontSize="$md">
+            {isLoading ? t('common.loading','Loading...') : t('auth.verifyOTP','Verify')}
+          </Text>
+        </HStack>
+      </Pressable>
+      
+      <VStack alignItems="center" marginTop={20} space={8}>
         {canResend ? (
-          <TouchableOpacity onPress={() => { setTimeLeft(60); setCanResend(false); setOtp(['', '', '', '', '', '']); }}>
-            <Text style={{ color: colors.primary[600], fontWeight: '500' }}>{t('otp.resend','Resend Code')}</Text>
-          </TouchableOpacity>
+          <Pressable onPress={() => { setTimeLeft(60); setCanResend(false); setOtp(['', '', '', '', '', '']); }}>
+            <Text color="$primary500" fontWeight="$medium" fontSize="$sm">
+              {t('otp.resend','Resend Code')}
+            </Text>
+          </Pressable>
         ) : (
-          <>
-            <Text style={{ color: isDark ? colors.text.secondary : colors.text.secondary, marginBottom: 6 }}>{t('auth.otpNotReceived', "Didn't receive the code?")}</Text>
-            <Text style={{ color: colors.primary[600], fontWeight: '600' }}>{formatTime(timeLeft)}</Text>
-          </>
+          <VStack alignItems="center" space={4}>
+            <Text color="$textLight600" fontSize="$sm">
+              {t('auth.otpNotReceived', "Didn't receive the code?")}
+            </Text>
+            <Text color="$primary500" fontWeight="$semibold" fontSize="$md">
+              {formatTime(timeLeft)}
+            </Text>
+          </VStack>
         )}
-      </View>
-    </View>
+      </VStack>
+    </Box>
   );
 };
